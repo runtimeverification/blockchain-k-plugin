@@ -120,13 +120,13 @@ let pack_output rets =
 let get_schedule blocknum config = match config with
 | Iele_config -> [KApply0(parse_klabel "ALBE_IELE-GAS")]
 | Ethereum_config cfg ->
-  let homestead = World.to_z_unsigned cfg.homestead_block_number in
-  if Z.lt blocknum homestead then [KApply0(parse_klabel "FRONTIER_EVM")] else
-  let eip150 = World.to_z_unsigned cfg.eip150_block_number in
-  if Z.lt blocknum eip150 then [KApply0(parse_klabel "HOMESTEAD_EVM")] else
-  let eip161 = World.to_z_unsigned cfg.eip161_block_number in
-  if Z.lt blocknum eip161 then [KApply0(parse_klabel "EIP150_EVM")] else
-  [KApply0(parse_klabel "EIP158_EVM")]
+  let eip161 = World.to_z cfg.eip161_block_number in
+  if Z.geq blocknum eip161 then [KApply0(parse_klabel "EIP158_EVM")] else
+  let eip150 = World.to_z cfg.eip150_block_number in
+  if Z.geq blocknum eip150 then [KApply0(parse_klabel "EIP150_EVM")] else
+  let homestead = World.to_z cfg.homestead_block_number in
+  if Z.geq blocknum homestead then [KApply0(parse_klabel "HOMESTEAD_EVM")] else
+  [KApply0(parse_klabel "FRONTIER_EVM")]
 
 let get_output_data k_rets config = match config with
 | Iele_config ->
