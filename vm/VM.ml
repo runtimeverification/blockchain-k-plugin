@@ -86,7 +86,7 @@ let z_of_rlp rlp =
   Rlp.RlpData rope -> World.to_z (Bytes.of_string (Rope.to_string rope))
 | Rlp.RlpList _ -> failwith "Invalid value where rlp-encoded string expected"
 
-let unpack_input iscreate data code config =
+let unpack_input iscreate data config =
   match config with
   | Iele_config -> 
   begin
@@ -100,16 +100,16 @@ let unpack_input iscreate data code config =
     if iscreate then
       str,args_list,""
     else
-      Bytes.to_string code,args_list,str
+      "",args_list,str
     | _ -> failwith "Invalid value where rlp-encoded args and function name expected"
   end
   | Ethereum_config _ ->
   begin
     let args = [String(Bytes.to_string data)] in
     if iscreate then
-      Bytes.to_string data,args,""
+      "",args,""
     else
-      Bytes.to_string code,args,""
+      "",args,""
   end
 
 let pack_output rets =
@@ -153,10 +153,10 @@ let run_transaction (ctx: call_context) : call_result =
   | Some hdr -> hdr
   | _ -> invalid_arg "Must pass a BlockHeader message as block_header") in
   MANTIS.Cache.clear ();
-  let iscreate = Bytes.length ctx.owner_addr = 0 in
-  let z_to = World.to_z_unsigned ctx.owner_addr in
-  let z_from = World.to_z_unsigned ctx.origin_addr in
-  let str_code,k_args,function_ = unpack_input iscreate ctx.input_data ctx.contract_code ctx.config in
+  let iscreate = Bytes.length ctx.recipient_addr = 0 in
+  let z_to = World.to_z_unsigned ctx.recipient_addr in
+  let z_from = World.to_z_unsigned ctx.caller_addr in
+  let str_code,k_args,function_ = unpack_input iscreate ctx.input_data ctx.config in
   let z_value = World.to_z_unsigned ctx.call_value in
   let z_gasprice = World.to_z_unsigned ctx.gas_price in
   let z_gas = World.to_z_unsigned ctx.gas_provided in

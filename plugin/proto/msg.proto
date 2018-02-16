@@ -9,27 +9,25 @@ message Hello {
   // or may required different configurations.
   oneof config {
     EthereumConfig ethereumConfig = 2;
-    IELEConfig ieleConfig = 3;
+    IeleConfig ieleConfig = 3;
   }
 }
 
 message CallContext {
-  bytes ownerAddr = 1;
-  bytes callerAddr = 2;
-  bytes originAddr = 3;
-  bytes contractCode = 4;
-  bytes inputData = 5;
-  bytes callValue = 6;
-  bytes gasPrice = 7;
-  bytes gasProvided = 8;
-  int32 callDepth = 9;
-  BlockHeader blockHeader = 10;
+  bytes callerAddr = 1;
+  // empty if contract creation
+  bytes recipientAddr = 2;
+  bytes inputData = 3;
+  bytes callValue = 4;
+  bytes gasPrice = 5;
+  bytes gasProvided = 6;
+  BlockHeader blockHeader = 7;
 
   // This may be used to override the VM configuration for the session. It used in tests to avoid
   // re-instantiating VM for each test.
   oneof config {
-    EthereumConfig ethereumConfig = 11;
-    IELEConfig ieleConfig = 12;
+    EthereumConfig ethereumConfig = 8;
+    IeleConfig ieleConfig = 9;
   }
 }
 
@@ -39,9 +37,6 @@ message BlockHeader {
   bytes number = 3;
   bytes gasLimit = 4;
   int64 unixTimestamp = 5;
-}
-
-message IELEConfig {
 }
 
 message EthereumConfig {
@@ -56,11 +51,17 @@ message EthereumConfig {
   bytes accountStartNonce = 17;
 }
 
+message IeleConfig {
+  // empty
+}
+
 message GetAccount {
   bytes address = 1;
 }
 
 message Account {
+  // if account does not exist, nonce and balance will be empty
+  // if account exists but is empty, nonce and balance will be equivalent to numeric zeroes
   bytes nonce = 1;
   bytes balance = 2;
   bool codeEmpty = 3;
