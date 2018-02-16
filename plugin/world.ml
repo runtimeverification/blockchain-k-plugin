@@ -172,7 +172,7 @@ let serve addr (run_transaction : Msg_types.call_context -> Msg_types.call_resul
       if String.equal hello.version "1.0" then
         process_transactions chans
     with
-      exn -> finish (); raise exn);
+      exn -> prerr_endline(Printexc.to_string exn); Printexc.print_backtrace stderr; finish (); raise exn);
     finish ()
   in
   let serve_on socket =
