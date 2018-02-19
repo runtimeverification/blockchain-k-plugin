@@ -169,7 +169,7 @@ let serve addr (run_transaction : Msg_types.call_context -> Msg_types.call_resul
                     close_in in_chan; close_out out_chan in
     (try
       let hello = input_framed in_chan Msg_pb.decode_hello in
-      if String.equal hello.version "1.0" then
+      if String.equal hello.version "1.1" then
         process_transactions chans
     with
       exn -> prerr_endline(Printexc.to_string exn); Printexc.print_backtrace stderr; finish (); raise exn);
