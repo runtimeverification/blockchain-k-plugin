@@ -17,7 +17,7 @@ let code_is_modified acctID code =
   let is_code_empty = match Def.eval (KApply(LblaccountEmpty, [code;[Int Z.zero];[Int Z.zero]])) [Bottom] with
   [Bool isempty] -> isempty
   | _ -> failwith "Invalid value where boolean was expected" in
-  MANTIS.Cache.is_code_empty acctID &&
+  (not (MANTIS.Cache.account_exists acctID) || MANTIS.Cache.is_code_empty acctID) &&
   not is_code_empty
 
 let account_is_modified selfdestruct _ acct =
