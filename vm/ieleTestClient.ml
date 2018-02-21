@@ -162,11 +162,6 @@ let test_transaction header (state: (string * Basic.json) list) (tx: Basic.json)
   let origin = Bytes.of_string origin in
   let checkpoint_state = checkpoint state gas_price gas_provided origin in
   init_state checkpoint_state;
-  let code = if txcreate then
-    Bytes.empty
-  else
-    World.InMemoryWorldState.get_code (of_hex_unsigned owner)
-  in
   let data_str = tx |> member "data" |> to_string in
   let data = if data_str = "" then Bytes.empty else assemble data_str in
   let args = List.map (fun json -> of_hex (json |> to_string)) (tx |> member "arguments" |> to_list) in
@@ -175,7 +170,7 @@ let test_transaction header (state: (string * Basic.json) list) (tx: Basic.json)
   let txdata = pack_input args function_ txcreate data in
   let g0 = VM.g0 txdata txcreate in
   let gas_provided = Z.sub (World.to_z_unsigned gas_provided) g0 in
-  let ctx = {owner_addr=of_hex_unsigned owner;caller_addr=origin;origin_addr=origin;contract_code=code;input_data=txdata;call_value=of_hex value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config;call_depth=0l} in
+  let ctx = {recipient_addr=of_hex_unsigned owner;caller_addr=origin;input_data=txdata;call_value=of_hex value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config} in
   let call_result = send_request ctx in
   let expected_return = List.map (fun json -> of_hex (json |> to_string)) (result |> member "out" |> to_list) in
   let rets = unpack_output call_result.return_data in
