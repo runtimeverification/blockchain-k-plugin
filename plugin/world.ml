@@ -139,6 +139,8 @@ module NetworkWorldState = struct
                Msg_pb.decode_blockhash).hash
 end
 
+let _VERSION = "1.1" (* TODO: get from file in submodule *)
+
 let serve addr (run_transaction : Msg_types.call_context -> Msg_types.call_result) =
   (* server side *)
   let process_transactions chans : unit =
@@ -164,7 +166,7 @@ let serve addr (run_transaction : Msg_types.call_context -> Msg_types.call_resul
                     close_in in_chan; close_out out_chan in
     (try
       let hello = input_framed in_chan Msg_pb.decode_hello in
-      if String.equal hello.version "1.1" then
+      if String.equal hello.version _VERSION then
         process_transactions chans
     with
       exn -> prerr_endline(Printexc.to_string exn); Printexc.print_backtrace stderr; finish (); raise exn);
@@ -200,7 +202,7 @@ let send addr ctx =
   in
   let sock = create_socket addr in
   let chans = (Unix.in_channel_of_descr sock, Unix.out_channel_of_descr sock) in
-  let hello = {version="1.0";config=Iele_config} in
+  let hello = {version=_VERSION;config=Iele_config} in
     output_framed (snd chans) Msg_pb.encode_hello hello;
     output_framed (snd chans) Msg_pb.encode_call_context ctx;
     let result = ref None in
