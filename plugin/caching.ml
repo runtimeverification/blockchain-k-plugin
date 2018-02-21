@@ -10,6 +10,7 @@ module type KWorldState = sig
   val get_code : Z.t -> string
   val get_blockhash : Z.t -> Z.t
   val is_code_empty : Z.t -> bool
+  val account_exists : Z.t -> bool
 
   val clear : unit -> unit
 end
@@ -35,6 +36,9 @@ module Make ( W : World.WorldState ) : KWorldState = struct
   let get_balance acct = to_z_unsigned (get_account acct).balance
   let get_nonce acct = to_z_unsigned (get_account acct).nonce
   let is_code_empty acct = (get_account acct).code_empty
+  let account_exists acct = 
+    let account = get_account acct in
+    Bytes.length account.balance <> 0 || Bytes.length account.nonce <> 0
 
   let get_storage_data acct index =
     let map = getOrUpdateLocal storages acct (fun () -> Hashtbl.create 10) in

@@ -90,7 +90,7 @@ module InMemoryWorldState = struct
     try
       let acct = StringMap.find id !accounts  in
       {Msg_types.nonce=acct.nonce;Msg_types.balance=acct.balance;code_empty=Bytes.length acct.code = 0}
-    with Not_found -> {Msg_types.nonce=zero;Msg_types.balance=zero;code_empty=true}
+    with Not_found -> {Msg_types.nonce=Bytes.empty;Msg_types.balance=Bytes.empty;code_empty=true}
 
   let get_storage_data id offset =
     let id = Bytes.to_string id in

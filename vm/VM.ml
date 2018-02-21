@@ -3,11 +3,6 @@ open Constants.K
 open Prelude
 open Msg_types
 
-let account_was_empty acctID =
-  MANTIS.Cache.get_balance acctID = Z.zero &&
-  MANTIS.Cache.get_nonce acctID = Z.zero &&
-  MANTIS.Cache.is_code_empty acctID
-
 let storage_key_is_modified acctID k v =
   match k,v with
   [Int key],[Int value] ->
@@ -29,6 +24,7 @@ let account_is_modified selfdestruct _ acct =
 match acct with
   [KApply5(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])] ->
   not (List.mem acctID selfdestruct) && (
+    not (MANTIS.Cache.account_exists acctID) ||
     MANTIS.Cache.get_balance acctID <> balance ||
     MANTIS.Cache.get_nonce acctID <> nonce ||
     code_is_modified acctID code ||
