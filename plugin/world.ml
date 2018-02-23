@@ -163,7 +163,8 @@ let serve addr (run_transaction : Msg_types.call_context -> Msg_types.call_resul
     let chans = (in_chan,out_chan) in
     ThreadLocal.put connections chans;
     let finish () = ThreadLocal.remove connections;
-                    close_in in_chan; close_out out_chan in
+                    Unix.shutdown fd Unix.SHUTDOWN_SEND;
+                    Unix.close fd in
     (try
       let hello = input_framed in_chan Msg_pb.decode_hello in
       if String.equal hello.version _VERSION then
