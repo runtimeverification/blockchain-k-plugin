@@ -36,7 +36,7 @@ let assemble file =
   let file_dir = Filename.dirname Sys.argv.(1) in
   let abs_file_dir = abs_path file_dir in
   let build_vm = Filename.dirname Sys.executable_name in
-  let _in = Unix.open_process_in("cd " ^ (Filename.quote build_vm) ^ "/../../compiler/ && iele-asm " ^ (Filename.quote (abs_file_dir ^ "/" ^ file))) in
+  let _in = Unix.open_process_in("cd " ^ (Filename.quote build_vm) ^ "/../../compiler/ && stack exec iele-assemble " ^ (Filename.quote (abs_file_dir ^ "/" ^ file))) in
   let result = input_line _in in
   match Unix.close_process_in _in with
   | Unix.WEXITED 0 -> of_hex_unsigned result
