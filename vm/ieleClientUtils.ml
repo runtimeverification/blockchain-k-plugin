@@ -4,7 +4,7 @@ open Msg_types
 
 let hash () = Cryptokit.Hash.keccak 256
 
-let sort l =
+let sort_assoc_list l =
   List.sort (fun (a,_) (b,_) -> compare a b) l
 
 let of_hex signed str =
@@ -97,7 +97,7 @@ let update_storage_entry (storage: (string * Basic.json) list) (update: storage_
   (key,`String value) :: without
 
 let update_storage (storage: (string * Basic.json) list) (updates: storage_update list) : (string * Basic.json) list =
-  sort (List.fold_left update_storage_entry storage updates)
+  sort_assoc_list (List.fold_left update_storage_entry storage updates)
 
 let mod_acct_to_json (pre: (string * Basic.json) list) (acct: modified_account) : string * Basic.json =
   let address = to_hex acct.address in

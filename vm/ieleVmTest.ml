@@ -53,7 +53,7 @@ let test_transaction header (state: (string * Basic.json) list) (tx: Basic.json)
 let rec canonicalize assoc =
   List.map (fun (k,v) -> match (k,v) with
   | "code", `String code -> "code",`String(if code = "" then "" else if String.sub code 0 2 = "0x" then code else to_hex (assemble code))
-  | _, `Assoc a -> (k,`Assoc(sort (canonicalize a)))
+  | _, `Assoc a -> (k,`Assoc(sort_assoc_list (canonicalize a)))
   | _ -> k,v) assoc
 
 let test_block state block =
@@ -70,12 +70,12 @@ let test_block state block =
 
 let pre = test |> member "pre" |> to_assoc
 let blocks = test |> member "blocks" |> to_list
-let expected = sort (canonicalize (test |> member "postState" |> to_assoc))
+let expected = sort_assoc_list (canonicalize (test |> member "postState" |> to_assoc))
 let json_blockhashes = test |> member "blockhashes" |> to_list
 let str_blockhashes = List.map to_string json_blockhashes
 let blockhashes = List.map of_hex_unsigned str_blockhashes;;
 List.iter World.InMemoryWorldState.add_blockhash (List.rev blockhashes);;
-let actual = sort (canonicalize (List.fold_left test_block pre blocks));;
+let actual = sort_assoc_list (canonicalize (List.fold_left test_block pre blocks));;
 if expected <> actual then begin
   prerr_endline ("failed " ^ file ^ ": postState:\nexpected:" ^ Yojson.Basic.to_string (`Assoc expected) ^ "\nactual: " ^ Yojson.Basic.to_string (`Assoc actual));
   failed := true;
