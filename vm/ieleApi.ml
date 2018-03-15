@@ -27,15 +27,14 @@ let get_block blocknumber =
 
 let personal_newAccount () =
   let acct = Cryptokit.Random.string random 20 in
-  let key = to_hex (Bytes.of_string acct) in
+ `String (to_hex (Bytes.of_string acct))
+
+let setBalance (address, account) =
   let value = `Assoc [("nonce", `String "0x00"); ("balance", `String "0x00"); ("storage", `Assoc []); ("code", `String "")] in
   let latest = List.hd !blocks in
   let state = latest.state in
-  let new_state = (key, value) :: state in
+  let new_state = (address, value) :: state in
   blocks := {state=new_state;timestamp=latest.timestamp} :: List.tl !blocks;
-  `String (to_hex (Bytes.of_string acct))
-
-let setBalance (address, account) =
   let balance = account |> member "wei" |> to_string in
   let latest = List.hd !blocks in
   let state = latest.state in
@@ -46,8 +45,19 @@ let setBalance (address, account) =
   let state_without = List.remove_assoc address state in
   let new_state = (address, new_account) :: state_without in
   blocks := {state=new_state;timestamp=latest.timestamp} :: List.tl !blocks
+ 
+let test_rewindToBlock blocknumber =
+  let num_to_remove = List.length !blocks - blocknumber - 1 in
+  for i = 1 to num_to_remove do
+    blocks := List.tl !blocks
+  done;
+  `Bool true
 
 let test_setChainParams params =
+  let _ = test_rewindToBlock 0 in
+  (* setChainParams sets the initial state of the blockchain so we overwrite the state of the genesis block *)
+  let latest = List.hd !blocks in
+  blocks := {state=[]; timestamp=latest.timestamp} :: List.tl !blocks;
   let accounts = params |> member "accounts" |> to_assoc in
   List.iter setBalance accounts;
  `Bool true
@@ -76,13 +86,6 @@ let eth_isStorageEmpty address blocknumber =
 
 let test_modifyTimestamp timestamp = 
   nextTimestamp := Some timestamp;
-  `Bool true
-  
-let test_rewindToBlock blocknumber =
-  let num_to_remove = List.length !blocks - blocknumber - 1 in
-  for i = 1 to num_to_remove do
-    blocks := List.tl !blocks
-  done;
   `Bool true
 
 let miner_setEtherbase address =
