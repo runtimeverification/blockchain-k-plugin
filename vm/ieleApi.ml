@@ -121,38 +121,39 @@ let mine_block () =
   if List.length !pendingTx = 0 then begin
     let new_block = {state=initial_state; timestamp=timestamp} in
     blocks := new_block :: !blocks
-  end else
-  let tx_str = List.hd !pendingTx in
-  pendingTx := List.tl !pendingTx;
-  let tx = Yojson.Basic.from_string tx_str in
-  let post_state, call_result = exec_transaction "gasprice" "gas" header initial_state tx in
-  (* TODO: apply gas for mine*)
-  let new_block = {state=post_state; timestamp=timestamp} in
-  blocks := new_block :: !blocks;
-  let hash = Cryptokit.hash_string (hash ()) tx_str in
-  let hash_hex = to_hex (Bytes.of_string hash) in
-  let tx_gas = tx |> member "gas" |> to_string in
-  let z_tx_gas = World.to_z (of_hex_unsigned tx_gas) in
-  let z_gas_remaining = World.to_z (call_result.gas_remaining) in
-  let z_gas_used = Z.sub z_tx_gas z_gas_remaining in
-  let gasUsed = to_hex (World.of_z z_gas_used) in
-  let status = to_hex call_result.return_code in
-  let blockNumber = to_hex number in
-  let output_bytes = unpack_output call_result.return_data in
-  let output = List.map to_hex output_bytes in
-  let output_json = List.map (fun t -> `String t) output in
-  let log_entry_to_json entry =
-    let address = to_hex entry.address in
-    let topics = List.map to_hex entry.topics in
-    let json_topics = List.map (fun t -> `String t) topics in
-    let data = to_hex entry.data in
-    `Assoc [("address", `String address); ("topics", `List json_topics); ("data", `String data)]
-  in
-  let logs = List.map log_entry_to_json call_result.logs in
-  let owner = tx |> member "to" |> to_string in
-  let txcreate = owner = "" || owner = "0x" in
-  let receipt = `Assoc [("gasUsed", `String gasUsed); ("status", `String status); ("contractAddress", if txcreate && List.length output > 0 then `String (List.hd output) else `Null); ("output", `List output_json); ("blockNumber", `String blockNumber); ("logs", `List logs)] in
-  receipts := StringMap.add hash_hex receipt !receipts
+  end else begin
+    let tx_str = List.hd !pendingTx in
+    pendingTx := List.tl !pendingTx;
+    let tx = Yojson.Basic.from_string tx_str in
+    let post_state, call_result = exec_transaction "gasprice" "gas" header initial_state tx in
+    (* TODO: apply gas for mine*)
+    let new_block = {state=post_state; timestamp=timestamp} in
+    blocks := new_block :: !blocks;
+    let hash = Cryptokit.hash_string (hash ()) tx_str in
+    let hash_hex = to_hex (Bytes.of_string hash) in
+    let tx_gas = tx |> member "gas" |> to_string in
+    let z_tx_gas = World.to_z (of_hex_unsigned tx_gas) in
+    let z_gas_remaining = World.to_z (call_result.gas_remaining) in
+    let z_gas_used = Z.sub z_tx_gas z_gas_remaining in
+    let gasUsed = to_hex (World.of_z z_gas_used) in
+    let status = to_hex call_result.return_code in
+    let blockNumber = to_hex number in
+    let output_bytes = unpack_output call_result.return_data in
+    let output = List.map to_hex output_bytes in
+    let output_json = List.map (fun t -> `String t) output in
+    let log_entry_to_json entry =
+      let address = to_hex entry.address in
+      let topics = List.map to_hex entry.topics in
+      let json_topics = List.map (fun t -> `String t) topics in
+      let data = to_hex entry.data in
+      `Assoc [("address", `String address); ("topics", `List json_topics); ("data", `String data)]
+    in
+    let logs = List.map log_entry_to_json call_result.logs in
+    let owner = tx |> member "to" |> to_string in
+    let txcreate = owner = "" || owner = "0x" in
+    let receipt = `Assoc [("gasUsed", `String gasUsed); ("status", `String status); ("contractAddress", if txcreate && List.length output > 0 then `String (List.hd output) else `Null); ("output", `List output_json); ("blockNumber", `String blockNumber); ("logs", `List logs)] in
+    receipts := StringMap.add hash_hex receipt !receipts
+  end
 
 let iele_call tx _ =
   let `String hash = iele_sendTransaction tx in
