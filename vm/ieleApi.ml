@@ -29,6 +29,7 @@ let personal_newAccount () =
   let acct = Cryptokit.Random.string random 20 in
  `String (to_hex (Bytes.of_string acct))
 
+(* assumes that the specified account in the latest block has the empty state *)
 let setBalance (address, account) =
   let value = `Assoc [("nonce", `String "0x00"); ("balance", `String "0x00"); ("storage", `Assoc []); ("code", `String "")] in
   let latest = List.hd !blocks in
