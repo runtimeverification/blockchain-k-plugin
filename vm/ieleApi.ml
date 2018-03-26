@@ -151,7 +151,7 @@ let mine_block () =
     let logs = List.map log_entry_to_json call_result.logs in
     let owner = tx |> member "to" |> to_string in
     let txcreate = owner = "" || owner = "0x" in
-    let receipt = `Assoc [("gasUsed", `String gasUsed); ("status", `String status); ("contractAddress", if txcreate && List.length output > 0 then `String (List.hd output) else `Null); ("output", `List output_json); ("blockNumber", `String blockNumber); ("logs", `List logs)] in
+    let receipt = `Assoc [("gasUsed", `String gasUsed); ("status", `String status); ("contractAddress", if txcreate && List.length output > 0 then `String (to_hex (List.hd output_bytes)) else `Null); ("output", `List output_json); ("blockNumber", `String blockNumber); ("logs", `List logs)] in
     receipts := StringMap.add hash_hex receipt !receipts
   end
 
