@@ -19,18 +19,19 @@ let of_hex signed str =
 let of_hex_unsigned = of_hex false
 let of_hex = of_hex true
 
-let to_hex signed bytes =
-  if Bytes.length bytes = 0 && signed then "0x00" else
+let to_hex bytes =
+  if Bytes.length bytes = 0 then "0x00" else
   let str = Bytes.to_string bytes in
-  let str = if String.length str > 1 && str.[0] = '\000' && signed then
+  let str = if String.length str > 1 && str.[0] = '\000' then
     String.sub str 1 (String.length str - 1)
   else
     str
   in
   "0x" ^ (match Hex.of_string str with (`Hex str) -> str)
 
-let to_hex_unsigned = to_hex false
-let to_hex = to_hex true
+let to_hex_unsigned bytes =
+  let str = Bytes.to_string bytes in
+  "0x" ^ (match Hex.of_string str with (`Hex str) -> str)
 
 let abs_path rel =
   if Filename.is_relative rel then (Sys.getcwd ()) ^ "/" ^ rel else rel
