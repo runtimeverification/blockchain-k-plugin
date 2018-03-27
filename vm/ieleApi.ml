@@ -63,13 +63,15 @@ let test_setChainParams params =
   List.iter setBalance accounts;
  `Bool true
 
-let get_account_field address blocknumber field convert =
+let get_account_field address blocknumber field convert default =
   let block = get_block blocknumber in
-  let acct = List.assoc ("0x" ^ address) block.state in
-  acct |> member field |> convert
+  try
+    let acct = List.assoc ("0x" ^ address) block.state in
+    acct |> member field |> convert
+  with Not_found -> default
 
 let eth_getCode address blocknumber = 
-  let code = get_account_field address blocknumber "code" to_string in
+  let code = get_account_field address blocknumber "code" to_string "0x" in
   let code_raw = of_hex_unsigned code in
   `String (Bytes.to_string code_raw)
 
@@ -78,11 +80,11 @@ let eth_getBlockByNumber blocknumber =
   `Assoc [("timestamp", `String block.timestamp)]
 
 let eth_getBalance address blocknumber =
-  let balance = get_account_field address blocknumber "balance" to_string in
+  let balance = get_account_field address blocknumber "balance" to_string "0x00" in
   `String balance
 
 let eth_isStorageEmpty address blocknumber =
-  let storage = get_account_field address blocknumber "storage" to_assoc in
+  let storage = get_account_field address blocknumber "storage" to_assoc [] in
   (storage = [])
 
 let test_modifyTimestamp timestamp = 
