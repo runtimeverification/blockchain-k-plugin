@@ -72,7 +72,7 @@ let get_account_field address blocknumber field convert default =
 
 let eth_getCode address blocknumber = 
   let code = get_account_field address blocknumber "code" to_string "0x" in
-  let code_raw = of_hex_unsigned code in
+  let code_raw = of_hex code in
   `String (Bytes.to_string code_raw)
 
 let eth_getBlockByNumber blocknumber =
@@ -106,7 +106,7 @@ let eth_getTransactionReceipt hash =
   StringMap.find hash !receipts
 
 let mine_block () =  
-  let beneficiary = of_hex_unsigned !nextBeneficiary in
+  let beneficiary = of_hex !nextBeneficiary in
   let now = Unix.gettimeofday () in
   let now_millis = Int64.of_float (now *. 1000.0) in
   let timestamp = match !nextTimestamp with
@@ -134,7 +134,7 @@ let mine_block () =
     let hash = Cryptokit.hash_string (hash ()) tx_str in
     let hash_hex = to_hex_unsigned (Bytes.of_string hash) in
     let tx_gas = tx |> member "gas" |> to_string in
-    let z_tx_gas = World.to_z (of_hex_unsigned tx_gas) in
+    let z_tx_gas = World.to_z (of_hex tx_gas) in
     let z_gas_remaining = World.to_z (call_result.gas_remaining) in
     let z_gas_used = Z.sub z_tx_gas z_gas_remaining in
     let gasUsed = to_hex_unsigned (World.of_z z_gas_used) in
