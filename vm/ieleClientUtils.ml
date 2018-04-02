@@ -16,6 +16,7 @@ let of_hex signed str =
   let res = Bytes.of_string str in
   if neg then World.of_z (Z.neg (World.to_z res)) else if signed then World.of_z (World.to_z res) else res
 
+let of_hex_with_signed = of_hex
 let of_hex_unsigned = of_hex false
 let of_hex = of_hex true
 
@@ -139,16 +140,16 @@ let send_request ctx =
   let addr = Unix.ADDR_INET(Unix.inet_addr_loopback,(int_of_string Sys.argv.(2))) in
   World.send addr ctx
 
-let exec_transaction gasPrice gasLimit header (state: (string * Basic.json) list) (tx: Basic.json) : (string * Basic.json) list * call_result =
-  let gas_price = of_hex (tx |> member gasPrice |> to_string) in
-  let gas_provided = of_hex (tx |> member gasLimit |> to_string) in
+let exec_transaction signed gasPrice gasLimit header (state: (string * Basic.json) list) (tx: Basic.json) : (string * Basic.json) list * call_result =
+  let gas_price = of_hex_with_signed signed (tx |> member gasPrice |> to_string) in
+  let gas_provided = of_hex_with_signed signed (tx |> member gasLimit |> to_string) in
   let owner = tx |> member "to" |> to_string in
   let txcreate = owner = "" || owner = "0x" in
   let from = tx |> member "from" |> to_string in
   let origin = of_hex_unsigned from in
   let checkpoint_state = checkpoint state gas_price gas_provided origin in
   init_state checkpoint_state;
-  let args = List.map (fun json -> of_hex (json |> to_string)) (tx |> member "arguments" |> to_list) in
+  let args = List.map (fun json -> of_hex_with_signed signed (json |> to_string)) (tx |> member "arguments" |> to_list) in
   let value = tx |> member "value" |> to_string in
   let data = if txcreate then
     let data_str = tx |> member "contractCode" |> to_string in
@@ -159,7 +160,7 @@ let exec_transaction gasPrice gasLimit header (state: (string * Basic.json) list
   let txdata = pack_input args data in
   let g0 = VM.g0 txdata txcreate in
   let gas_provided = Z.sub (World.to_z_unsigned gas_provided) g0 in
-  let ctx = {recipient_addr=of_hex_unsigned owner;caller_addr=origin;input_data=txdata;call_value=of_hex value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config} in
+  let ctx = {recipient_addr=of_hex_unsigned owner;caller_addr=origin;input_data=txdata;call_value=of_hex_with_signed signed value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config} in
   let call_result = send_request ctx in
   let post_state = update_state checkpoint_state call_result.modified_accounts call_result.deleted_accounts in
   post_state, call_result
