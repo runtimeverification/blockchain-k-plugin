@@ -6,16 +6,40 @@ Here we implement the various cryptographic primitives needed for KEVM.
 Cryptographic Hashes
 --------------------
 
--   `Keccak256` takes a string and returns a 64-character hex-encoded string of the 32-byte keccak256 hash of the string.
--   `Sha256` takes a String and returns a 64-character hex-encoded string of the 32-byte SHA2-256 hash of the string.
--   `RipEmd160` takes a String and returns a 40-character hex-encoded string of the 20-byte RIPEMD160 hash of the string.
-
 ``` {.k .cryptography-hashes}
 module HASH
     imports STRING-SYNTAX
-    syntax String ::= Keccak256 ( String )     [function, hook(HASH.keccak256)]
-                    | RipEmd160 ( String )     [function, hook(HASH.ripemd160)]
-                    | "Sha2_256" "(" String ")" [function, hook(HASH.sha2_256)]
+    imports BYTES-SYNTAX
+```
+
+For each hash function, we support two overloads -- `String -> String` and
+`Bytes -> Bytes`:
+
+The `Bytes -> Bytes` overload returns:
+
+- 32-byte long bytestring for `Sha2_256`
+- 32-byte long bytestring for `Keccak256`
+- 20-byte long bytestring for `RipEmd160`
+
+``` {.k .cryptography-hashes}
+    syntax Bytes  ::= Keccak256 ( Bytes )       [function, hook(HASH.keccak256)]
+                    | "Sha2_256" "(" Bytes ")"  [function, hook(HASH.sha2_256 )]
+                    | RipEmd160 ( Bytes )       [function, hook(HASH.ripemd160)]
+```
+
+The `String -> String` overload returns:
+
+- 64-character hex-encoded string for `Sha2_256`
+- 64-character hex-encoded string for `Keccak256`
+- 40-character hex-encoded string for `RipEmd160`
+
+``` {.k .cryptography-hashes}
+    syntax String ::= Keccak256 ( String )      [function, hook(HASH.keccak256)]
+                    | "Sha2_256" "(" String ")" [function, hook(HASH.sha2_256 )]
+                    | RipEmd160 ( String )      [function, hook(HASH.ripemd160)]
+```
+
+``` {.k .cryptography-hashes}
 endmodule
 ```
 
