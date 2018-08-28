@@ -19,5 +19,6 @@ let do_hook
              | _ -> failwith failMsg
 
 let hook_sha2_256  = do_hook (Cryptokit.Hash.sha2 256)      "sha2_256"
+let hook_sha3_256  = do_hook (Cryptokit.Hash.sha3 256)      "sha3_256"
 let hook_keccak256 = do_hook (Cryptokit.Hash.keccak 256)    "keccak256"
 let hook_ripemd160 = do_hook (Cryptokit.Hash.ripemd160 ())  "ripemd160"
