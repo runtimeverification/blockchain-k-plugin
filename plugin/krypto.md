@@ -13,9 +13,9 @@ Cryptographic Hashes
 ``` {.k .cryptography-hashes}
 module HASH
     imports STRING-SYNTAX
-    syntax String ::= Keccak256 ( String )   [function, hook(HASH.keccak256)]
-                    | Sha256 ( String )      [function, hook(HASH.sha256)]
-                    | RipEmd160 ( String )   [function, hook(HASH.ripemd160)]
+    syntax String ::= Keccak256 ( String )     [function, hook(HASH.keccak256)]
+                    | RipEmd160 ( String )     [function, hook(HASH.ripemd160)]
+                    | "Sha2_256" "(" String ")" [function, hook(HASH.sha2_256)]
 endmodule
 ```
 

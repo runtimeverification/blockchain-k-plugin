@@ -1,7 +1,7 @@
 open Constants
 open Constants.K
 
-let hook_sha256    = HASH.hook_sha256
+let hook_sha256    = HASH.hook_sha2_256
 let hook_keccak256 = HASH.hook_keccak256
 let hook_ripemd160 = HASH.hook_ripemd160
 

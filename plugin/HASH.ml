@@ -7,11 +7,11 @@ let do_hash str h =
   String.iter (fun c -> Buffer.add_string buf (Printf.sprintf "%02x" (int_of_char c))) bytes;
   [String (Buffer.contents buf)]
 
-let hook_sha256 c lbl sort config ff = match c with
+let hook_sha2_256 c lbl sort config ff = match c with
   [String str] ->
   let h = Cryptokit.Hash.sha2 256 in
   do_hash str h
-| _ -> failwith "sha256"
+| _ -> failwith "sha2_256"
 
 let hook_keccak256 c lbl sort config ff = match c with
   [String str] ->
