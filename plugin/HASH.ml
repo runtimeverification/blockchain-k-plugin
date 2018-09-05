@@ -8,8 +8,7 @@ let do_hash_str (str: string) (h: Cryptokit.hash) : k =
   [String (Buffer.contents buf)]
 
 let do_hash_bytes (bytes: bytes) (h: Cryptokit.hash): k =
-  h#add_substring bytes 0 (Bytes.length bytes);
-  [Bytes (Bytes.of_string h#result)]
+  [Bytes (Bytes.of_string (Cryptokit.hash_string h (Bytes.to_string bytes)))]
 
 let do_hook
   (h: Cryptokit.hash) (failMsg: string)
