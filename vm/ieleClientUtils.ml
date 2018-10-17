@@ -134,11 +134,11 @@ let rec rlp_to_hex = function
   | Rlp.RlpData str -> Rlp.RlpData (Rope.of_string (to_hex (Bytes.of_string (Rope.to_string str))))
   | Rlp.RlpList l -> Rlp.RlpList (List.map rlp_to_hex l)
 
-let send_request ctx =
+let send_request ctx config =
   let addr = Unix.ADDR_INET(Unix.inet_addr_loopback,(int_of_string Sys.argv.(2))) in
-  World.send addr ctx
+  World.send addr ctx config
 
-let exec_transaction signed gasPrice gasLimit header (state: (string * Basic.json) list) (tx: Basic.json) : (string * Basic.json) list * call_result =
+let exec_transaction danseBlock signed gasPrice gasLimit header (state: (string * Basic.json) list) (tx: Basic.json) : (string * Basic.json) list * call_result =
   let gas_price = of_hex ~signed:signed (tx |> member gasPrice |> to_string) in
   let gas_provided = of_hex ~signed:signed (tx |> member gasLimit |> to_string) in
   let owner = tx |> member "to" |> to_string in
@@ -158,7 +158,8 @@ let exec_transaction signed gasPrice gasLimit header (state: (string * Basic.jso
   let txdata = pack_input args data in
   let g0 = VM.g0 txdata txcreate in
   let gas_provided = Z.sub (World.to_z_unsigned gas_provided) g0 in
-  let ctx = {recipient_addr=of_hex owner;caller_addr=origin;input_data=txdata;call_value=of_hex ~signed:signed value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config} in
-  let call_result = send_request ctx in
+  let config = {danse_block_number=World.of_z danseBlock} in
+  let ctx = {recipient_addr=of_hex owner;caller_addr=origin;input_data=txdata;call_value=of_hex ~signed:signed value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config config} in
+  let call_result = send_request ctx config in
   let post_state = update_state checkpoint_state call_result.modified_accounts call_result.deleted_accounts in
   post_state, call_result

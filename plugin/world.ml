@@ -192,9 +192,9 @@ let serve addr run_transaction : unit =
     timeout := !timeout + 1
   done
   
-let send addr ctx =
+let send addr ctx cfg =
   let chans = Unix.open_connection addr in
-  let hello = {version=_VERSION;config=Iele_config} in
+  let hello = {version=_VERSION;config=Iele_config cfg} in
     output_framed (snd chans) Msg_pb.encode_hello hello;
     output_framed (snd chans) Msg_pb.encode_call_context ctx;
     let result = ref None in

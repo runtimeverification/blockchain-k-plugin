@@ -126,7 +126,7 @@ let mine_block () =
     let tx_str = List.hd !pendingTx in
     pendingTx := List.tl !pendingTx;
     let tx = Yojson.Basic.from_string tx_str in
-    let post_state, call_result = exec_transaction false "gasprice" "gas" header initial_state tx in
+    let post_state, call_result = exec_transaction (Z.of_int 0) false "gasprice" "gas" header initial_state tx in
     (* TODO: apply gas for mine*)
     let new_block = {state=post_state; timestamp=timestamp} in
     blocks := new_block :: !blocks;

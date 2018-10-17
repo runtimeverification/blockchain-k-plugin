@@ -82,7 +82,7 @@ let z_of_rlp rlp =
 
 let unpack_input iscreate data config =
   match config with
-  | Iele_config -> 
+  | Iele_config _ -> 
   begin
     let rlp = Rlp.decode (Rope.of_string (Bytes.to_string data)) in
     match rlp with
@@ -112,7 +112,10 @@ let pack_output rets =
   Bytes.of_string (Rope.to_string (Rlp.encode rlp))
 
 let get_schedule blocknum config = match config with
-| Iele_config -> [KApply0(parse_klabel "ALBE_IELE-GAS")]
+| Iele_config cfg -> 
+  let danse = World.to_z cfg.danse_block_number in
+  if Z.geq blocknum danse then [KApply0(parse_klabel "DANSE_IELE-CONSTANTS")] else
+  [KApply0(parse_klabel "ALBE_IELE-CONSTANTS")]
 | Ethereum_config cfg ->
   let eip161 = World.to_z cfg.eip161_block_number in
   if Z.geq blocknum eip161 then [KApply0(parse_klabel "EIP158_EVM")] else
@@ -123,7 +126,7 @@ let get_schedule blocknum config = match config with
   [KApply0(parse_klabel "FRONTIER_EVM")]
 
 let get_output_data k_rets config = match config with
-| Iele_config ->
+| Iele_config _ ->
   begin
     match k_rets with [List(SortList,Lbl_List_,k_rets)] ->
     let z_rets = List.map k_to_z k_rets in
@@ -139,7 +142,7 @@ let get_output_data k_rets config = match config with
   end
 
 let get_error status config = match config with
-| Iele_config -> not (Z.equal status Z.zero)
+| Iele_config _ -> not (Z.equal status Z.zero)
 | Ethereum_config _ -> Z.equal status Z.zero
 
 let run_transaction (ctx: call_context) : call_result =
