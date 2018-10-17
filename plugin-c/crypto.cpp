@@ -6,6 +6,7 @@
 #include <gmp.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
+#include "runtime/alloc.h"
 
 using namespace CryptoPP;
 using namespace libff;
@@ -16,15 +17,15 @@ struct blockheader {
 };
 
 struct string {
-  struct blockheader h;
+  struct blockheader b;
   unsigned char data[0];
 };
 
 static string *hexEncode(unsigned char *digest, size_t len) {
   uint64_t hexLen = len * 2;
   char byte[3];
-  struct string *result = (struct string *)malloc(hexLen+8);
-  result->h.len = hexLen;
+  struct string *result = (struct string *)koreAllocToken(hexLen+8);
+  result->b.len = hexLen;
   for (size_t i = 0, j = 0; i < len; i++, j += 2) {
     sprintf(byte, "%02x", digest[i]);
     result->data[j] = byte[0];
@@ -36,26 +37,26 @@ static string *hexEncode(unsigned char *digest, size_t len) {
 struct string *hook_KRYPTO_keccak256(struct string *str) {
   Keccak_256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, str->h.len);
+  h.CalculateDigest(digest, str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha256(struct string *str) {
   SHA256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, str->h.len);
+  h.CalculateDigest(digest, str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_ripemd160(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
-  h.CalculateDigest(digest, str->data, str->h.len);
+  h.CalculateDigest(digest, str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct string *r, struct string *s) {
-  if (str->h.len != 32 || r->h.len != 32 || s->h.len != 32) {
+  if (len(str) != 32 || len(r) != 32 || len(s) != 32) {
     return hexEncode(nullptr, 0);
   }
   unsigned char sigArr[64];
@@ -80,8 +81,8 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
   unsigned char serialized[65];
   size_t len = sizeof(serialized);
   secp256k1_ec_pubkey_serialize(ctx, serialized, &len, &key, SECP256K1_EC_UNCOMPRESSED);
-  struct string *result = (struct string *)malloc(sizeof(struct string) + 64);
-  result->h.len = 64;
+  struct string *result = (struct string *)koreAlloc(sizeof(struct string) + 64);
+  result->b.len = 64;
   memcpy(result->data, serialized+1, 64);
   return result;
 }
@@ -176,7 +177,7 @@ g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
     pt.X.as_bigint().to_mpz(x);
     pt.Y.as_bigint().to_mpz(y);
   }
-  struct g1point *g1pt = (struct g1point *)malloc(sizeof(struct g1point));
+  struct g1point *g1pt = (struct g1point *)koreAlloc(sizeof(struct g1point));
   g1pt->h.len = hdr;
   g1pt->x = x;
   g1pt->y = y;
