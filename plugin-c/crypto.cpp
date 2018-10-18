@@ -76,6 +76,7 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
     return hexEncode(nullptr, 0);
   }
   secp256k1_ecdsa_recoverable_signature sig;
+  // matches evm and bitcoin's value of V, which is in the range 27-28
   if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigArr, v_long - 27)) {
     return hexEncode(nullptr, 0);
   }
