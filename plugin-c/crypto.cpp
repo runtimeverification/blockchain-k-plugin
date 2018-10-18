@@ -199,6 +199,7 @@ bool hook_KRYPTO_bn128valid(g1point *pt) {
   }
 }
 
+// this code mirrors https://github.com/ethereum/aleth/blob/master/libdevcrypto/LibSnark.cpp
 bool hook_KRYPTO_bn128g2valid(g2point *pt) {
   initBN128();
   try {
