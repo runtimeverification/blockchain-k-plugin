@@ -121,7 +121,7 @@ bool bn128_initialized = false;
 
 extern "C++" {
 
-void initBN128() {
+static void initBN128() {
   if (bn128_initialized) {
     return;
   }
@@ -130,7 +130,7 @@ void initBN128() {
   bn128_initialized = true;
 }
 
-alt_bn128_G1 getPoint(g1point *pt) {
+static alt_bn128_G1 getPoint(g1point *pt) {
   if (mpz_cmp_ui(pt->x, 0) == 0 && mpz_cmp_ui(pt->y, 0) == 0) {
     return alt_bn128_G1::zero();
   }
@@ -147,7 +147,7 @@ alt_bn128_G1 getPoint(g1point *pt) {
   return alt_bn128_G1{x, y, z};
 }
 
-alt_bn128_G2 getPoint(g2point *pt) {
+static alt_bn128_G2 getPoint(g2point *pt) {
   if (mpz_cmp_ui(pt->x0, 0) == 0 && mpz_cmp_ui(pt->x1, 0) == 0 
       && mpz_cmp_ui(pt->y0, 0) == 0 && mpz_cmp_ui(pt->y1, 0) == 0) {
     return alt_bn128_G2::zero();
@@ -166,7 +166,7 @@ alt_bn128_G2 getPoint(g2point *pt) {
   return alt_bn128_G2{x, y, z};
 }
 
-g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
+static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
   mpz_ptr x, y;
   if (pt.is_zero()) {
     x = (mpz_ptr) malloc(sizeof(*x));
