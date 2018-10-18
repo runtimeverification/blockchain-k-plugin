@@ -21,11 +21,16 @@ struct string {
   unsigned char data[0];
 };
 
+static inline string* allocString(size_t len) {
+  struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
+  result->b.len = len;
+  return result;
+}
+
 static string *hexEncode(unsigned char *digest, size_t len) {
   uint64_t hexLen = len * 2;
   char byte[3];
-  struct string *result = (struct string *)koreAllocToken(hexLen+8);
-  result->b.len = hexLen;
+  struct string *result = allocString(hexLen);
   for (size_t i = 0, j = 0; i < len; i++, j += 2) {
     sprintf(byte, "%02x", digest[i]);
     result->data[j] = byte[0];
@@ -81,8 +86,7 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
   unsigned char serialized[65];
   size_t len = sizeof(serialized);
   secp256k1_ec_pubkey_serialize(ctx, serialized, &len, &key, SECP256K1_EC_UNCOMPRESSED);
-  struct string *result = (struct string *)koreAlloc(sizeof(struct string) + 64);
-  result->b.len = 64;
+  struct string *result = allocString(64);
   memcpy(result->data, serialized+1, 64);
   return result;
 }
