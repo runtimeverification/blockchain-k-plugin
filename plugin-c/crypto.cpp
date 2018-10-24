@@ -13,17 +13,17 @@ using namespace libff;
 
 extern "C" {
 struct blockheader {
-  uint64_t len;
+  uint64_t hdr;
 };
 
 struct string {
-  struct blockheader b;
+  struct blockheader h;
   unsigned char data[0];
 };
 
 static inline string* allocString(size_t len) {
   struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
-  result->b.len = len;
+  set_len(result, len);
   return result;
 }
 
@@ -183,7 +183,7 @@ static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
     pt.Y.as_bigint().to_mpz(y);
   }
   struct g1point *g1pt = (struct g1point *)koreAlloc(sizeof(struct g1point));
-  g1pt->h.len = hdr;
+  g1pt->h.hdr = hdr;
   g1pt->x = x;
   g1pt->y = y;
   return g1pt;
@@ -212,14 +212,14 @@ bool hook_KRYPTO_bn128g2valid(g2point *pt) {
 
 g1point *hook_KRYPTO_bn128add(g1point *pt1, g1point *pt2) {
   initBN128();
-  return projectPoint(pt1->h.len, getPoint(pt1) + getPoint(pt2));
+  return projectPoint(pt1->h.hdr, getPoint(pt1) + getPoint(pt2));
 }
 
 g1point *hook_KRYPTO_bn128mul(g1point *pt, mpz_t scalar) {
   initBN128();
   bigint<alt_bn128_q_limbs> s(scalar);
   alt_bn128_G1 g1pt = getPoint(pt);
-  return projectPoint(pt->h.len, s * g1pt);
+  return projectPoint(pt->h.hdr, s * g1pt);
 }
 
 struct list;
