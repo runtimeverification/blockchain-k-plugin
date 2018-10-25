@@ -111,12 +111,6 @@ struct inj {
   void *data;
 };
 
-struct kseq {
-  struct blockheader h;
-  inj *inj;
-  void *dotk;
-};
-
 bool bn128_initialized = false;
 
 extern "C++" {
@@ -241,10 +235,10 @@ bool hook_KRYPTO_bn128ate(struct list *g1, struct list *g2) {
   mpz_init(bigi);
   alt_bn128_Fq12 accum = alt_bn128_Fq12::one();
   for (unsigned long i = 0; i < g1size_long; i++) {
-    kseq *injg1 = (kseq *)hook_LIST_get_long(g1, i);
-    kseq *injg2 = (kseq *)hook_LIST_get_long(g2, i);
-    alt_bn128_G1 g1pt = getPoint((g1point *)injg1->inj->data);
-    alt_bn128_G2 g2pt = getPoint((g2point *)injg2->inj->data);
+    inj *injg1 = (inj *)hook_LIST_get_long(g1, i);
+    inj *injg2 = (inj *)hook_LIST_get_long(g2, i);
+    alt_bn128_G1 g1pt = getPoint((g1point *)injg1->data);
+    alt_bn128_G2 g2pt = getPoint((g2point *)injg2->data);
     if (g1pt.is_zero() || g2pt.is_zero()) {
       continue;
     }
