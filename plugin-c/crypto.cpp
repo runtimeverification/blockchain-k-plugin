@@ -7,23 +7,15 @@
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
 #include "runtime/alloc.h"
+#include "runtime/header.h"
 
 using namespace CryptoPP;
 using namespace libff;
 
 extern "C" {
-struct blockheader {
-  uint64_t len;
-};
-
-struct string {
-  struct blockheader b;
-  unsigned char data[0];
-};
-
 static inline string* allocString(size_t len) {
   struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
-  result->b.len = len;
+  set_len(result, len);
   return result;
 }
 
@@ -42,21 +34,21 @@ static string *hexEncode(unsigned char *digest, size_t len) {
 struct string *hook_KRYPTO_keccak256(struct string *str) {
   Keccak_256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha256(struct string *str) {
   SHA256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_ripemd160(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
@@ -81,7 +73,7 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
     return hexEncode(nullptr, 0);
   }
   secp256k1_pubkey key;
-  if (!secp256k1_ecdsa_recover(ctx, &key, &sig, str->data)) {
+  if (!secp256k1_ecdsa_recover(ctx, &key, &sig, (unsigned char *)str->data)) {
     return hexEncode(nullptr, 0);
   }
   unsigned char serialized[65];
@@ -109,12 +101,6 @@ struct g2point {
 struct inj {
   struct blockheader h;
   void *data;
-};
-
-struct kseq {
-  struct blockheader h;
-  inj *inj;
-  void *dotk;
 };
 
 bool bn128_initialized = false;
@@ -183,7 +169,7 @@ static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
     pt.Y.as_bigint().to_mpz(y);
   }
   struct g1point *g1pt = (struct g1point *)koreAlloc(sizeof(struct g1point));
-  g1pt->h.len = hdr;
+  g1pt->h.hdr = hdr;
   g1pt->x = x;
   g1pt->y = y;
   return g1pt;
@@ -212,14 +198,14 @@ bool hook_KRYPTO_bn128g2valid(g2point *pt) {
 
 g1point *hook_KRYPTO_bn128add(g1point *pt1, g1point *pt2) {
   initBN128();
-  return projectPoint(pt1->h.len, getPoint(pt1) + getPoint(pt2));
+  return projectPoint(pt1->h.hdr, getPoint(pt1) + getPoint(pt2));
 }
 
 g1point *hook_KRYPTO_bn128mul(g1point *pt, mpz_t scalar) {
   initBN128();
   bigint<alt_bn128_q_limbs> s(scalar);
   alt_bn128_G1 g1pt = getPoint(pt);
-  return projectPoint(pt->h.len, s * g1pt);
+  return projectPoint(pt->h.hdr, s * g1pt);
 }
 
 struct list;
@@ -241,10 +227,10 @@ bool hook_KRYPTO_bn128ate(struct list *g1, struct list *g2) {
   mpz_init(bigi);
   alt_bn128_Fq12 accum = alt_bn128_Fq12::one();
   for (unsigned long i = 0; i < g1size_long; i++) {
-    kseq *injg1 = (kseq *)hook_LIST_get_long(g1, i);
-    kseq *injg2 = (kseq *)hook_LIST_get_long(g2, i);
-    alt_bn128_G1 g1pt = getPoint((g1point *)injg1->inj->data);
-    alt_bn128_G2 g2pt = getPoint((g2point *)injg2->inj->data);
+    inj *injg1 = (inj *)hook_LIST_get_long(g1, i);
+    inj *injg2 = (inj *)hook_LIST_get_long(g2, i);
+    alt_bn128_G1 g1pt = getPoint((g1point *)injg1->data);
+    alt_bn128_G2 g2pt = getPoint((g2point *)injg2->data);
     if (g1pt.is_zero() || g2pt.is_zero()) {
       continue;
     }
