@@ -7,6 +7,7 @@
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
 #include "runtime/alloc.h"
+#include "runtime/header.h"
 
 using namespace CryptoPP;
 using namespace libff;
