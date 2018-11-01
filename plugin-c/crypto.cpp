@@ -34,21 +34,21 @@ static string *hexEncode(unsigned char *digest, size_t len) {
 struct string *hook_KRYPTO_keccak256(struct string *str) {
   Keccak_256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha256(struct string *str) {
   SHA256 h;
   unsigned char digest[32];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_ripemd160(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
-  h.CalculateDigest(digest, str->data, len(str));
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }
 
@@ -73,7 +73,7 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
     return hexEncode(nullptr, 0);
   }
   secp256k1_pubkey key;
-  if (!secp256k1_ecdsa_recover(ctx, &key, &sig, str->data)) {
+  if (!secp256k1_ecdsa_recover(ctx, &key, &sig, (unsigned char *)str->data)) {
     return hexEncode(nullptr, 0);
   }
   unsigned char serialized[65];
