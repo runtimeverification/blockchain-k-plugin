@@ -13,15 +13,6 @@ using namespace CryptoPP;
 using namespace libff;
 
 extern "C" {
-struct blockheader {
-  uint64_t hdr;
-};
-
-struct string {
-  struct blockheader h;
-  unsigned char data[0];
-};
-
 static inline string* allocString(size_t len) {
   struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
   set_len(result, len);
