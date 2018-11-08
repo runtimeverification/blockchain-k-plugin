@@ -22,7 +22,8 @@ let code_is_modified acctID code =
 
 let account_is_modified selfdestruct _ acct =
 match acct with
-  [KApply5(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])] ->
+  [KApply5(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])]
+|  [KApply6(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],_,[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])] ->
   not (List.mem acctID selfdestruct) && (
     not (BLOCKCHAIN.Cache.account_exists acctID) ||
     BLOCKCHAIN.Cache.get_balance acctID <> balance ||
@@ -50,7 +51,8 @@ let k_to_storage k v =
 | _ -> failwith "Invalid values found where ints were expected"
 
 let k_to_mod_acct (acct: k) : modified_account = match acct with
-  [KApply5(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])] ->
+  [KApply5(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])]
+| [KApply6(Lbl'_LT_'account'_GT_',[KApply1(Lbl'_LT_'acctID'_GT_',[Int acctID])],[KApply1(Lbl'_LT_'balance'_GT_',[Int balance])],[KApply1(Lbl'_LT_'code'_GT_',code)],[KApply1(Lbl'_LT_'storage'_GT_',[Map(SortMap,Lbl_Map_,storage)])],_,[KApply1(Lbl'_LT_'nonce'_GT_',[Int nonce])])] ->
   let address = World.of_z_width 20 acctID in
   let nonce = World.of_z nonce in
   let balance = World.of_z balance in
@@ -69,10 +71,12 @@ let k_to_log (log: k) : log_entry = match log with
   [KApply3(LbllogEntry, [Int address], [List(SortList,Lbl_List_,topics)], data)] ->
   let z_topics = List.map k_to_z topics in
   let module Def = (val Plugin.get ()) in
-  (match data with
-  | [Bytes bytes_data] ->
+  let bytes_data = 
+    match Def.eval (KApply(LblunparseByteStack, [data])) [Bottom] with
+    | [String bytes] -> Bytes.of_string bytes
+    | _ -> failwith "Invalid value where string was expected"
+  in
   {address=World.of_z_width 20 address;topics=List.map (World.of_z_width 32) z_topics;data=bytes_data}
-  | _ -> failwith "Invalid value where Bytes was expected")
 | _ -> failwith "Invalid value found where SubstateLogEntry was expected"
 
 let z_of_rlp rlp =
