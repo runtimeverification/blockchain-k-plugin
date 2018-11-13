@@ -17,8 +17,8 @@ let test =
 
 let failed = ref false
 
-let test_transaction header (state: (string * Basic.json) list) (tx: Basic.json) (result: Basic.json) : (string * Basic.json) list =
-  let post_state, call_result = exec_transaction true "gasPrice" "gasLimit" header state tx in
+let test_transaction header danseBlock (state: (string * Basic.json) list) (tx: Basic.json) (result: Basic.json) : (string * Basic.json) list =
+  let post_state, call_result = exec_transaction danseBlock true "gasPrice" "gasLimit" header state tx in
   let expected_return = List.map (fun json -> of_hex ~signed:true (json |> to_string)) (result |> member "out" |> to_list) in
   let rets = unpack_output call_result.return_data in
   let actual_return = List.map (fun arg -> `String (Bytes.to_string arg)) rets in
@@ -56,7 +56,12 @@ let rec canonicalize assoc =
   | _, `Assoc a -> (k,`Assoc(sort_assoc_list (canonicalize a)))
   | _ -> k,v) assoc
 
-let test_block state block =
+let danse_block schedule = match schedule with
+| "Albe" -> Z.of_string "1000000000000000000000" (* dummy value which should be higher than the block number of any test, so as to force disable danse *)
+| "Danse" -> Z.of_int 0
+| _ -> failwith "unexpected schedule"
+
+let test_block danseBlock state block =
   let bh = block |> member "blockHeader" in
   let beneficiary = bh |> member "coinbase" |> to_string in
   let difficulty = bh |> member "difficulty" |> to_string in
@@ -66,7 +71,7 @@ let test_block state block =
   let block_header = {beneficiary=of_hex beneficiary;difficulty=of_hex ~signed:true difficulty;number=of_hex ~signed:true number;gas_limit=of_hex ~signed:true gas_limit;unix_timestamp=Z.to_int64 (World.to_z (of_hex ~signed:true timestamp))} in
   let transactions = block |> member "transactions" |> to_list in
   let results = block |> member "results" |> to_list in
-  List.fold_left2 (test_transaction block_header) state transactions results
+  List.fold_left2 (test_transaction block_header danseBlock) state transactions results
 
 let pre = test |> member "pre" |> to_assoc
 let blocks = test |> member "blocks" |> to_list
@@ -75,7 +80,7 @@ let json_blockhashes = test |> member "blockhashes" |> to_list
 let str_blockhashes = List.map to_string json_blockhashes
 let blockhashes = List.map of_hex str_blockhashes;;
 List.iter World.InMemoryWorldState.add_blockhash blockhashes;;
-let actual = sort_assoc_list (canonicalize (List.fold_left test_block pre blocks));;
+let actual = sort_assoc_list (canonicalize (List.fold_left (test_block (danse_block (test |> member "network" |> to_string))) pre blocks));;
 if expected <> actual then begin
   prerr_endline ("failed " ^ file ^ ": postState:\nexpected:" ^ Yojson.Basic.to_string (`Assoc expected) ^ "\nactual: " ^ Yojson.Basic.to_string (`Assoc actual));
   failed := true;
