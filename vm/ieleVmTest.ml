@@ -57,7 +57,7 @@ let rec canonicalize assoc =
   | _ -> k,v) assoc
 
 let danse_block schedule = match schedule with
-| "Albe" -> Z.of_string "1000000000000000000000"
+| "Albe" -> Z.of_string "1000000000000000000000" (* dummy value which should be higher than the block number of any test, so as to force disable danse *)
 | "Danse" -> Z.of_int 0
 | _ -> failwith "unexpected schedule"
 
