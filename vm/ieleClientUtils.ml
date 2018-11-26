@@ -2,6 +2,15 @@ open Yojson
 open Yojson.Basic.Util
 open Msg_types
 
+let g0_byte res b = match b with
+| '\000' -> res := Z.add !res (Z.of_int 4)
+| _ -> res := Z.add !res (Z.of_int 68)
+
+let g0 txdata txcreate =
+  let res = ref (Z.of_int (if txcreate then 53000 else 21000)) in
+  Bytes.iter (g0_byte res) txdata;
+  !res
+
 let hash () = Cryptokit.Hash.keccak 256
 
 let sort_assoc_list l =
@@ -79,11 +88,16 @@ let pack_input args str =
   let rlp = Rlp.RlpList[Rlp.RlpData (Rope.of_string str);Rlp.RlpList l] in
   Bytes.of_string (Rope.to_string (Rlp.encode rlp))
 
+let z_of_rlp rlp =
+  match rlp with
+  Rlp.RlpData rope -> World.to_z (Bytes.of_string (Rope.to_string rope))
+| Rlp.RlpList _ -> failwith "Invalid value where rlp-encoded string expected"
+
 let unpack_output data =
   let rlp = Rlp.decode (Rope.of_string (Bytes.to_string data)) in
   match rlp with
   Rlp.RlpList(rets) ->
-  List.map (fun rlp -> World.of_z (VM.z_of_rlp rlp)) rets
+  List.map (fun rlp -> World.of_z (z_of_rlp rlp)) rets
 | _ -> failwith "Invalid value where rlp-encoded return values expected"
 
 let rlp_of_bytes (b: bytes) : Rlp.t =
@@ -156,10 +170,12 @@ let exec_transaction danseBlock signed gasPrice gasLimit header (state: (string 
     tx |> member "function" |> to_string
   in
   let txdata = pack_input args data in
-  let g0 = VM.g0 txdata txcreate in
+  let g0 = g0 txdata txcreate in
   let gas_provided = Z.sub (World.to_z_unsigned gas_provided) g0 in
   let config = {danse_block_number=World.of_z danseBlock} in
   let ctx = {recipient_addr=of_hex owner;caller_addr=origin;input_data=txdata;call_value=of_hex ~signed:signed value;gas_price=gas_price;gas_provided=World.of_z gas_provided;block_header=Some header;config=Iele_config config} in
   let call_result = send_request ctx config in
   let post_state = update_state checkpoint_state call_result.modified_accounts call_result.deleted_accounts in
   post_state, call_result
+
+
