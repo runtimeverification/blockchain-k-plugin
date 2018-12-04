@@ -202,7 +202,7 @@ CallResult run_transaction(CallContext ctx) {
   void *arr[1];
   arr[0] = &init;
   block* init_config = (block *)evaluateFunctionSymbol(tag, arr);
-  block* final_config = take_steps_no_depth(init_config);
+  block* final_config = take_steps(-1, init_config);
   tag = getTagForSymbolName("LblextractConfig{}");
   arr[0] = final_config;
   tx_result* extracted = (tx_result *)evaluateFunctionSymbol(tag, arr);

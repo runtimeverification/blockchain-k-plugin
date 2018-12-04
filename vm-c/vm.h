@@ -9,7 +9,7 @@ extern "C" {
   block* hook_MAP_lookup(map *m, block* key);
   map hook_MAP_element(block*, block*);
   map hook_MAP_update(map *, block*, block*);
-  block* take_steps_no_depth(block*);
+  block* take_steps(uint64_t, block*);
   string* makeString(const char *, ssize_t len=-1);
   mpz_ptr hook_BLOCKCHAIN_getBalance(mpz_ptr);
   mpz_ptr hook_BLOCKCHAIN_getNonce(mpz_ptr);
