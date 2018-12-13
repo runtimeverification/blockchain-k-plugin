@@ -13,6 +13,7 @@ struct account {
   zinj* balance;
   inj* code;
   mapinj *storage;
+  mapinj *origStorage;
   zinj *nonce;
 };
 
@@ -31,7 +32,7 @@ struct log {
   blockheader h;
   mpz_ptr acct;
   list topics;
-  string *data;
+  block *data;
 };
 
 struct input_data {
@@ -44,7 +45,7 @@ struct accounts;
 
 struct tx_result {
   blockheader h;
-  list rets;
+  string* rets;
   mpz_ptr gas;
   mpz_ptr refund;
   mpz_ptr status;
@@ -54,7 +55,7 @@ struct tx_result {
   list touched;
 };
 
-std::string get_output_data(list *);
+std::string get_output_data(string**);
 
 extern uint32_t unparseByteStack;
 

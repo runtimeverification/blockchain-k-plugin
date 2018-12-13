@@ -13,6 +13,20 @@ static std::map<mpz_class, Code *> code;
 static std::map<mpz_class, Blockhash *> blockhash;
 
 void clear_cache() {
+  for (const auto& entry : accounts) {
+    delete entry.second;
+  }
+  for (const auto& entry : code) {
+    delete entry.second;
+  }
+  for (const auto& entry : blockhash) {
+    delete entry.second;
+  }
+  for (const auto& entry : storage) {
+    for (const auto& entry2 : entry.second) {
+      delete entry2.second;
+    }
+  }
   accounts.clear();
   storage.clear();
   code.clear();
@@ -20,33 +34,42 @@ void clear_cache() {
 }
 
 static Account* get_account(mpz_t acctID) {
-  Account* acct = accounts[mpz_class(acctID)];
+  mpz_class id(acctID);
+  Account* acct = accounts[id];
   if (!acct) {
     acct = World::get_account(of_z_width(20, acctID));
+    accounts[id] = acct;
   }
   return acct;
 }
 
 static StorageData* get_storage_data(mpz_t acctID, mpz_t index) {
-  StorageData *data = storage[mpz_class(acctID)][mpz_class(index)];
+  mpz_class id(acctID);
+  mpz_class idx(index);
+  StorageData *data = storage[id][idx];
   if (!data) {
     data = World::get_storage_data(of_z_width(20, acctID), of_z(index));
+    storage[id][idx] = data;
   }
   return data;
 }
 
 static Code* get_code(mpz_t acctID) {
-  Code* c = code[mpz_class(acctID)];
+  mpz_class id(acctID);
+  Code* c = code[id];
   if (!c) {
     c = World::get_code(of_z_width(20, acctID));
+    code[id] = c;
   }
   return c;
 }
 
 static Blockhash* get_blockhash(mpz_t offset) {
-  Blockhash* h = blockhash[mpz_class(offset)];
+  mpz_class off(offset);
+  Blockhash* h = blockhash[off];
   if (!h) {
     h = World::get_blockhash(mpz_get_ui(offset));
+    blockhash[off] = h;
   }
   return h;
 }
@@ -85,4 +108,8 @@ mpz_ptr hook_BLOCKCHAIN_getBlockhash(mpz_t offset) {
   return to_z_unsigned(h->hash());
 }
 
+bool hook_BLOCKCHAIN_accountExists(mpz_t acctID) {
+  Account *acct = get_account(acctID);
+  return acct->balance().size() != 0 || acct->nonce().size() != 0;
+}
 }

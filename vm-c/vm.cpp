@@ -3,9 +3,9 @@
 #include "proto/msg.pb.h"
 #include "runtime/header.h"
 #include "runtime/alloc.h"
+#include "vm.h"
 #include "semantics.h"
 #include "world.h"
-#include "vm.h"
 
 using namespace io::iohk::ethereum::extvm;
 
@@ -105,8 +105,10 @@ bool code_is_modified(mpz_ptr acctID, block* code) {
   arr[0] = code;
   arr[1] = zero;
   arr[2] = zero;
-  bool isCodeEmpty = *(bool *)evaluateFunctionSymbol(tag, arr);
-  return hook_BLOCKCHAIN_isCodeEmpty(acctID) && !isCodeEmpty;
+  bool *isCodeEmptyPtr = (bool *)evaluateFunctionSymbol(tag, arr);
+  bool isCodeEmpty = *isCodeEmptyPtr;
+  free(isCodeEmptyPtr);
+  return (!hook_BLOCKCHAIN_accountExists(acctID) || hook_BLOCKCHAIN_isCodeEmpty(acctID)) && !isCodeEmpty;
 }
 
 bool account_is_modified(std::vector<mpz_ptr> selfdestruct, account *acct) {
@@ -114,6 +116,9 @@ bool account_is_modified(std::vector<mpz_ptr> selfdestruct, account *acct) {
     if (mpz_cmp(deleted, acct->acctID->data) == 0) {
       return false;
     }
+  }
+  if (!hook_BLOCKCHAIN_accountExists(acct->acctID->data)) {
+    return true;
   }
   if (mpz_cmp(hook_BLOCKCHAIN_getBalance(acct->acctID->data), acct->balance->data) != 0) {
     return true;
@@ -171,7 +176,6 @@ bool get_error(mpz_ptr);
 
 CallResult run_transaction(CallContext ctx) {
   std::cerr << ctx.DebugString() << std::endl;
-  clear_cache();
   bool iscreate = ctx.recipientaddr().size() == 0;
   mpz_ptr to = to_z_unsigned(ctx.recipientaddr());
   mpz_ptr from = to_z_unsigned(ctx.calleraddr());
@@ -238,6 +242,7 @@ CallResult run_transaction(CallContext ctx) {
     k_to_log(log, log_pb);
   }
   std::cerr << result.DebugString() << std::endl;
+  clear_cache();
   return result;
 }
  
