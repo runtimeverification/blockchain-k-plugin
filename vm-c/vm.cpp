@@ -9,7 +9,7 @@
 
 using namespace io::iohk::ethereum::extvm;
 
-std::vector<mpz_ptr> k_to_z(list* l) {
+std::vector<mpz_ptr> k_to_zs(list* l) {
   std::vector<mpz_ptr> result;
   for (size_t i = 0; i < hook_LIST_size_long(l); i++) {
      zinj* elem = (zinj*) hook_LIST_get_long(l, i);
@@ -18,7 +18,7 @@ std::vector<mpz_ptr> k_to_z(list* l) {
   return result;
 }
 
-std::vector<account *> k_to_acct(map* m) {
+std::vector<account *> k_to_accts(map* m) {
   list l = hook_MAP_values(m);
   std::vector<account *> result;
   for (size_t i = 0; i < hook_LIST_size_long(&l); i++) {
@@ -28,7 +28,7 @@ std::vector<account *> k_to_acct(map* m) {
   return result;
 }
 
-std::vector<log *> k_to_log(list* l) {
+std::vector<log *> k_to_logs(list* l) {
   std::vector<log*> result;
   for (size_t i = 0; i < hook_LIST_size_long(l); i++) {
      loginj* elem = (loginj*) hook_LIST_get_long(l, i);
@@ -39,7 +39,7 @@ std::vector<log *> k_to_log(list* l) {
 
 void k_to_log(log* log, LogEntry *pb) {
   std::string address = of_z_width(20, log->acct);
-  std::vector<mpz_ptr> topics = k_to_z(&log->topics);
+  std::vector<mpz_ptr> topics = k_to_zs(&log->topics);
   void *arr[1];
   arr[0] = logData(log);
   string* token = (string*)evaluateFunctionSymbol(unparseByteStack, arr);
@@ -216,10 +216,10 @@ CallResult run_transaction(CallContext ctx) {
   std::string refund = of_z(extracted->refund);
   std::string status = of_z(extracted->status);
   bool error = get_error(extracted->status);
-  auto selfdestruct = k_to_z(&extracted->selfdestruct);
-  auto touched = k_to_z(&extracted->touched);
-  auto accounts = k_to_acct(&extracted->accounts->data);
-  auto logs = k_to_log(&extracted->logs);
+  auto selfdestruct = k_to_zs(&extracted->selfdestruct);
+  auto touched = k_to_zs(&extracted->touched);
+  auto accounts = k_to_accts(&extracted->accounts->data);
+  auto logs = k_to_logs(&extracted->logs);
   CallResult result;
   result.set_returndata(ret_data);
   result.set_returncode(status);
