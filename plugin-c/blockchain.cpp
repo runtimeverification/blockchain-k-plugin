@@ -7,26 +7,12 @@
 
 using namespace io::iohk::ethereum::extvm;
 
-static std::map<mpz_class, Account *> accounts;
-static std::map<mpz_class, std::map<mpz_class, StorageData *>> storage;
-static std::map<mpz_class, Code *> code;
-static std::map<mpz_class, Blockhash *> blockhash;
+static std::map<mpz_class, std::unique_ptr<Account>> accounts;
+static std::map<mpz_class, std::map<mpz_class, std::unique_ptr<StorageData>>> storage;
+static std::map<mpz_class, std::unique_ptr<Code>> code;
+static std::map<mpz_class, std::unique_ptr<Blockhash>> blockhash;
 
 void clear_cache() {
-  for (const auto& entry : accounts) {
-    delete entry.second;
-  }
-  for (const auto& entry : code) {
-    delete entry.second;
-  }
-  for (const auto& entry : blockhash) {
-    delete entry.second;
-  }
-  for (const auto& entry : storage) {
-    for (const auto& entry2 : entry.second) {
-      delete entry2.second;
-    }
-  }
   accounts.clear();
   storage.clear();
   code.clear();
@@ -35,10 +21,10 @@ void clear_cache() {
 
 static Account* get_account(mpz_t acctID) {
   mpz_class id(acctID);
-  Account* acct = accounts[id];
+  Account* acct = accounts[id].get();
   if (!acct) {
     acct = World::get_account(of_z_width(20, acctID));
-    accounts[id] = acct;
+    accounts[id] = std::unique_ptr<Account>(acct);
   }
   return acct;
 }
@@ -46,30 +32,30 @@ static Account* get_account(mpz_t acctID) {
 static StorageData* get_storage_data(mpz_t acctID, mpz_t index) {
   mpz_class id(acctID);
   mpz_class idx(index);
-  StorageData *data = storage[id][idx];
+  StorageData *data = storage[id][idx].get();
   if (!data) {
     data = World::get_storage_data(of_z_width(20, acctID), of_z(index));
-    storage[id][idx] = data;
+    storage[id][idx] = std::unique_ptr<StorageData>(data);
   }
   return data;
 }
 
 static Code* get_code(mpz_t acctID) {
   mpz_class id(acctID);
-  Code* c = code[id];
+  Code* c = code[id].get();
   if (!c) {
     c = World::get_code(of_z_width(20, acctID));
-    code[id] = c;
+    code[id] = std::unique_ptr<Code>(c);
   }
   return c;
 }
 
 static Blockhash* get_blockhash(mpz_t offset) {
   mpz_class off(offset);
-  Blockhash* h = blockhash[off];
+  Blockhash* h = blockhash[off].get();
   if (!h) {
     h = World::get_blockhash(mpz_get_ui(offset));
-    blockhash[off] = h;
+    blockhash[off] = std::unique_ptr<Blockhash>(h);
   }
   return h;
 }
