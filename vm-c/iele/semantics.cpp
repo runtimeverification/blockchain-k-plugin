@@ -12,13 +12,13 @@ bool get_error(mpz_ptr status) {
 }
 
 std::string get_output_data(list *l) {
-  uint32_t tag = getTagForSymbolName("LblListToInts{}");
+  static uint32_t tag = getTagForSymbolName("LblListToInts{}");
   void *arr[1];
   arr[0] = l;
   block* ints = (block*)evaluateFunctionSymbol(tag, arr);
-  tag = getTagForSymbolName("LblrlpEncodeInts{}");
+  static uint32_t tag2 = getTagForSymbolName("LblrlpEncodeInts{}");
   arr[0] = ints;
-  string* token = (string*)evaluateFunctionSymbol(tag, arr);
+  string* token = (string*)evaluateFunctionSymbol(tag2, arr);
   return std::string(token->data, len(token));
 }
 
@@ -35,7 +35,7 @@ uint64_t get_schedule(mpz_ptr number, CallContext *ctx) {
 
 input_data unpack_input(bool iscreate, std::string data) {
   string* token = makeString(data.c_str(), data.size());
-  uint32_t tag = getTagForSymbolName("LblrlpDecode{}");
+  static uint32_t tag = getTagForSymbolName("LblrlpDecode{}");
   void* arr[1];
   arr[0] = token;
   json* decoded = (json*) evaluateFunctionSymbol(tag, arr);
@@ -53,8 +53,5 @@ input_data unpack_input(bool iscreate, std::string data) {
   return res;
 }
 
-const char *kcellinjName() {
-  return "inj{SortIELESimulation{}, SortKItem{}}";
-}
-
+uint32_t kcellInjTag = getTagForSymbolName("inj{SortIELESimulation{}, SortKItem{}}");
 uint32_t unparseByteStack = getTagForSymbolName("LblunparseByteStack{}");

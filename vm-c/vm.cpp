@@ -53,21 +53,20 @@ void k_to_log(log* log, LogEntry *pb) {
 block* configvar(const char *name) {
   stringinj* inj = (stringinj*)koreAlloc(sizeof(stringinj));
   inj->data = makeString(name);
-  uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
+  static uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
   inj->h = getBlockHeaderForSymbol(tag);
   return (block*)inj;
 }
 
-const char* kcellinjName(void);
+extern uint32_t kcellInjTag;
 
 block* make_k_cell(bool iscreate, mpz_ptr to, mpz_ptr from, string *code, block *args, mpz_ptr value, mpz_ptr gasprice, mpz_ptr gas, mpz_ptr beneficiary, mpz_ptr difficulty, mpz_ptr number, mpz_ptr gaslimit, mpz_ptr timestamp, string *function) {
   kcellinj *inj = (kcellinj *)koreAlloc(sizeof(kcellinj));
-  uint32_t tag = getTagForSymbolName(kcellinjName());
-  inj->h = getBlockHeaderForSymbol(tag);
+  inj->h = getBlockHeaderForSymbol(kcellInjTag);
   kcell* runvm = (kcell *)koreAlloc(sizeof(kcell));
   inj->data = runvm;
-  tag = getTagForSymbolName("LblrunVM{}");
-  runvm->h = getBlockHeaderForSymbol(tag);
+  static uint32_t tag2 = getTagForSymbolName("LblrunVM{}");
+  runvm->h = getBlockHeaderForSymbol(tag2);
   runvm->iscreate = iscreate;
   runvm->to = to;
   runvm->from = from;
@@ -98,7 +97,7 @@ bool storage_is_modified(mpz_ptr acctID, map* storage) {
 }
 
 bool code_is_modified(mpz_ptr acctID, block* code) {
-  uint32_t tag = getTagForSymbolName("LblaccountEmpty{}");
+  static uint32_t tag = getTagForSymbolName("LblaccountEmpty{}");
   void* arr[3];
   mpz_t zero;
   mpz_init(zero);
@@ -136,7 +135,7 @@ bool account_is_modified(std::vector<mpz_ptr> selfdestruct, account *acct) {
 }
 
 std::string get_code_bytes(block* code) {
-  uint32_t tag = getTagForSymbolName("LblcontractBytes{}");
+  static uint32_t tag = getTagForSymbolName("LblcontractBytes{}");
   void* arr[1];
   arr[0] = code;
   string *token = (string*)evaluateFunctionSymbol(tag, arr);
@@ -189,27 +188,29 @@ CallResult run_transaction(CallContext ctx) {
   mpz_ptr gaslimit = to_z_unsigned(ctx.blockheader().gaslimit());
   mpz_t timestamp;
   mpz_init_set_ui(timestamp, ctx.blockheader().unixtimestamp());
-  uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
+  static uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
   inj *modeinj = (inj *)koreAlloc(sizeof(inj));
-  modeinj->h = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
+  static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
+  modeinj->h = hdr;
   modeinj->data = (block*)mode;
   uint64_t schedule = get_schedule(number, &ctx);
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
-  scheduleinj->h = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
+  static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
+  scheduleinj->h = hdr2;
   scheduleinj->data = (block*)schedule;
   block* inj = make_k_cell(iscreate, to, from, in.code, in.args, value, gasprice, gas, beneficiary, difficulty, number, gaslimit, timestamp, in.function);
-  uint32_t tag = getTagForSymbolName("kseq{}");
+  static uint32_t tag = getTagForSymbolName("kseq{}");
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map init = hook_MAP_update(&withMode, configvar("$PGM"), inj);
-  tag = getTagForSymbolName("LblinitGeneratedTopCell{}");
+  static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
-  block* init_config = (block *)evaluateFunctionSymbol(tag, arr);
+  block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(-1, init_config);
-  tag = getTagForSymbolName("LblextractConfig{}");
+  static uint32_t tag3 = getTagForSymbolName("LblextractConfig{}");
   arr[0] = final_config;
-  tx_result* extracted = (tx_result *)evaluateFunctionSymbol(tag, arr);
+  tx_result* extracted = (tx_result *)evaluateFunctionSymbol(tag3, arr);
   std::string ret_data = get_output_data(&extracted->rets);
   std::string gasLeft = of_z(extracted->gas);
   std::string refund = of_z(extracted->refund);

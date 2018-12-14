@@ -45,8 +45,5 @@ input_data unpack_input(bool iscreate, std::string data) {
   return res;
 }
 
-const char *kcellinjName() {
-  return "inj{SortEthereumSimulation{}, SortKItem{}}";
-}
-
+uint32_t kcellInjTag = getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}");
 uint32_t unparseByteStack = getTagForSymbolName("LblunparseByteStack{}");
