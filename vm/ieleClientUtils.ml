@@ -177,5 +177,3 @@ let exec_transaction danseBlock signed gasPrice gasLimit header (state: (string 
   let call_result = send_request ctx config in
   let post_state = update_state checkpoint_state call_result.modified_accounts call_result.deleted_accounts in
   post_state, call_result
-
-
