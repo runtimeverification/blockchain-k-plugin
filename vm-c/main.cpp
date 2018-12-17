@@ -113,8 +113,8 @@ int main(int argc, char **argv) {
         os.write((char *)&len, 4) << buf3;
         os.flush();
       }
-    } else {
-      std::cerr << h.DebugString() << std::endl;
+    } else if (success) {
+      std::cerr << "Invalid protobuf version, found " << h.version() << std::endl;
     }
     if(shutdown(clientsock, SHUT_RD)) {
       perror("shutdown");
