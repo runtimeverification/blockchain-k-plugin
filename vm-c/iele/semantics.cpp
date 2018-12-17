@@ -24,13 +24,15 @@ std::string get_output_data(list *l) {
 
 uint64_t get_schedule(mpz_ptr number, CallContext *ctx) {
   mpz_ptr danse = to_z(ctx->ieleconfig().danseblocknumber());
-  const char *name;
+  static uint32_t danse_tag = getTagForSymbolName("LblDANSE'Unds'IELE-CONSTANTS'Unds'{}");
+  static uint32_t albe_tag = getTagForSymbolName("LblALBE'Unds'IELE-CONSTANTS'Unds'{}");
+  uint32_t tag;
   if (mpz_cmp(number, danse) >= 0) {
-    name = "LblDANSE'Unds'IELE-CONSTANTS'Unds'{}";
+    tag = danse_tag;
   } else {
-    name = "LblALBE'Unds'IELE-CONSTANTS'Unds'{}";
+    tag = albe_tag;
   }
-  return (((uint64_t)getTagForSymbolName(name)) << 32) | 1;
+  return (((uint64_t)tag) << 32) | 1;
 }
 
 input_data unpack_input(bool iscreate, std::string data) {
