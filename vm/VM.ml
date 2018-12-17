@@ -192,12 +192,3 @@ let run_transaction (ctx: call_context) : call_result =
   let logs = List.map k_to_log k_logs in
   {return_data=ret_data;return_code=status;gas_remaining=gas;gas_refund=refund;error=error;modified_accounts=mod_accounts;deleted_accounts=deleted_accounts;touched_accounts=touched_accounts;logs=logs})
 | k -> prerr_endline (Prelude.print_k k); failwith "Unexpected value where vmResult expected"
-
-let g0_byte res b = match b with
-| '\000' -> res := Z.add !res (Z.of_int 4)
-| _ -> res := Z.add !res (Z.of_int 68)
-
-let g0 txdata txcreate =
-  let res = ref (Z.of_int (if txcreate then 53000 else 21000)) in
-  Bytes.iter (g0_byte res) txdata;
-  !res
