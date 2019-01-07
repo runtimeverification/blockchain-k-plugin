@@ -2,6 +2,7 @@
 #include <crypto++/keccak.h>
 #include <crypto++/ripemd.h>
 #include <crypto++/sha.h>
+#include <crypto++/sha3.h>
 #include <secp256k1_recovery.h>
 #include <gmp.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
@@ -31,6 +32,33 @@ static string *hexEncode(unsigned char *digest, size_t len) {
   return result;
 }
 
+static string *raw(unsigned char *digest, size_t len) {
+  struct string *result = allocString(len);
+  memcpy(result->data, digest, len);
+  return result;
+}
+
+struct string *hook_KRYPTO_sha3raw(struct string *str) {
+  SHA3_256 h;
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest)); 
+}
+
+struct string *hook_KRYPTO_sha3(struct string *str) {
+  SHA3_256 h;
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
+}
+
+struct string *hook_KRYPTO_keccak256raw(struct string *str) {
+  Keccak_256 h;
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest)); 
+}
+
 struct string *hook_KRYPTO_keccak256(struct string *str) {
   Keccak_256 h;
   unsigned char digest[32];
@@ -38,11 +66,25 @@ struct string *hook_KRYPTO_keccak256(struct string *str) {
   return hexEncode(digest, sizeof(digest));
 }
 
+struct string *hook_KRYPTO_sha256raw(struct string *str) {
+  SHA256 h;
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest)); 
+}
+
 struct string *hook_KRYPTO_sha256(struct string *str) {
   SHA256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
+}
+
+struct string *hook_KRYPTO_ripemd160raw(struct string *str) {
+  RIPEMD160 h;
+  unsigned char digest[20];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest)); 
 }
 
 struct string *hook_KRYPTO_ripemd160(struct string *str) {
