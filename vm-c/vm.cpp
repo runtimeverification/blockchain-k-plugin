@@ -203,7 +203,7 @@ CallResult run_transaction(CallContext ctx) {
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map init = hook_MAP_update(&withMode, configvar("$PGM"), inj);
-  static uint32_t tag2 = getTagForSymbolName("LblinitKevmCell{}");
+  static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
