@@ -171,7 +171,7 @@ let run_transaction (ctx: call_context) : call_result =
   let kcell = [KApply14(LblrunVM,[Bool iscreate],[Int z_to],[Int z_from],[String str_code],k_args,[Int z_value],[Int z_gasprice],[Int z_gas],[Int z_beneficiary],[Int z_difficulty],[Int z_number],[Int z_gaslimit],[Int z_timestamp],[String function_])] in
   let map = KMap.add [KToken(SortKConfigVar, "$PGM")] kcell (KMap.add [KToken(SortKConfigVar, "$MODE")] mode (KMap.singleton [KToken(SortKConfigVar, "$SCHEDULE")] schedule)) in
   let module Def = (val Plugin.get ()) in
-  let init_config = Def.eval (KApply(LblinitGeneratedTopCell, [[Map(SortMap,Lbl_Map_,map)]])) [Bottom] in
+  let init_config = Def.eval (KApply(LblinitKevmCell, [[Map(SortMap,Lbl_Map_,map)]])) [Bottom] in
   let final_config,_ = Run.run_no_thread_opt init_config (-1) in
   let extracted =
   try Def.eval (KApply(LblextractConfig, [final_config])) [Bottom]
