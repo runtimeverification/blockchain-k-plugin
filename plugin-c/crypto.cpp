@@ -1,8 +1,8 @@
 #include <cstdint>
-#include <crypto++/keccak.h>
-#include <crypto++/ripemd.h>
-#include <crypto++/sha.h>
-#include <crypto++/sha3.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/ripemd.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/sha3.h>
 #include <secp256k1_recovery.h>
 #include <gmp.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
