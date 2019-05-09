@@ -17,7 +17,9 @@ CallResult run_transaction(CallContext ctx);
 
 extern "C" {
   void freeAllKoreMem(void);
+  void setKoreMemoryFunctionsForGMP(void);
 }
+
 
 int main(int argc, char **argv) {
   std::string usage = std::string("Usage: ") + argv[0] + " PORT BIND_ADDRESS";
@@ -36,7 +38,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  mp_set_memory_functions(koreAllocOld, koreReallocOld, koreFree);
+  setKoreMemoryFunctionsForGMP();
 
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
