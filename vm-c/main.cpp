@@ -68,6 +68,13 @@ int main(int argc, char **argv) {
     return 1;
   }
   sockaddr_in peer;
+  sockaddr_in named;
+  socklen_t len = sizeof(named);
+  if (getsockname(sock, (sockaddr *)&named, &len) == -1) {
+    perror("getsockname");
+    return 1;
+  }
+  std::cerr << "VM Server listening at tcp://" << argv[2] << ":" << ntohs(named.sin_port) << std::endl;
   while(1) {
     socklen_t len = sizeof(peer);
     int clientsock = accept(sock, (sockaddr *)&peer, &len);
@@ -90,6 +97,7 @@ int main(int argc, char **argv) {
     Hello h;
     bool success = h.ParseFromString(buf);
     if (success && h.version() == "2.0") {
+      std::cerr << "Received Hello:" << std::endl << h.DebugString() << std::endl;
       while(1) {
         is.read((char *)&len, 4);
         if (is.eof()) {
