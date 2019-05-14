@@ -5,7 +5,7 @@
 #include "world.h"
 #include "runtime/header.h"
 
-using namespace io::iohk::ethereum::extvm;
+using namespace org::kframework::kevm::extvm;
 
 static std::map<mpz_class, std::unique_ptr<Account>> accounts;
 static std::map<mpz_class, std::map<mpz_class, std::unique_ptr<StorageData>>> storage;

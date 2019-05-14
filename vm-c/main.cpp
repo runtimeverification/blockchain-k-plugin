@@ -11,7 +11,7 @@
 extern std::ostream *vm_out_chan;
 extern std::istream *vm_in_chan;
 
-using namespace io::iohk::ethereum::extvm;
+using namespace org::kframework::kevm::extvm;
 
 CallResult run_transaction(CallContext ctx);
 
