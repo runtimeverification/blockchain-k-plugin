@@ -1,5 +1,5 @@
 syntax = "proto3";
-package io.iohk.ethereum.extvm;
+package org.kframework.kevm.extvm;
 
 message Hello {
   string version = 1;
