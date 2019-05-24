@@ -45,8 +45,11 @@ message EthereumConfig {
   bytes eip150BlockNumber = 3;
   bytes eip160BlockNumber = 4;
   bytes eip161BlockNumber = 5;
-  bytes maxCodeSize = 6;
-  bytes accountStartNonce = 7;
+  bytes byzantiumBlockNumber = 6;
+  bytes constantinopleBlockNumber = 7;
+  bytes petersburgBlockNumber = 8;
+  bytes maxCodeSize = 9;
+  bytes accountStartNonce = 10;
 }
 
 message IeleConfig {
