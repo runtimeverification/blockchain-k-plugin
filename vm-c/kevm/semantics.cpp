@@ -17,24 +17,42 @@ std::string get_output_data(string **sptr) {
 }
 
 uint64_t get_schedule(mpz_ptr number, CallContext *ctx) {
-  mpz_ptr eip161 = to_z(ctx->ethereumconfig().eip161blocknumber());
+  mpz_ptr petersburg = to_z(ctx->ethereumconfig().petersburgblocknumber());
+  static uint32_t petersburg_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+  static uint32_t constantinople_tag = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
+  static uint32_t byzantium_tag = getTagForSymbolName("LblBYZANTIUM'Unds'EVM{}");
   static uint32_t eip158_tag = getTagForSymbolName("LblEIP158'Unds'EVM{}");
   static uint32_t eip150_tag = getTagForSymbolName("LblEIP150'Unds'EVM{}");
   static uint32_t homestead_tag = getTagForSymbolName("LblHOMESTEAD'Unds'EVM{}");
   static uint32_t frontier_tag = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
   uint32_t tag;
-  if (mpz_cmp(number, eip161) >= 0) {
-    tag = eip158_tag;
+  if (mpz_cmp(number, petersburg) >= 0) {
+    tag = petersburg_tag;
   } else {
-    mpz_ptr eip150 = to_z(ctx->ethereumconfig().eip150blocknumber());
-    if (mpz_cmp(number, eip150) >= 0) {
-      tag = eip150_tag;
+    mpz_ptr constantinople = to_z(ctx->ethereumconfig().constantinopleblocknumber());
+    if (mpz_cmp(number, constantinople) >= 0) {
+      tag = constantinople_tag;
     } else {
-      mpz_ptr homestead = to_z(ctx->ethereumconfig().homesteadblocknumber());
-      if (mpz_cmp(number, homestead) >= 0) {
-        tag = homestead_tag;
+      mpz_ptr byzantium = to_z(ctx->ethereumconfig().byzantiumblocknumber());
+      if (mpz_cmp(number, byzantium) >= 0) {
+        tag = byzantium_tag;
       } else {
-        tag = frontier_tag;
+        mpz_ptr eip161 = to_z(ctx->ethereumconfig().eip161blocknumber());
+        if (mpz_cmp(number, eip161) >= 0) {
+          tag = eip158_tag;
+        } else {
+          mpz_ptr eip150 = to_z(ctx->ethereumconfig().eip150blocknumber());
+          if (mpz_cmp(number, eip150) >= 0) {
+            tag = eip150_tag;
+          } else {
+            mpz_ptr homestead = to_z(ctx->ethereumconfig().homesteadblocknumber());
+            if (mpz_cmp(number, homestead) >= 0) {
+              tag = homestead_tag;
+            } else {
+              tag = frontier_tag;
+            }
+          }
+        }
       }
     }
   }
