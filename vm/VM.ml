@@ -121,10 +121,10 @@ let get_schedule blocknum config = match config with
   if Z.geq blocknum danse then [KApply0(parse_klabel "DANSE_IELE-CONSTANTS")] else
   [KApply0(parse_klabel "ALBE_IELE-CONSTANTS")]
 | Ethereum_config cfg ->
-  let eip161 = World.to_z cfg.eip161_block_number in
-  if Z.geq blocknum eip161 then [KApply0(parse_klabel "EIP158_EVM")] else
-  let eip150 = World.to_z cfg.eip150_block_number in
-  if Z.geq blocknum eip150 then [KApply0(parse_klabel "EIP150_EVM")] else
+  let spuriousDragon = World.to_z cfg.eip161_block_number in
+  if Z.geq blocknum spuriousDragon then [KApply0(parse_klabel "SPURIOUS_DRAGON_EVM")] else
+  let tangerineWhistle = World.to_z cfg.eip150_block_number in
+  if Z.geq blocknum tangerineWhistle then [KApply0(parse_klabel "TANGERINE_WHISTLE_EVM")] else
   let homestead = World.to_z cfg.homestead_block_number in
   if Z.geq blocknum homestead then [KApply0(parse_klabel "HOMESTEAD_EVM")] else
   [KApply0(parse_klabel "FRONTIER_EVM")]
