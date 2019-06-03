@@ -21,8 +21,8 @@ uint64_t get_schedule(mpz_ptr number, CallContext *ctx) {
   static uint32_t petersburg_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
   static uint32_t constantinople_tag = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
   static uint32_t byzantium_tag = getTagForSymbolName("LblBYZANTIUM'Unds'EVM{}");
-  static uint32_t spuriousDragon_tag = getTagForSymbolName("LblSPURIOUS_DRAGON'Unds'EVM{}");
-  static uint32_t tangerineWhistle_tag = getTagForSymbolName("LblTANGERINE_WHISTLE'Unds'EVM{}");
+  static uint32_t spuriousDragon_tag = getTagForSymbolName("LblSPURIOUS'Unds'DRAGON'Unds'EVM{}");
+  static uint32_t tangerineWhistle_tag = getTagForSymbolName("LblTANGERINE'Unds'WHISTLE'Unds'EVM{}");
   static uint32_t homestead_tag = getTagForSymbolName("LblHOMESTEAD'Unds'EVM{}");
   static uint32_t frontier_tag = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
   uint32_t tag;
