@@ -3,6 +3,7 @@ const net = require('net')
 const BN = require('ethereumjs-util').BN
 const msg_pb = require('./proto/msg_pb.js')
 const cp = require("child_process");
+const tcpPortUsed = require("tcp-port-used")
 
 const kevmHost = '127.0.0.1'
 const kevmPort = 8080
@@ -21,7 +22,6 @@ const largeBlockNumber = new Uint8Array([127, 255, 255, 255])
 const maxCodeSize = new Uint8Array([96, 0])
 const retryTimeMs = 500
 const timeOutMs = 4000
-const tcpPortUsed = require("tcp-port-used")
 
 var dataReceived = false
 var schedule = 0
