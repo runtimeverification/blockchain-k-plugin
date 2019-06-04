@@ -1,9 +1,14 @@
+// ################################################################################################
+// Test that kevm-vm is able to start, receive a Hello and a CallContext mock message and respond 
+// and respond with a GetAccount request for each schedule.
+// ################################################################################################
+
 const Buffer = require('safe-buffer').Buffer
 const net = require('net')
 const BN = require('ethereumjs-util').BN
-const msg_pb = require('./proto/msg_pb.js')
-const cp = require("child_process");
-const tcpPortUsed = require("tcp-port-used")
+const msg_pb = require('./../proto/msg_pb')
+const cp = require('child_process')
+const tcpPortUsed = require('tcp-port-used')
 
 const kevmHost = '127.0.0.1'
 const kevmPort = 8080
@@ -51,20 +56,18 @@ function runScheduleTest(schedule){
       process.exit()
     }
   })
-
   client = new net.Socket()
-
   tcpPortUsed.waitUntilUsed(kevmPort, retryTimeMs, timeOutMs)
-  .then(function() {
-    client.connect(kevmPort, kevmHost, function() {
+  .then(function () {
+    client.connect(kevmPort, kevmHost, function () {
       client.write(hello)
       var callCtx = createCallContext(schedule)
       client.write(callCtx)
     })
   }, function(err) {
-      console.log('Error:', err.message);
+      console.log('Error:', err.message)
       process.exit(1)
-  });
+  })
 
   client.on('data', function (data) {
     var query = msg_pb.VMQuery.deserializeBinary(data)
@@ -76,9 +79,7 @@ function runScheduleTest(schedule){
    })
   
   client.on('close', function () {})
-
 }
-
 
 function createCallContext (schedule) {
   var callCtx = new msg_pb.CallContext()
@@ -112,7 +113,7 @@ function createEthereumConfig (schedule) {
   ethereumConfig.setAccountstartnonce(zero)
   ethereumConfig.setFrontierblocknumber(zero)
   switch (schedule) {
-    case 0:{ //frontier
+    case 0:{ // frontier
       ethereumConfig.setHomesteadblocknumber(largeBlockNumber)
       ethereumConfig.setEip150blocknumber(largeBlockNumber)
       ethereumConfig.setEip160blocknumber(largeBlockNumber)
@@ -122,7 +123,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 1:{ //homestead
+    case 1:{ // homestead
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(largeBlockNumber)
       ethereumConfig.setEip160blocknumber(largeBlockNumber)
@@ -132,7 +133,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 2:{ //eip150
+    case 2:{ // eip150
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(largeBlockNumber)
@@ -142,7 +143,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 3:{ //eip160
+    case 3:{ // eip160
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(zero)
@@ -152,7 +153,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 4:{ //eip161
+    case 4:{ // eip161
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(zero)
@@ -162,7 +163,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 5: { //byzantium
+    case 5: { // byzantium
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(zero)
@@ -172,7 +173,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 6: { //constantinople
+    case 6: { // constantinople
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(zero)
@@ -182,7 +183,7 @@ function createEthereumConfig (schedule) {
       ethereumConfig.setPetersburgblocknumber(largeBlockNumber)
       break
     }
-    case 7 : { //petersburg
+    case 7 : { // petersburg
       ethereumConfig.setHomesteadblocknumber(zero)
       ethereumConfig.setEip150blocknumber(zero)
       ethereumConfig.setEip160blocknumber(zero)
