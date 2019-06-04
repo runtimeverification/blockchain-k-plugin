@@ -1,0 +1,18 @@
+{
+  "name": "test-node",
+  "version": "1.0.0",
+  "main": "check-all-schedules.js",
+  "dependencies": {
+    "ethereumjs-util": "^6.1.0",
+    "google-protobuf": "^3.8.0",
+    "tcp-port-used": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

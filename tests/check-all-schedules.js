@@ -1,12 +1,12 @@
 // ################################################################################################
 // Test that kevm-vm is able to start, receive a Hello and a CallContext mock message and respond 
-// and respond with a GetAccount request for each schedule.
+// with a GetAccount request for each schedule.
 // ################################################################################################
 
 const Buffer = require('safe-buffer').Buffer
 const net = require('net')
 const BN = require('ethereumjs-util').BN
-const msg_pb = require('./../proto/msg_pb')
+const msg_pb = require('./proto/msg_pb')
 const cp = require('child_process')
 const tcpPortUsed = require('tcp-port-used')
 
