@@ -53,7 +53,7 @@ struct tx_result {
   list logs;
   accounts* accounts; 
   list touched;
-  std::string statuscode;
+  string* statuscode;
 };
 
 std::string get_output_data(string**);
