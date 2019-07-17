@@ -215,6 +215,7 @@ CallResult run_transaction(CallContext ctx) {
   std::string gasLeft = of_z(extracted->gas);
   std::string refund = of_z(extracted->refund);
   std::string status = of_z(extracted->status);
+  std::string statusCode = std::string(extracted->statuscode->data, len(extracted->statuscode));
   bool error = get_error(extracted->status);
   auto selfdestruct = k_to_zs(&extracted->selfdestruct);
   auto touched = k_to_zs(&extracted->touched);
@@ -226,6 +227,7 @@ CallResult run_transaction(CallContext ctx) {
   result.set_gasremaining(gasLeft);
   result.set_gasrefund(refund);
   result.set_error(error);
+  result.set_statuscode(statusCode);
   for (mpz_ptr acct : selfdestruct) {
     result.add_deletedaccounts(of_z_width(20, acct));
   }
