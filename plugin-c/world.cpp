@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <iostream>
 #include <gmp.h>
 #include <arpa/inet.h>
 #include "proto/msg.pb.h"
