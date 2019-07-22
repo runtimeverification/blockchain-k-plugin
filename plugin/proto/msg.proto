@@ -66,6 +66,7 @@ message Account {
   bytes nonce = 1;
   bytes balance = 2;
   bool codeEmpty = 3;
+  bytes codeHash = 4;
 }
 
 message GetStorageData {
