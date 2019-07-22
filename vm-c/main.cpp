@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     is.read(&buf[0], len);
     Hello h;
     bool success = h.ParseFromString(buf);
-    if (success && h.version() == "2.0") {
+    if (success && h.version() == "2.1") {
       while(1) {
         is.read((char *)&len, 4);
         if (is.eof()) {
