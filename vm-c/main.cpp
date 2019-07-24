@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
       perror("shutdown");
       return 1;
     }
-    close(clientsock);
+    fclose(_if);
+    fclose(of);
   }
 }
