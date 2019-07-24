@@ -52,7 +52,7 @@ struct log;
 
 struct loginj {
   blockheader h;
-  log* data;
+  struct log* data;
 };
 
 struct stringinj {
