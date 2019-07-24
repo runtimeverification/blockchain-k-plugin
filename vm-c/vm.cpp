@@ -28,8 +28,8 @@ std::vector<account *> k_to_accts(map* m) {
   return result;
 }
 
-std::vector<log *> k_to_logs(list* l) {
-  std::vector<log*> result;
+std::vector<struct log *> k_to_logs(list* l) {
+  std::vector<struct log*> result;
   for (size_t i = 0; i < hook_LIST_size_long(l); i++) {
      loginj* elem = (loginj*) hook_LIST_get_long(l, i);
      result.push_back(elem->data);
@@ -37,7 +37,7 @@ std::vector<log *> k_to_logs(list* l) {
   return result;
 }
 
-void k_to_log(log* log, LogEntry *pb) {
+void k_to_log(struct log* log, LogEntry *pb) {
   std::string address = of_z_width(20, log->acct);
   std::vector<mpz_ptr> topics = k_to_zs(&log->topics);
   void *arr[1];
@@ -240,7 +240,7 @@ CallResult run_transaction(CallContext ctx) {
       k_to_mod_acct(acct, mod);
     }
   }
-  for (log *log : logs) {
+  for (struct log *log : logs) {
     auto log_pb = result.add_logs();
     k_to_log(log, log_pb);
   }
