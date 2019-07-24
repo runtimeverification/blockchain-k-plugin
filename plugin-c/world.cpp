@@ -46,20 +46,21 @@ mpz_ptr to_z(std::string str) {
   return hook_BYTES_bytes2int(token, tag_big_endian(), 0);
 }
 
-std::ostream *vm_out_chan;
-std::istream *vm_in_chan;
+FILE *vm_out_chan;
+FILE *vm_in_chan;
 
 template<typename Cls>
 Cls* send_query(VMQuery q, Cls* output) {
   std::string buf;
   q.SerializeToString(&buf);
   uint32_t len = htonl(buf.size());
-  vm_out_chan->write((char *)&len, 4) << buf;
-  vm_out_chan->flush();
-  vm_in_chan->read((char *)&len, 4);
+  fwrite((char *)&len, 4, 1, vm_out_chan);
+  fwrite(buf.c_str(), 1, buf.length(), vm_out_chan);
+  fflush(vm_out_chan);
+  fread((char *)&len, 4, 1, vm_in_chan);
   len = ntohl(len);
   std::string buf2(len, '\000');
-  vm_in_chan->read(&buf2[0], len);
+  fread(&buf2[0], 1, len, vm_in_chan);
   output->ParseFromString(buf2);
   return output;
 }

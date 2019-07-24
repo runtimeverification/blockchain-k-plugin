@@ -3,14 +3,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <ext/stdio_filebuf.h>
 #include <gmp.h>
 #include "proto/msg.pb.h"
 #include "runtime/alloc.h"
 #include "version.h"
 
-extern std::ostream *vm_out_chan;
-extern std::istream *vm_in_chan;
+extern FILE *vm_out_chan;
+extern FILE *vm_in_chan;
 
 using namespace org::kframework::kevm::extvm;
 
@@ -79,30 +78,28 @@ int main(int argc, char **argv) {
       perror("accept");
       return 1;
     }
-    __gnu_cxx::stdio_filebuf<char> inbuf(clientsock, std::ios::in | std::ios::binary);
-    std::istream is(&inbuf);
-    vm_in_chan = &is;
+    FILE *_if = fdopen(clientsock, "r");
+    vm_in_chan = _if;
 
-    __gnu_cxx::stdio_filebuf<char> outbuf(clientsock, std::ios::out | std::ios::binary);
-    std::ostream os(&outbuf);
-    vm_out_chan = &os;
+    FILE *of = fdopen(clientsock, "w");
+    vm_out_chan = of;
 
-    is.read((char *)&len, 4);
+    fread((char *)&len, 4, 1, _if);
     len = ntohl(len);
     std::string buf(len, '\000');
-    is.read(&buf[0], len);
+    fread(&buf[0], 1, len, _if);
     Hello h;
     bool success = h.ParseFromString(buf);
     if (success && h.version() == "2.1") {
       while(1) {
-        is.read((char *)&len, 4);
-        if (is.eof()) {
+        fread((char *)&len, 4, 1, _if);
+        if (feof(_if)) {
           break;
         }
         len = ntohl(len);
         std::string buf2(len, '\000');
-        is.read(&buf2[0], len);
-        if (is.eof()) {
+        fread(&buf2[0], len, 1, _if);
+        if (feof(_if)) {
           break;
         }
         CallContext ctx;
@@ -116,8 +113,9 @@ int main(int argc, char **argv) {
         std::string buf3;
         q.SerializeToString(&buf3);
         len = htonl(buf3.size());
-        os.write((char *)&len, 4) << buf3;
-        os.flush();
+        fwrite((char *)&len, 4, 1, of);
+        fwrite(buf3.c_str(), 1, buf3.length(), of);
+        fflush(of);
       }
     } else if (success) {
       std::cerr << "Invalid protobuf version, found " << h.version() << std::endl;
