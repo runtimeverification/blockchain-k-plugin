@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     } else if (success) {
       std::cerr << "Invalid protobuf version, found " << h.version() << std::endl;
     }
-    if(shutdown(clientsock, SHUT_RD)) {
+    if(shutdown(clientsock, SHUT_WR)) {
       perror("shutdown");
       return 1;
     }
