@@ -79,9 +79,17 @@ int main(int argc, char **argv) {
       return 1;
     }
     FILE *_if = fdopen(clientsock, "r");
+    if (!_if) {
+      perror("fdopen");
+      return 1;
+    }
     vm_in_chan = _if;
 
     FILE *of = fdopen(clientsock, "w");
+    if (!of) {
+      perror("fdopen");
+      return 1;
+    }
     vm_out_chan = of;
 
     fread((char *)&len, 4, 1, _if);
@@ -120,10 +128,11 @@ int main(int argc, char **argv) {
     } else if (success) {
       std::cerr << "Invalid protobuf version, found " << h.version() << std::endl;
     }
-    if(shutdown(clientsock, SHUT_RD)) {
+    if(shutdown(clientsock, SHUT_WR)) {
       perror("shutdown");
       return 1;
     }
-    close(clientsock);
+    fclose(_if);
+    fclose(of);
   }
 }
