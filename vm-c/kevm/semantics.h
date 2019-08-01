@@ -49,10 +49,10 @@ struct tx_result {
   mpz_ptr gas;
   mpz_ptr refund;
   mpz_ptr status;
-  list selfdestruct;
+  set selfdestruct;
   list logs;
   accounts* accounts; 
-  list touched;
+  set touched;
   string* statuscode;
 };
 

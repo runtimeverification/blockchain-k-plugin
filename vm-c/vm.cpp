@@ -18,6 +18,16 @@ std::vector<mpz_ptr> k_to_zs(list* l) {
   return result;
 }
 
+std::vector<mpz_ptr> set_to_zs(set* s) {
+  std::vector<mpz_ptr> result;
+
+  iter i = set_iterator(s);
+  while(zinj *elem = (zinj*) set_iterator_next(&i)) {
+     result.push_back(elem->data);
+  }
+  return result;
+}
+
 std::vector<account *> k_to_accts(map* m) {
   list l = hook_MAP_values(m);
   std::vector<account *> result;
@@ -217,8 +227,8 @@ CallResult run_transaction(CallContext ctx) {
   std::string status = of_z(extracted->status);
   std::string statusCode = std::string(extracted->statuscode->data, len(extracted->statuscode));
   bool error = get_error(extracted->status);
-  auto selfdestruct = k_to_zs(&extracted->selfdestruct);
-  auto touched = k_to_zs(&extracted->touched);
+  auto selfdestruct = set_to_zs(&extracted->selfdestruct);
+  auto touched = set_to_zs(&extracted->touched);
   auto accounts = k_to_accts(&extracted->accounts->data);
   auto logs = k_to_logs(&extracted->logs);
   CallResult result;
