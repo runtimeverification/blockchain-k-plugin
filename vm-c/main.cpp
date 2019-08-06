@@ -18,6 +18,7 @@ CallResult run_transaction(CallContext ctx);
 extern "C" {
   void freeAllKoreMem(void);
   void setKoreMemoryFunctionsForGMP(void);
+  extern uint64_t INTERVAL;
 }
 
 
@@ -71,6 +72,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   sockaddr_in peer;
+  INTERVAL = 10000;
   while(1) {
     socklen_t len = sizeof(peer);
     int clientsock = accept(sock, (sockaddr *)&peer, &len);
