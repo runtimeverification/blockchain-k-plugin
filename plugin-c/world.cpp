@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <iostream>
 #include <gmp.h>
 #include <arpa/inet.h>
 #include "proto/msg.pb.h"
@@ -51,6 +52,7 @@ FILE *vm_in_chan;
 
 template<typename Cls>
 Cls* send_query(VMQuery q, Cls* output) {
+  std::cerr << q.DebugString() << std::endl;
   std::string buf;
   q.SerializeToString(&buf);
   uint32_t len = htonl(buf.size());
@@ -62,6 +64,7 @@ Cls* send_query(VMQuery q, Cls* output) {
   std::string buf2(len, '\000');
   fread(&buf2[0], 1, len, vm_in_chan);
   output->ParseFromString(buf2);
+  std::cerr << output->DebugString() << std::endl;
   return output;
 }
 
