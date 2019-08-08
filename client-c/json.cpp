@@ -30,6 +30,11 @@ typedef struct sinj {
   string *s;
 } sinj;
 
+typedef struct inj {
+  struct blockheader h;
+  block *data;
+} inj;
+
 struct jsonlist {
   blockheader h;
   block *hd;
@@ -56,6 +61,9 @@ static blockheader listHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'Un
 static blockheader membHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsColnUndsUnds'EVM-DATA'UndsUnds'JSONKey'Unds'JSON{}"));
 static blockheader objHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LBraUndsRBraUnds'EVM-DATA'UndsUnds'JSONList{}"));
 static blockheader listWrapHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LSqBUndsRSqBUnds'EVM-DATA'UndsUnds'JSONList{}"));
+static block * eof = (block *)((((uint64_t)getTagForSymbolName("Lbl'Hash'EOF{}")) << 32) | 1);
+static blockheader ioErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortIOError{}, SortIOJSON{}}"));
+static blockheader jsonHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortJSON{}, SortIOJSON{}}"));
 
 struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   block *result;
@@ -238,9 +246,24 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   char readBuffer[4096];
   FileReadStream is(f, readBuffer, sizeof(readBuffer));
 
-  reader.Parse(is, handler);
+  bool result = reader.Parse(is, handler);
   fclose(f);
-  return handler.result;
+  if (result) {
+    block *semifinal = handler.stack.back();
+    if (block->h.hdr == objHdr.hdr || block->h.hdr == listWrapHdr->h.hdr) {
+      inj *res = (inj *)koreAlloc(sizeof(inj));
+      res->h = jsonHdr;
+      res->data = semifinal;
+      return res;
+    } else {
+      return semifinal;
+    }
+  } else {
+    inj *error = (inj *)koreAlloc(sizeof(inj));
+    error->h = ioErrorHdr;
+    error->data = eof;
+    return error;
+  }
 }
 
 block *hook_JSON_write(block *json, mpz_ptr fd_z) {
