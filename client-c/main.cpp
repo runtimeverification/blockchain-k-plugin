@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
-  map init = hook_MAP_update(&withSocket, configvar("$PGM"), kinj);
+  map init = hook_MAP_update(&withSocket, configvar("$PGM"), (block *)kinj);
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
