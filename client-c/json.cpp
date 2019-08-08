@@ -147,7 +147,17 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   }
 };
 
-void write_json(Writer<FileWriteStream> &writer, block *data) {
+struct KoreWriter : Writer<FileWriteStream> {
+  bool RawNumber(const Ch* str, rapidjson::SizeType length, bool copy = false) {
+    (void)copy;
+    Prefix(rapidjson::kNumberType);
+    return EndValue(WriteRawValue(str, length));
+  }
+
+  KoreWriter(FileWriteStream &os) : Writer(os) {}
+};
+
+void write_json(KoreWriter &writer, block *data) {
   if (data == dotList) {
     return;
   }
@@ -185,6 +195,7 @@ void write_json(Writer<FileWriteStream> &writer, block *data) {
   }
 }
 
+
 extern "C" {
 
 struct block *hook_JSON_read(mpz_t fd_z) {
@@ -220,7 +231,7 @@ block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   FILE *f = fdopen(dup(fd), "w");
   char writeBuffer[4096];
   FileWriteStream os(f, writeBuffer, sizeof(writeBuffer));
-  Writer<FileWriteStream> writer(os);
+  KoreWriter writer(os);
 
   write_json(writer, json);
   fclose(f);
