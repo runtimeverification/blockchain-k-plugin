@@ -1,7 +1,7 @@
 #ifndef INIT_H
 #define INIT_H
 
-#include "runtime/header..h"
+#include "runtime/header.h"
 #include <gmp.h>
 
 extern "C" {
