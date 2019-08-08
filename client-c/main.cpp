@@ -43,6 +43,11 @@ int main(int argc, char **argv) {
   mpz_t sock_z;
   mpz_init_set_si(sock_z, sock);
   sockinj->data = move_int(sock_z);
+  zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
+  chaininj->h = hdr3;
+  mpz_t chainid;
+  mpz_init_set_si(chainid, 28346);
+  chaininj->data = move_int(chainid);
   static uint64_t accept = (((uint64_t)getTagForSymbolName("Lblaccept{}")) << 32) | 1;
   inj *kinj = (inj *)koreAlloc(sizeof(inj));
   static blockheader hdr4 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
@@ -51,7 +56,8 @@ int main(int argc, char **argv) {
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
-  map init = hook_MAP_update(&withSocket, configvar("$PGM"), (block *)kinj);
+  map withChain = hook_MAP_update(&withSocket, configvar("$CHAINID"), (block *)chaininj);
+  map init = hook_MAP_update(&withChain, configvar("$PGM"), (block *)kinj);
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
