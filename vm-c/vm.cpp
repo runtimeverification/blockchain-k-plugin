@@ -60,13 +60,7 @@ void k_to_log(struct log* log, LogEntry *pb) {
   pb->set_data(std::string(token->data, len(token)));
 }
 
-block* configvar(const char *name) {
-  stringinj* inj = (stringinj*)koreAlloc(sizeof(stringinj));
-  inj->data = makeString(name);
-  static uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
-  inj->h = getBlockHeaderForSymbol(tag);
-  return (block*)inj;
-}
+block *configvar(const char *name);
 
 extern uint32_t kcellInjTag;
 

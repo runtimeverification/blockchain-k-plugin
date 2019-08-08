@@ -5,6 +5,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include "runtime/header.h"
+#include "runtime/alloc.h"
+
 extern "C" {
   void setKoreMemoryFunctionsForGMP(void);
   extern thread_local uint64_t INTERVAL;
@@ -43,3 +46,13 @@ int init(int port, in_addr host) {
   INTERVAL = 10000;
   return sock;
 }
+
+block* configvar(const char *name) {
+  stringinj* inj = (stringinj*)koreAlloc(sizeof(stringinj));
+  inj->data = makeString(name);
+  static uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
+  inj->h = getBlockHeaderForSymbol(tag);
+  return (block*)inj;
+}
+
+
