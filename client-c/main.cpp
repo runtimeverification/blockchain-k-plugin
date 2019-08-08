@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
   modeinj->h = hdr;
   modeinj->data = (block*)mode;
-  uint64_t schedule = (((uint64_t)getTagForSymbolName("LblPETERSBURG{}")) << 32) | 1;
+  uint64_t schedule = (((uint64_t)getTagForSymbolName("LblPETERSBURG_EVM{}")) << 32) | 1;
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
   static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
   scheduleinj->h = hdr2;
