@@ -6,6 +6,7 @@
 #include <gmp.h>
 #include "runtime/alloc.h"
 #include "version.h"
+#include "init.h"
 
 int init(int port, in_addr host);
 
