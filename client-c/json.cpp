@@ -250,11 +250,11 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   fclose(f);
   if (result) {
     block *semifinal = handler.stack.back();
-    if (block->h.hdr == objHdr.hdr || block->h.hdr == listWrapHdr->h.hdr) {
+    if (semifinal->h.hdr == objHdr.hdr || semifinal->h.hdr == listWrapHdr->h.hdr) {
       inj *res = (inj *)koreAlloc(sizeof(inj));
       res->h = jsonHdr;
       res->data = semifinal;
-      return res;
+      return (block *)res;
     } else {
       return semifinal;
     }
@@ -262,7 +262,7 @@ struct block *hook_JSON_read(mpz_t fd_z) {
     inj *error = (inj *)koreAlloc(sizeof(inj));
     error->h = ioErrorHdr;
     error->data = eof;
-    return error;
+    return (block *)error;
   }
 }
 
