@@ -40,51 +40,16 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     return true;
   }
 
-  bool Int(int i) {
+  bool RawNumber(const char *str, SizeType length, bool copy) {
     zinj *inj = (zinj *)koreAlloc(sizeof(zinj));
     inj->h = intHdr;
     mpz_t z;
-    mpz_init_set_si(z, i);
+    mpz_init_set_str(z, str, 10);
     inj->data = move_int(z);
     result = (block *)inj;
     stack.push_back(result);
     return true;
   }
-
-  bool Uint(unsigned i) {
-    zinj *inj = (zinj *)koreAlloc(sizeof(zinj));
-    inj->h = intHdr;
-    mpz_t z;
-    mpz_init_set_ui(z, i);
-    inj->data = move_int(z);
-    result = (block *)inj;
-    stack.push_back(result);
-    return true;
-  }
-
-  bool Int64(int64_t i) {
-    zinj *inj = (zinj *)koreAlloc(sizeof(zinj));
-    inj->h = intHdr;
-    mpz_t z;
-    mpz_init_set_si(z, i);
-    inj->data = move_int(z);
-    result = (block *)inj;
-    stack.push_back(result);
-    return true;
-  }
-
-  bool Uint64(uint64_t i) {
-    zinj *inj = (zinj *)koreAlloc(sizeof(zinj));
-    inj->h = intHdr;
-    mpz_t z;
-    mpz_init_set_ui(z, i);
-    inj->data = move_int(z);
-    result = (block *)inj;
-    stack.push_back(result);
-    return true;
-  }
-
-  bool Double(double d) { return false; }
 
   bool String(const char *str, SizeType len, bool copy) {
     stringinj *inj = (stringinj *)koreAlloc(sizeof(stringinj));
@@ -206,7 +171,7 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   char readBuffer[4096];
   FileReadStream is(f, readBuffer, sizeof(readBuffer));
 
-  bool result = reader.Parse<kParseStopWhenDoneFlag>(is, handler);
+  bool result = reader.Parse<kParseStopWhenDoneFlag | kParseNumbersAsStringsFlag>(is, handler);
   fclose(f);
   if (result) {
     block *semifinal = handler.stack.back();
