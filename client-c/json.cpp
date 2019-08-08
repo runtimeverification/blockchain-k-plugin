@@ -87,7 +87,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   bool Double(double d) { return false; }
 
   bool String(const char *str, SizeType len, bool copy) {
-    sinj *inj = (sinj *)koreAlloc(sizeof(sinj));
+    stringinj *inj = (stringinj *)koreAlloc(sizeof(stringinj));
     inj->h = strHdr;
     string *token = (string *)koreAllocToken(len);
     set_len(token, len);
@@ -171,7 +171,7 @@ void write_json(Writer<FileWriteStream> &writer, block *data) {
     string *str = hook_STRING_int2string(inj->data);
     writer.RawNumber(str->data, len(str), false);
   } else if (data->h.hdr == strHdr.hdr) {
-    sinj *inj = (sinj *)data;
+    stringinj *inj = (stringinj *)data;
     writer.String(inj->data->data, len(inj->data), false);
   } else if (data->h.hdr == objHdr.hdr) {
     writer.StartObject();
@@ -189,7 +189,7 @@ void write_json(Writer<FileWriteStream> &writer, block *data) {
     write_json(writer, (block *)list->tl);
   } else if (data->h.hdr == membHdr.hdr) {
     jsonmember *memb = (jsonmember *)data;
-    sinj *inj = (sinj *)memb->key;
+    stringinj *inj = (stringinj *)memb->key;
     writer.Key(inj->data->data, len(inj->data), false);
     write_json(writer, memb->val);
   } else {
