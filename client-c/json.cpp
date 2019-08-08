@@ -107,20 +107,13 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
 
   bool EndObject(SizeType memberCount) {
     result = dotList;
-    std::vector<block *> children;
-    for (int i = 0; i < memberCount; i++) {
-      children.push_back(stack.back());
-      stack.pop_back();
-      children.push_back(stack.back());
-      stack.pop_back();
-    }
     for (int i = 0; i < memberCount; i++) {
       jsonmember *member = (jsonmember *)koreAlloc(sizeof(jsonmember));
       member->h = membHdr;
-      member->key = children.back();
-      children.pop_back();
-      member->val = children.back();
-      children.pop_back();
+      member->val = stack.back();
+      stack.pop_back();
+      member->key = stack.back();
+      stack.pop_back();
       jsonlist *list = (jsonlist *)koreAlloc(sizeof(jsonlist));
       list->h = listHdr;
       list->hd = (block *)member;
@@ -138,16 +131,11 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
 
   bool EndArray(SizeType elementCount) {
     result = dotList;
-    std::vector<block *> children;
-    for (int i = 0; i < elementCount; i++) {
-      children.push_back(stack.back());
-      stack.pop_back();
-    }
     for (int i = 0; i < elementCount; i++) {
       jsonlist *list = (jsonlist *)koreAlloc(sizeof(jsonlist));
       list->h = listHdr;
-      list->hd = children.back();
-      children.pop_back();
+      list->hd = stack.back();
+      stack.pop_back();
       list->tl = (jsonlist *)result;
       result = (block *)list;
     }
