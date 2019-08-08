@@ -89,7 +89,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   bool String(const char *str, SizeType len, bool copy) {
     stringinj *inj = (stringinj *)koreAlloc(sizeof(stringinj));
     inj->h = strHdr;
-    string *token = (string *)koreAllocToken(len);
+    string *token = (string *)koreAllocToken(sizeof(string) + len);
     set_len(token, len);
     memcpy(token->data, str, len);
     inj->data = token;
