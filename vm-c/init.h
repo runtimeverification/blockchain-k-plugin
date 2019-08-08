@@ -1,6 +1,9 @@
 #ifndef INIT_H
 #define INIT_H
 
+#include "runtime/header..h"
+#include <gmp.h>
+
 extern "C" {
   void setKoreMemoryFunctionsForGMP(void);
   extern thread_local uint64_t INTERVAL;
