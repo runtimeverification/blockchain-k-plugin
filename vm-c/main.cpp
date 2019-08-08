@@ -21,6 +21,7 @@ extern "C" {
   extern thread_local uint64_t INTERVAL;
 }
 
+int init(int port, in_addr host);
 
 int main(int argc, char **argv) {
   std::string usage = std::string("Usage: ") + argv[0] + " PORT BIND_ADDRESS";
@@ -42,37 +43,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  setKoreMemoryFunctionsForGMP();
+  int sock = init(port, host);
 
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock == -1) {
-    perror("socket");
-    return 1;
-  }
-  sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr = host;
-  int sec = 0;
-  int ret;
-  do {
-    if (sec > 0) {
-      std::cerr << "Socket in use, retrying in " << sec << "..." << std::endl;
-    }
-    sleep(sec);
-    ret = bind(sock, (sockaddr *)&addr, sizeof(addr));
-    sec++;
-  } while(ret == -1 && errno == EADDRINUSE);
-  if (ret) {
-    perror("bind");
-    return 1;
-  }
-  if (listen(sock, 50)) {
-    perror("listen");
-    return 1;
-  }
   sockaddr_in peer;
-  INTERVAL = 10000;
   while(1) {
     socklen_t len = sizeof(peer);
     int clientsock = accept(sock, (sockaddr *)&peer, &len);
