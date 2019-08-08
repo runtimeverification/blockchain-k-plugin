@@ -206,7 +206,7 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   char readBuffer[4096];
   FileReadStream is(f, readBuffer, sizeof(readBuffer));
 
-  bool result = reader.Parse(is, handler);
+  bool result = reader.Parse<kParseStopWhenDoneFlag>(is, handler);
   fclose(f);
   if (result) {
     block *semifinal = handler.stack.back();
