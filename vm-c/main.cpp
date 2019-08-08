@@ -17,8 +17,6 @@ CallResult run_transaction(CallContext ctx);
 
 extern "C" {
   void freeAllKoreMem(void);
-  void setKoreMemoryFunctionsForGMP(void);
-  extern thread_local uint64_t INTERVAL;
 }
 
 int init(int port, in_addr host);

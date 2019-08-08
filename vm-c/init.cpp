@@ -1,10 +1,22 @@
+#include <iostream>
+#include<cstdlib>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+extern "C" {
+  void setKoreMemoryFunctionsForGMP(void);
+  extern thread_local uint64_t INTERVAL;
+}
+
 int init(int port, in_addr host) {
   setKoreMemoryFunctionsForGMP();
 
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
     perror("socket");
-    return 1;
+    exit(1);
   }
   sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -22,11 +34,11 @@ int init(int port, in_addr host) {
   } while(ret == -1 && errno == EADDRINUSE);
   if (ret) {
     perror("bind");
-    return 1;
+    exit(1);
   }
   if (listen(sock, 50)) {
     perror("listen");
-    return 1;
+    exit(1);
   }
   INTERVAL = 10000;
   return sock;
