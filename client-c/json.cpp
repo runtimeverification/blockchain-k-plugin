@@ -250,7 +250,7 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   fclose(f);
   if (result) {
     block *semifinal = handler.stack.back();
-    if (semifinal->h.hdr == objHdr.hdr || semifinal->h.hdr == listWrapHdr->h.hdr) {
+    if (semifinal->h.hdr == objHdr.hdr || semifinal->h.hdr == listWrapHdr.hdr) {
       inj *res = (inj *)koreAlloc(sizeof(inj));
       res->h = jsonHdr;
       res->data = semifinal;
