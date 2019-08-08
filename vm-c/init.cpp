@@ -8,10 +8,7 @@
 #include "runtime/header.h"
 #include "runtime/alloc.h"
 
-extern "C" {
-  void setKoreMemoryFunctionsForGMP(void);
-  extern thread_local uint64_t INTERVAL;
-}
+#include "init.h"
 
 int init(int port, in_addr host) {
   setKoreMemoryFunctionsForGMP();

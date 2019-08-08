@@ -7,22 +7,7 @@
 #include "runtime/alloc.h"
 #include "version.h"
 
-extern "C" {
-  void setKoreMemoryFunctionsForGMP(void);
-  extern thread_local uint64_t INTERVAL;
-}
-
 int init(int port, in_addr host);
-
-typedef struct zinj {
-  struct blockheader h;
-  mpz_ptr z;
-} zinj;
-
-typedef struct inj {
-  struct blockheader h;
-  block *data;
-} inj;
 
 int main(int argc, char **argv) {
   std::string usage = std::string("Usage: ") + argv[0] + " PORT BIND_ADDRESS";

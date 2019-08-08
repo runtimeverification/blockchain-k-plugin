@@ -9,48 +9,9 @@
 #include "runtime/header.h"
 #include "runtime/alloc.h"
 
+#include "init.h"
+
 using namespace rapidjson;
-
-extern "C" {
-  string *hook_STRING_int2string(mpz_ptr);
-}
-
-typedef struct binj {
-  struct blockheader h;
-  bool b;
-} binj;
-
-typedef struct zinj {
-  struct blockheader h;
-  mpz_ptr z;
-} zinj;
-
-typedef struct sinj {
-  struct blockheader h;
-  string *s;
-} sinj;
-
-typedef struct inj {
-  struct blockheader h;
-  block *data;
-} inj;
-
-struct jsonlist {
-  blockheader h;
-  block *hd;
-  jsonlist* tl;
-};
-
-struct json {
-  blockheader h;
-  jsonlist *data;
-};
-
-struct jsonmember {
-  blockheader h;
-  block *key;
-  block *val;
-};
 
 static block * dotk = (block *)((((uint64_t)getTagForSymbolName("dotk{}")) << 32) | 1);
 static struct blockheader boolHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortJSON{}}"));
@@ -71,9 +32,9 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
 
   bool Null() { return false; }
   bool Bool(bool b) {
-    binj *inj = (binj *)koreAlloc(sizeof(binj));
+    boolinj *inj = (boolinj *)koreAlloc(sizeof(boolinj));
     inj->h = boolHdr;
-    inj->b = b;
+    inj->data = b;
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -84,7 +45,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     inj->h = intHdr;
     mpz_t z;
     mpz_init_set_si(z, i);
-    inj->z = move_int(z);
+    inj->data = move_int(z);
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -95,7 +56,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     inj->h = intHdr;
     mpz_t z;
     mpz_init_set_ui(z, i);
-    inj->z = move_int(z);
+    inj->data = move_int(z);
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -106,7 +67,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     inj->h = intHdr;
     mpz_t z;
     mpz_init_set_si(z, i);
-    inj->z = move_int(z);
+    inj->data = move_int(z);
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -117,7 +78,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     inj->h = intHdr;
     mpz_t z;
     mpz_init_set_ui(z, i);
-    inj->z = move_int(z);
+    inj->data = move_int(z);
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -131,7 +92,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
     string *token = (string *)koreAllocToken(len);
     set_len(token, len);
     memcpy(token->data, str, len);
-    inj->s = token;
+    inj->data = token;
     result = (block *)inj;
     stack.push_back(result);
     return true;
@@ -203,15 +164,15 @@ void write_json(Writer<FileWriteStream> &writer, block *data) {
     return;
   }
   if (data->h.hdr == boolHdr.hdr) {
-    binj *inj = (binj *)data;
-    writer.Bool(inj->b);
+    boolinj *inj = (boolinj *)data;
+    writer.Bool(inj->data);
   } else if (data->h.hdr == intHdr.hdr) {
     zinj *inj = (zinj *)data;
-    string *str = hook_STRING_int2string(inj->z);
+    string *str = hook_STRING_int2string(inj->data);
     writer.RawNumber(str->data, len(str), false);
   } else if (data->h.hdr == strHdr.hdr) {
     sinj *inj = (sinj *)data;
-    writer.String(inj->s->data, len(inj->s), false);
+    writer.String(inj->data->data, len(inj->data), false);
   } else if (data->h.hdr == objHdr.hdr) {
     writer.StartObject();
     json *obj = (json *)data;
@@ -229,7 +190,7 @@ void write_json(Writer<FileWriteStream> &writer, block *data) {
   } else if (data->h.hdr == membHdr.hdr) {
     jsonmember *memb = (jsonmember *)data;
     sinj *inj = (sinj *)memb->key;
-    writer.Key(inj->s->data, len(inj->s), false);
+    writer.Key(inj->data->data, len(inj->data), false);
     write_json(writer, memb->val);
   } else {
     abort();
