@@ -1,4 +1,3 @@
-#include <gmp.h>
 #include <iostream>
 #include "proto/msg.pb.h"
 #include "runtime/header.h"
@@ -60,8 +59,6 @@ void k_to_log(struct log* log, LogEntry *pb) {
   }
   pb->set_data(std::string(token->data, len(token)));
 }
-
-block *configvar(const char *name);
 
 extern uint32_t kcellInjTag;
 

@@ -1,6 +1,7 @@
 #ifndef INIT_H
 #define INIT_H
 
+#include <netinet/in.h>
 #include "runtime/header.h"
 #include <gmp.h>
 
@@ -18,6 +19,9 @@ extern "C" {
   string* makeString(const char *, ssize_t len=-1);
   string *hook_STRING_int2string(mpz_ptr);
 }
+
+int init(int port, in_addr host);
+block *configvar(const char *name);
 
 struct kseq {
   blockheader h;

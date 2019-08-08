@@ -1,12 +1,11 @@
 #include <iostream>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <gmp.h>
 #include "proto/msg.pb.h"
 #include "runtime/alloc.h"
 #include "version.h"
+#include "init.h"
 
 extern FILE *vm_out_chan;
 extern FILE *vm_in_chan;

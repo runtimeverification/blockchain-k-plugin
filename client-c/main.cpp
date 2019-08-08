@@ -1,14 +1,10 @@
 #include <iostream>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <gmp.h>
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
-
-int init(int port, in_addr host);
 
 int main(int argc, char **argv) {
   std::string usage = std::string("Usage: ") + argv[0] + " PORT BIND_ADDRESS";
@@ -41,11 +37,11 @@ int main(int argc, char **argv) {
   static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
   scheduleinj->h = hdr2;
   scheduleinj->data = (block*)schedule;
-  zinj *sockinj = (inj *)koreAlloc(sizeof(zinj));
+  zinj *sockinj = (zinj *)koreAlloc(sizeof(zinj));
   static blockheader hdr3 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
   sockinj->h = hdr3;
   mpz_t sock_z;
-  gmp_init_set_si(sock_z, sock);
+  mpz_init_set_si(sock_z, sock);
   sockinj->data = move_int(sock_z);
   static uint64_t accept = (((uint64_t)getTagForSymbolName("Lblaccept{}")) << 32) | 1;
   block *kcell = (block *)accept;
@@ -58,6 +54,6 @@ int main(int argc, char **argv) {
   arr[0] = &init;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(-1, init_config);
-  printConfiguration(stderr, final_config);
+  printConfiguration("/dev/stderr", final_config);
 }
 
