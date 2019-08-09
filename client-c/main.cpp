@@ -2,31 +2,91 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <getopt.h>
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
 
+static std::string FRONTIER = "frontier";
+static std::string HOMESTEAD = "homestead";
+static std::string TANGERINE_WHISTLE = "tangerine_whistle";
+static std::string SPURIOUS_DRAGON = "spurious_dragon";
+static std::string BYZANTIUM = "byzantium";
+static std::string CONSTANTINOPLE = "constantinople";
+static std::string PETERSBURG = "petersburg";
+
 int main(int argc, char **argv) {
-  std::string usage = std::string("Usage: ") + argv[0] + " PORT BIND_ADDRESS";
-  if (argc == 2 && argv[1] == std::string("--help")) {
+  std::string usage = std::string("Usage: ") + argv[0] + " [flags] PORT BIND_ADDRESS";
+  int flag, port = 8545, chainId;
+  in_addr address;
+  inet_aton("127.0.0.1", &address);
+  int help = false, version = false;
+  uint32_t schedule_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+  while(1) {
+    static struct option long_options[] = {
+      {"help", no_argument, &help, true},
+      {"verison", no_argument, &version, true},
+      {"host", required_argument, 0, 'h'},
+      {"hostname", required_argument, 0, 'h'},
+      {"port", required_argument, 0, 'p'},
+      {"hardfork", required_argument, 0, 'k'},
+      {"networkId", required_argument, 0, 'i'},
+      {0, 0, 0, 0}
+    };
+    int option_index = 0;
+    flag = getopt_long(argc, argv, "h:p:k:i:", long_options, &option_index);
+    if (flag == -1) {
+      break;
+    }
+    switch(flag) {
+    case 0:
+      break;
+    case 'h':
+      if (!inet_aton(optarg, &address)) {
+        std::cerr << "Invalid bind address" << std::endl;
+        return 1;
+      }
+      break;
+    case 'p':
+      port = std::stoi(optarg);
+      break;
+    case 'k':
+      if (optarg == FRONTIER) {
+        schedule_tag = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
+      } else if (optarg == HOMESTEAD) {
+        schedule_tag = getTagForSymbolName("LblHOMESTEAD'Unds'EVM{}");
+      } else if (optarg == TANGERINE_WHISTLE) {
+        schedule_tag = getTagForSymbolName("LblTANGERINE'Unds'WHISTLE'Unds'EVM{}");
+      } else if (optarg == SPURIOUS_DRAGON) {
+        schedule_tag = getTagForSymbolName("LblSPURIOUS'Unds'DRAGON'Unds'EVM{}");
+      } else if (optarg == BYZANTIUM) {
+        schedule_tag = getTagForSymbolName("LblBYZANTIUM'Unds'EVM{}");
+      } else if (optarg == CONSTANTINOPLE) {
+        schedule_tag = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
+      } else if (optarg == PETERSBURG) {
+        schedule_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+      } else {
+	std::cerr << "Invalid hardfork found: " << optarg << std::endl;
+	return 1;
+      }
+      break;
+    case 'i':
+      chainId = std::stoi(optarg);
+      break;
+    default:
+      std::cerr << "Invalid option: " << (char)flag << std::endl;
+      return 1;
+    }
+  }
+  if (help) {
     std::cout << usage << std::endl;
     return 0;
-  } else if (argc == 2 && argv[1] == std::string("--version")) {
+  } else if (version) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
     return 0;
-  } else if (argc != 3) {
-    std::cerr << "Incorrect number of arguments" << std::endl;
-    std::cerr << usage << std::endl;
-    return 1;
-  }
-  int port = std::stoi(argv[1]);
-  in_addr host;
-  if (!inet_aton(argv[2], &host)) {
-    std::cerr << "Invalid bind address" << std::endl;
-    return 1;
   }
 
-  int sock = init(port, host);
+  int sock = init(port, address);
   static uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
   inj *modeinj = (inj *)koreAlloc(sizeof(inj));
   static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
