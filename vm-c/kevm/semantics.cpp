@@ -3,6 +3,7 @@
 #include "semantics.h"
 #include "world.h"
 #include "vm.h"
+#include "init.h"
 #include <string>
 
 using namespace org::kframework::kevm::extvm;

@@ -2,6 +2,7 @@
 #define SEMANTICS_H
 
 struct json;
+struct jsonlist;
 struct stringinj;
 struct zinj;
 struct inj;
@@ -15,17 +16,6 @@ struct account {
   mapinj *storage;
   mapinj *origStorage;
   zinj *nonce;
-};
-
-struct jsonlist {
-  blockheader h;
-  block *hd;
-  jsonlist* tl;
-};
-
-struct json {
-  blockheader h;
-  jsonlist *data;
 };
 
 struct log {

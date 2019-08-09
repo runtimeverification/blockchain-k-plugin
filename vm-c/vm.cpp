@@ -1,9 +1,9 @@
-#include <gmp.h>
 #include <iostream>
 #include "proto/msg.pb.h"
 #include "runtime/header.h"
 #include "runtime/alloc.h"
 #include "vm.h"
+#include "init.h"
 #include "semantics.h"
 #include "world.h"
 
@@ -58,14 +58,6 @@ void k_to_log(struct log* log, LogEntry *pb) {
     pb->add_topics(of_z_width(32, topic));
   }
   pb->set_data(std::string(token->data, len(token)));
-}
-
-block* configvar(const char *name) {
-  stringinj* inj = (stringinj*)koreAlloc(sizeof(stringinj));
-  inj->data = makeString(name);
-  static uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
-  inj->h = getBlockHeaderForSymbol(tag);
-  return (block*)inj;
 }
 
 extern uint32_t kcellInjTag;
