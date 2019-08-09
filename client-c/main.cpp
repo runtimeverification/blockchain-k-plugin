@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
           "                      'spurious_dragon', 'byzantium', 'constantinople',\n"
           "                      or 'petersburg'\n"
 	  "  -i,--networkId=ID   Set network chain id to ID\n";
-  int flag, port = 8545, chainId;
+  int flag, port = 8545, chainId = 28346;
   in_addr address;
   inet_aton("127.0.0.1", &address);
   int help = false, version = false;
