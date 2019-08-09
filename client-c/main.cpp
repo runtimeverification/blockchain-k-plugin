@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
   static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
   modeinj->h = hdr;
   modeinj->data = (block*)mode;
-  uint64_t schedule = (((uint64_t)getTagForSymbolName("LblPETERSBURG'Unds'EVM{}")) << 32) | 1;
+  uint64_t schedule = (((uint64_t)schedule_tag) << 32) | 1;
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
   static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
   scheduleinj->h = hdr2;
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
   chaininj->h = hdr3;
   mpz_t chainid;
-  mpz_init_set_si(chainid, 28346);
+  mpz_init_set_si(chainid, chainId);
   chaininj->data = move_int(chainid);
   static uint64_t accept = (((uint64_t)getTagForSymbolName("Lblaccept{}")) << 32) | 1;
   inj *kinj = (inj *)koreAlloc(sizeof(inj));
