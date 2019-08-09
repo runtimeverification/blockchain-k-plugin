@@ -41,7 +41,7 @@ public:
         int nread = read(fd, &c, 1);
         return nread ? c : '\0';
     }
-    size_t Tell() const { assert(false); return 0; } // 3
+    size_t Tell() const { return -1; } // 3
 
     Ch* PutBegin() { assert(false); return 0; }
     void Put(Ch c) { write(fd, &c, 1); }                  // 1
