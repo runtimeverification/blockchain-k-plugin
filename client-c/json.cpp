@@ -26,6 +26,33 @@ static block * eof = (block *)((((uint64_t)getTagForSymbolName("Lbl'Hash'EOF{}")
 static blockheader ioErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortIOError{}, SortIOJSON{}}"));
 static blockheader jsonHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortJSON{}, SortIOJSON{}}"));
 
+class FDStream {
+public:
+    typedef char Ch;
+    FDStream(int fd) : fd(fd) {
+    }
+    Ch Peek() const { // 1
+        char c;
+        int nread = recv(fd, &c, 1, MSG_PEEK);
+        return nread ? c : '\0';
+    }
+    Ch Take() { // 2
+        char c;
+        int nread = read(fd, &c, 1);
+        return nread ? c : '\0';
+    }
+    size_t Tell() const { assert(false); return 0; } // 3
+
+    Ch* PutBegin() { assert(false); return 0; }
+    void Put(Ch c) { write(fd, &c, 1); }                  // 1
+    void Flush() { }                   // 2
+    size_t PutEnd(Ch*) { assert(false); return 0; }
+private:
+    FDStream(const FDStream&);
+    FDStream& operator=(const FDStream&);
+    int fd;
+};
+
 struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   block *result;
   std::vector<block *> stack;
@@ -112,14 +139,14 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   }
 };
 
-struct KoreWriter : Writer<FileWriteStream> {
+struct KoreWriter : Writer<FDStream> {
   bool RawNumber(const Ch* str, rapidjson::SizeType length, bool copy = false) {
     (void)copy;
     Prefix(rapidjson::kNumberType);
     return EndValue(WriteRawValue(str, length));
   }
 
-  KoreWriter(FileWriteStream &os) : Writer(os) {}
+  KoreWriter(FDStream &os) : Writer(os) {}
 };
 
 void write_json(KoreWriter &writer, block *data) {
@@ -160,19 +187,15 @@ void write_json(KoreWriter &writer, block *data) {
   }
 }
 
-
 extern "C" {
 
 struct block *hook_JSON_read(mpz_t fd_z) {
   KoreHandler handler;
   Reader reader;
   int fd = mpz_get_si(fd_z);
-  FILE *f = fdopen(dup(fd), "r");
-  char readBuffer[4096];
-  FileReadStream is(f, readBuffer, sizeof(readBuffer));
+  FDStream is(fd);
 
   bool result = reader.Parse<kParseStopWhenDoneFlag | kParseNumbersAsStringsFlag>(is, handler);
-  fclose(f);
   if (result) {
     block *semifinal = handler.stack.back();
     if (semifinal->h.hdr == objHdr.hdr || semifinal->h.hdr == listWrapHdr.hdr) {
@@ -193,13 +216,10 @@ struct block *hook_JSON_read(mpz_t fd_z) {
 
 block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   int fd = mpz_get_si(fd_z);
-  FILE *f = fdopen(dup(fd), "w");
-  char writeBuffer[4096];
-  FileWriteStream os(f, writeBuffer, sizeof(writeBuffer));
+  FDStream os(fd);
   KoreWriter writer(os);
 
   write_json(writer, json);
-  fclose(f);
   return dotk;
 }
 
