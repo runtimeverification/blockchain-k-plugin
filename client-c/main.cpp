@@ -16,7 +16,19 @@ static std::string CONSTANTINOPLE = "constantinople";
 static std::string PETERSBURG = "petersburg";
 
 int main(int argc, char **argv) {
-  std::string usage = std::string("Usage: ") + argv[0] + " [flags] PORT BIND_ADDRESS";
+  std::string usage = std::string("Usage: ") + argv[0] + " [OPTIONS] [-p PORT] [-h HOST]\n"
+	  "A KEVM-powered in-memory Web3 Ethereum client by Runtime Verification\n"
+	  "\n"
+	  "Network:\n"
+	  "  -h,--host=IP        Bind server to IP\n"
+	  "  -p,--port=PORT      Listen to requests on port PORT\n"
+	  "\n"
+	  "Chain:\n"
+	  "  -k,--hardfork=FORK  Ethereum client implements hardfork FORK;\n"
+          "                      FORK is 'frontier', 'homestead', 'tangerine_whistle',\n"
+          "                      'spurious_dragon', 'byzantium', 'constantinople',\n"
+          "                      or 'petersburg'\n"
+	  "  -i,--networkId=ID   Set network chain id to ID\n";
   int flag, port = 8545, chainId;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -79,7 +91,7 @@ int main(int argc, char **argv) {
     }
   }
   if (help) {
-    std::cout << usage << std::endl;
+    std::cout << usage;
     return 0;
   } else if (version) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
