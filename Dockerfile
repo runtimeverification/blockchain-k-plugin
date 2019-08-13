@@ -1,7 +1,7 @@
 FROM ubuntu:bionic
 
 RUN apt-get update && \
-    apt-get install -y git cmake clang-8 zlib1g-dev bison flex libboost-test-dev libgmp-dev libmpfr-dev libyaml-dev libjemalloc-dev curl pkg-config protobuf-compiler libprotobuf-dev libcrypto++-dev libsecp256k1-dev
+    apt-get install -y cmake clang-8 zlib1g-dev bison flex libboost-test-dev libgmp-dev libmpfr-dev libyaml-dev libjemalloc-dev pkg-config protobuf-compiler libprotobuf-dev libcrypto++-dev libsecp256k1-dev rapidjson-dev
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
