@@ -28,7 +28,15 @@ pipeline {
           '''
         }
         dir ('libff') {
-          git url: 'git@github.com:scipr-lab/libff.git'
+          checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'SubmoduleOption',
+                        disableSubmodules: false,
+                        parentCredentials: false,
+                        recursiveSubmodules: true,
+                        reference: '',
+                        trackingSubmodules: false]], 
+          userRemoteConfigs: [[url: 'git@github.com:scipr-lab/libff.git']]])
           sh '''
             mkdir build
             cd build
