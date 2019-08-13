@@ -24,8 +24,7 @@ pipeline {
             mkdir build
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Release
-            make -j16
-            make install
+            make include
           '''
         }
         sh 'make -j16'

@@ -1,4 +1,4 @@
-CPPFLAGS += -I llvm-backend/build/install/include -I vm-c -I dummy-version -I plugin -I vm-c/kevm -I plugin-c
+CPPFLAGS += -I llvm-backend/build/include -I llvm-backend/include -I vm-c -I dummy-version -I plugin -I vm-c/kevm -I plugin-c
 CXX=clang++-8
 
 .PHONY: build
