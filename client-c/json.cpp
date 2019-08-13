@@ -18,6 +18,7 @@ static struct blockheader boolHdr = getBlockHeaderForSymbol(getTagForSymbolName(
 static struct blockheader intHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortJSON{}}"));
 static struct blockheader strHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortString{}, SortJSON{}}"));
 static block *dotList = (block *)((((uint64_t)getTagForSymbolName("Lbl'Stop'List'LBraQuotUndsCommUndsUnds'EVM-DATA'UndsUnds'JSON'Unds'JSONList'QuotRBraUnds'JSONList{}")) << 32) | 1);
+static block *null = (block *)((((uint64_t)getTagForSymbolName("Lblnull'Unds'WEB3'Unds'{}")) << 32) | 1);
 static blockheader listHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsCommUndsUnds'EVM-DATA'UndsUnds'JSON'Unds'JSONList{}"));
 static blockheader membHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsColnUndsUnds'EVM-DATA'UndsUnds'JSONKey'Unds'JSON{}"));
 static blockheader objHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LBraUndsRBraUnds'EVM-DATA'UndsUnds'JSONList{}"));
@@ -57,7 +58,7 @@ struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
   block *result;
   std::vector<block *> stack;
 
-  bool Null() { return false; }
+  bool Null() { stack.push_back(null); return true; }
   bool Bool(bool b) {
     boolinj *inj = (boolinj *)koreAlloc(sizeof(boolinj));
     inj->h = boolHdr;
@@ -153,7 +154,9 @@ void write_json(KoreWriter &writer, block *data) {
   if (data == dotList) {
     return;
   }
-  if (data->h.hdr == boolHdr.hdr) {
+  if (data == null) {
+    writer.Null();
+  } else if (data->h.hdr == boolHdr.hdr) {
     boolinj *inj = (boolinj *)data;
     writer.Bool(inj->data);
   } else if (data->h.hdr == intHdr.hdr) {
