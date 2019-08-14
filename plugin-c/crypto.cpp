@@ -126,6 +126,23 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
   return result;
 }
 
+struct string *hook_KRYPTO_ecdsaSign(struct string *mhash, struct string *prikey) {
+  if (len(prikey) != 32 || len(mhash) != 32) {
+    return hexEncode(nullptr, 0);
+  }
+  secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+  secp256k1_ecdsa_signature sig;
+  if (!secp256k1_ecdsa_sign(ctx, &sig, (unsigned char *)mhash->data, (unsigned char *)prikey->data, NULL, NULL)) {
+    return hexEncode(nullptr, 0);
+  }
+  unsigned char result[128];
+  size_t resultlen = 128;
+  if (!secp256k1_ecdsa_signature_serialize_der(ctx, result, &resultlen, &sig)) {
+    return hexEncode(nullptr, 0);
+  }
+  return hexEncode(result, resultlen);
+}
+
 struct g1point {
   struct blockheader h;
   mpz_ptr x;
