@@ -50,6 +50,26 @@ let hook_ecdsaRecover c lbl sort config ff = match c with
   |    Z.Overflow -> [String ""])
 | _ -> failwith "ecdsaRecover"
 
+let hook_ecdsaSign c lbl sort config ff = match c with
+  [String mhash], [String prikey] ->
+  if String.length mhash <> 32 || String.length prikey <> 32 then [String ""] else
+  let context = Secp256k1.Context.create [Secp256k1.Context.Sign] in
+  (try
+    let messageArray = Array.init 32 (fun idx -> mhash.[idx]) in
+    let messageBuffer = Bigarray.Array1.of_array Bigarray.char Bigarray.c_layout messageArray in
+    let privateKeyArray = Array.init 32 (fun idx -> prikey.[idx]) in
+    let privateKeyBuffer = Bigarray.Array1.of_array Bigarray.char Bigarray.c_layout privateKeyArray in
+    let privateKey = Secp256k1.Secret.read_exn context privateKeyBuffer in
+    let signature = Secp256k1.RecoverableSign.sign context privateKey messageBuffer in
+    let (compactSig, recid) = Secp256k1.RecoverableSign.to_compact context signature in
+    let sigLength = (Bigarray.Array1.dim compactSig) + 1 in
+    let sigString = String.init sigLength (fun idx -> if idx < (sigLength-1) then Bigarray.Array1.get compactSig idx else Char.chr recid) in
+    let sigHex = Hex.of_string sigString in
+    [String (Hex.show sigHex)]
+  with Failure _ -> [String ""]
+  |    Z.Overflow -> [String ""])
+| _ -> failwith "ecdsaSign"
+
 exception InvalidPoint
 
 let get_pt k = match k with
