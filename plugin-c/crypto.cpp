@@ -131,16 +131,17 @@ struct string *hook_KRYPTO_ecdsaSign(struct string *mhash, struct string *prikey
     return hexEncode(nullptr, 0);
   }
   secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-  secp256k1_ecdsa_signature sig;
-  if (!secp256k1_ecdsa_sign(ctx, &sig, (unsigned char *)mhash->data, (unsigned char *)prikey->data, NULL, NULL)) {
+  secp256k1_ecdsa_recoverable_signature sig;
+  if (!secp256k1_ecdsa_sign_recoverable(ctx, &sig, (unsigned char *)mhash->data, (unsigned char *)prikey->data, NULL, NULL)) {
     return hexEncode(nullptr, 0);
   }
-  unsigned char result[128];
-  size_t resultlen = 128;
-  if (!secp256k1_ecdsa_signature_serialize_der(ctx, result, &resultlen, &sig)) {
+  unsigned char result[65];
+  int recid;
+  if (!secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, result, &recid, &sig)) {
     return hexEncode(nullptr, 0);
   }
-  return hexEncode(result, resultlen);
+  result[64] = recid;
+  return hexEncode(result, 65);
 }
 
 struct g1point {
