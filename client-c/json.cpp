@@ -19,6 +19,7 @@ static struct blockheader intHdr = getBlockHeaderForSymbol(getTagForSymbolName("
 static struct blockheader strHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortString{}, SortJSON{}}"));
 static block *dotList = (block *)((((uint64_t)getTagForSymbolName("Lbl'Stop'List'LBraQuotUndsCommUndsUnds'EVM-DATA'UndsUnds'JSON'Unds'JSONList'QuotRBraUnds'JSONList{}")) << 32) | 1);
 static block *null = (block *)((((uint64_t)getTagForSymbolName("Lblnull'Unds'WEB3'Unds'{}")) << 32) | 1);
+static block *undef = (block *)((((uint64_t)getTagForSymbolName("Lblundef'Unds'WEB3'Unds'{}")) << 32) | 1);
 static blockheader listHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsCommUndsUnds'EVM-DATA'UndsUnds'JSON'Unds'JSONList{}"));
 static blockheader membHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsColnUndsUnds'EVM-DATA'UndsUnds'JSONKey'Unds'JSON{}"));
 static blockheader objHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LBraUndsRBraUnds'EVM-DATA'UndsUnds'JSONList{}"));
@@ -209,11 +210,16 @@ struct block *hook_JSON_read(mpz_t fd_z) {
     } else {
       return semifinal;
     }
-  } else {
+  } else if (reader.GetParseErrorCode() == kParseErrorDocumentEmpty) {
     inj *error = (inj *)koreAlloc(sizeof(inj));
     error->h = ioErrorHdr;
     error->data = eof;
     return (block *)error;
+  } else {
+    inj *res = (inj *)koreAlloc(sizeof(inj));
+    res->h = jsonHdr;
+    res->data = undef;
+    return (block *)res;
   }
 }
 
