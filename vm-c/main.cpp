@@ -18,7 +18,7 @@ extern "C" {
   void freeAllKoreMem(void);
 }
 
-bool logging = false;
+extern bool logging;
 
 int init(int port, in_addr host);
 
