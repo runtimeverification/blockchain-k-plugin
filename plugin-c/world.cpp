@@ -8,6 +8,8 @@
 
 using namespace org::kframework::kevm::extvm;
 
+extern bool logging;
+
 extern "C" {
   string* hook_BYTES_int2bytes(mpz_t, mpz_t, uint64_t);
   mpz_ptr hook_BYTES_bytes2int(string*, uint64_t, uint64_t);
@@ -52,7 +54,9 @@ FILE *vm_in_chan;
 
 template<typename Cls>
 Cls* send_query(VMQuery q, Cls* output) {
-  std::cerr << q.DebugString() << std::endl;
+  if (logging) {
+    std::cerr << q.DebugString() << std::endl;
+  }
   std::string buf;
   q.SerializeToString(&buf);
   uint32_t len = htonl(buf.size());
@@ -64,7 +68,9 @@ Cls* send_query(VMQuery q, Cls* output) {
   std::string buf2(len, '\000');
   fread(&buf2[0], 1, len, vm_in_chan);
   output->ParseFromString(buf2);
-  std::cerr << output->DebugString() << std::endl;
+  if (logging) {
+    std::cerr << output->DebugString() << std::endl;
+  }
   return output;
 }
 

@@ -9,6 +9,8 @@
 
 using namespace org::kframework::kevm::extvm;
 
+extern bool logging;
+
 std::vector<mpz_ptr> k_to_zs(list* l) {
   std::vector<mpz_ptr> result;
   for (size_t i = 0; i < hook_LIST_size_long(l); i++) {
@@ -176,7 +178,9 @@ uint64_t get_schedule(mpz_ptr, CallContext*);
 bool get_error(mpz_ptr);
 
 CallResult run_transaction(CallContext ctx) {
-  std::cerr << ctx.DebugString() << std::endl;
+  if (logging) {
+    std::cerr << ctx.DebugString() << std::endl;
+  }
   bool iscreate = ctx.recipientaddr().size() == 0;
   mpz_ptr to = to_z_unsigned(ctx.recipientaddr());
   mpz_ptr from = to_z_unsigned(ctx.calleraddr());
@@ -246,7 +250,9 @@ CallResult run_transaction(CallContext ctx) {
     auto log_pb = result.add_logs();
     k_to_log(log, log_pb);
   }
-  std::cerr << result.DebugString() << std::endl;
+  if (logging) {
+    std::cerr << result.DebugString() << std::endl;
+  }
   clear_cache();
   return result;
 }

@@ -18,6 +18,8 @@ extern "C" {
   void freeAllKoreMem(void);
 }
 
+bool logging = false;
+
 int init(int port, in_addr host);
 
 int main(int argc, char **argv) {
@@ -28,7 +30,7 @@ int main(int argc, char **argv) {
   } else if (argc == 2 && argv[1] == std::string("--version")) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
     return 0;
-  } else if (argc != 3) {
+  } else if (argc < 3 || argc > 4) {
     std::cerr << "Incorrect number of arguments" << std::endl;
     std::cerr << usage << std::endl;
     return 1;
@@ -41,6 +43,10 @@ int main(int argc, char **argv) {
   }
 
   int sock = init(port, host);
+
+  if (argc == 4) {
+    logging = true;
+  }
 
   sockaddr_in peer;
   while(1) {
