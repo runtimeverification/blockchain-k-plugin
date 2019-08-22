@@ -98,38 +98,42 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  // injections to KItem for initial configuration variables
+
+  static blockheader injHeaderMode               = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
+  static blockheader injHeaderSchedule           = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
+  static blockheader injHeaderInt                = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
+  static blockheader injHeaderBool               = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortKItem{}}"));
+  static blockheader injHeaderEthereumSimulation = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
+
   // create `Init` configuration variable entries
 
   static uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
   inj *modeinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
-  modeinj->h = hdr;
+  modeinj->h = injHeaderMode;
   modeinj->data = (block*)mode;
 
   uint64_t schedule = (((uint64_t)schedule_tag) << 32) | 1;
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
-  scheduleinj->h = hdr2;
+  scheduleinj->h = injHeaderSchedule;
   scheduleinj->data = (block*)schedule;
 
   int sock = init(port, address);
   zinj *sockinj = (zinj *)koreAlloc(sizeof(zinj));
-  static blockheader hdr3 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
-  sockinj->h = hdr3;
+  sockinj->h = injHeaderInt;
   mpz_t sock_z;
   mpz_init_set_si(sock_z, sock);
   sockinj->data = move_int(sock_z);
 
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
-  chaininj->h = hdr3;
+  chaininj->h = injHeaderInt;
   mpz_t chainid;
   mpz_init_set_si(chainid, chainId);
   chaininj->data = move_int(chainid);
 
   static uint64_t accept = (((uint64_t)getTagForSymbolName("Lblaccept{}")) << 32) | 1;
   inj *kinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr4 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
-  kinj->h = hdr4;
+  kinj->h = injHeaderEthereumSimulation;
   kinj->data = (block *)accept;
 
   // build `Init` configuration variable `Map`
