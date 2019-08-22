@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
       {0, 0, 0, 0}
     };
     int option_index = 0;
-    flag = getopt_long(argc, argv, "h:p:s:k:i:", long_options, &option_index);
+    flag = getopt_long(argc, argv, "h:p:sk:i:", long_options, &option_index);
     if (flag == -1) {
       break;
     }
@@ -130,12 +130,9 @@ int main(int argc, char **argv) {
   mpz_init_set_si(sock_z, sock);
   sockinj->data = move_int(sock_z);
 
-  uint32_t shutdownable_tag = shutdownable ? getTagForSymbolName("\\dv{SortBool{}}(\"true\")")
-                                           : getTagForSymbolName("\\dv{SortBool{}}(\"false\")");
-  static uint64_t shutdownableBody = (((uint64_t)shutdownable_tag) << 32) | 1;
   boolinj *shutdownableinj = (boolinj *)koreAlloc(sizeof(boolinj));
   shutdownableinj->h = injHeaderBool;
-  shutdownableinj->data = (block *)shutdownableBody;
+  shutdownableinj->data = shutdownable;
 
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
   chaininj->h = injHeaderInt;
