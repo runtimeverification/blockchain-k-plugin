@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
 	  "Network:\n"
 	  "  -h,--host=IP        Bind server to IP\n"
 	  "  -p,--port=PORT      Listen to requests on port PORT\n"
+	  "  -s,--shutdownable   Allow `firefly_shutdown` message to kill server\n"
 	  "\n"
 	  "Chain:\n"
 	  "  -k,--hardfork=FORK  Ethereum client implements hardfork FORK;\n"
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
   int flag, port = 8545, chainId = 28346;
   in_addr address;
   inet_aton("127.0.0.1", &address);
-  int help = false, version = false;
+  int help = false, version = false, shutdownable = false;
   uint32_t schedule_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
   while(1) {
     static struct option long_options[] = {
@@ -41,12 +42,13 @@ int main(int argc, char **argv) {
       {"host", required_argument, 0, 'h'},
       {"hostname", required_argument, 0, 'h'},
       {"port", required_argument, 0, 'p'},
+      {"shutdownable", no_argument, 0, 's'},
       {"hardfork", required_argument, 0, 'k'},
       {"networkId", required_argument, 0, 'i'},
       {0, 0, 0, 0}
     };
     int option_index = 0;
-    flag = getopt_long(argc, argv, "h:p:k:i:", long_options, &option_index);
+    flag = getopt_long(argc, argv, "h:p:sk:i:", long_options, &option_index);
     if (flag == -1) {
       break;
     }
@@ -82,6 +84,9 @@ int main(int argc, char **argv) {
 	return 1;
       }
       break;
+    case 's':
+      shutdownable = true;
+      break;
     case 'i':
       chainId = std::stoi(optarg);
       break;
@@ -98,38 +103,59 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  int sock = init(port, address);
+  // injections to KItem for initial configuration variables
+
+  static blockheader injHeaderMode               = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
+  static blockheader injHeaderSchedule           = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
+  static blockheader injHeaderInt                = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
+  static blockheader injHeaderBool               = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortKItem{}}"));
+  static blockheader injHeaderEthereumSimulation = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
+
+  // create `Init` configuration variable entries
+
   static uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
   inj *modeinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortMode{}, SortKItem{}}"));
-  modeinj->h = hdr;
+  modeinj->h = injHeaderMode;
   modeinj->data = (block*)mode;
+
   uint64_t schedule = (((uint64_t)schedule_tag) << 32) | 1;
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
-  scheduleinj->h = hdr2;
+  scheduleinj->h = injHeaderSchedule;
   scheduleinj->data = (block*)schedule;
+
+  int sock = init(port, address);
   zinj *sockinj = (zinj *)koreAlloc(sizeof(zinj));
-  static blockheader hdr3 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
-  sockinj->h = hdr3;
+  sockinj->h = injHeaderInt;
   mpz_t sock_z;
   mpz_init_set_si(sock_z, sock);
   sockinj->data = move_int(sock_z);
+
+  boolinj *shutdownableinj = (boolinj *)koreAlloc(sizeof(boolinj));
+  shutdownableinj->h = injHeaderBool;
+  shutdownableinj->data = shutdownable;
+
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
-  chaininj->h = hdr3;
+  chaininj->h = injHeaderInt;
   mpz_t chainid;
   mpz_init_set_si(chainid, chainId);
   chaininj->data = move_int(chainid);
+
   static uint64_t accept = (((uint64_t)getTagForSymbolName("Lblaccept{}")) << 32) | 1;
   inj *kinj = (inj *)koreAlloc(sizeof(inj));
-  static blockheader hdr4 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
-  kinj->h = hdr4;
+  kinj->h = injHeaderEthereumSimulation;
   kinj->data = (block *)accept;
+
+  // build `Init` configuration variable `Map`
+
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
-  map withChain = hook_MAP_update(&withSocket, configvar("$CHAINID"), (block *)chaininj);
+  map withShutdownable = hook_MAP_update(&withSocket, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
+  map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
   map init = hook_MAP_update(&withChain, configvar("$PGM"), (block *)kinj);
+
+  // invoke the rewriter
+
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
