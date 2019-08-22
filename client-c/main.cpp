@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
-  map withShutdownable = hook_MAP_update(&withSocket, configvar("$SOCK"), (block *)shutdownableinj);
+  map withShutdownable = hook_MAP_update(&withSocket, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
   map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
   map init = hook_MAP_update(&withChain, configvar("$PGM"), (block *)kinj);
 
