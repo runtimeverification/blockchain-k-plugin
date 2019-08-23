@@ -144,6 +144,21 @@ struct string *hook_KRYPTO_ecdsaSign(struct string *mhash, struct string *prikey
   return hexEncode(result, 65);
 }
 
+struct string *hook_KRYPTO_ecdsaPubKey(struct string *prikey) {
+  if (len(prikey) != 32) {
+    return hexEncode(nullptr, 0);
+  }
+  secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+  secp256k1_pubkey pubkey;
+  if (!secp256k1_ec_pubkey_create(ctx, &pubkey, (unsigned char *)prikey->data)) {
+    return hexEncode(nullptr, 0);
+  }
+  unsigned char keystring[65];
+  size_t outputlen = 65;
+  secp256k1_ec_pubkey_serialize(ctx, keystring, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+  return hexEncode(keystring+1, outputlen-1);
+}
+
 struct g1point {
   struct blockheader h;
   mpz_ptr x;
