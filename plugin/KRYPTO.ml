@@ -79,7 +79,7 @@ let hook_ecdsaPubKey c lbl sort config ff = match c with
     let privateKeyBuffer = Bigarray.Array1.of_array Bigarray.char Bigarray.c_layout privateKeyArray in
     let privateKey = Secp256k1.Secret.read_exn context privateKeyBuffer in
     let publicKey = Secp256k1.Public.of_secret context privateKey in
-    let publicBuf = Secp256k1.Public.to_bytes false context publicKey in
+    let publicBuf = Secp256k1.Public.to_bytes ~compress:false context publicKey in
     let publicStr = String.init 64 (fun idx -> Bigarray.Array1.get publicBuf idx) in
     let publicHex = Hex.of_string publicStr in
     [String (Hex.show publicHex)]
