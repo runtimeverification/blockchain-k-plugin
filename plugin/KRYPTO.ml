@@ -70,6 +70,23 @@ let hook_ecdsaSign c lbl sort config ff = match c with
   |    Z.Overflow -> [String ""])
 | _ -> failwith "ecdsaSign"
 
+let hook_ecdsaPubKey c lbl sort config ff = match c with
+  [String prikey] ->
+  if String.length prikey <> 32 then [String ""] else
+  let context = Secp256k1.Context.create [Secp256k1.Context.Sign] in
+  (try
+    let privateKeyArray = Array.init 32 (fun idx -> prikey.[idx]) in
+    let privateKeyBuffer = Bigarray.Array1.of_array Bigarray.char Bigarray.c_layout privateKeyArray in
+    let privateKey = Secp256k1.Secret.read_exn context privateKeyBuffer in
+    let publicKey = Secp256k1.Public.of_secret context privateKey in
+    let publicBuf = Secp256k1.Public.to_bytes false context publicKey in
+    let publicStr = String.init 64 (fun idx -> Bigarray.Array1.get publicBuf idx) in
+    let publicHex = Hex.of_string publicStr in
+    [String (Hex.show publicHex)]
+  with Failure _ -> [String ""]
+  |    Z.Overflow -> [String ""])
+| _ -> failwith "ecdsaPubKey"
+
 exception InvalidPoint
 
 let get_pt k = match k with
