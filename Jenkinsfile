@@ -19,7 +19,15 @@ pipeline {
     stage("Test compilation") {
       steps {
         dir ('llvm-backend') {
-          git url: 'git@github.com:kframework/llvm-backend.git'
+          checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'SubmoduleOption',
+                        disableSubmodules: false,
+                        parentCredentials: false,
+                        recursiveSubmodules: true,
+                        reference: '',
+                        trackingSubmodules: false]], 
+          userRemoteConfigs: [[url: 'git@github.com:kframework/llvm-backend.git']]])
           sh '''
             mkdir build
             cd build
