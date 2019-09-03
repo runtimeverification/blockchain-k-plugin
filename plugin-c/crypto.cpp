@@ -283,11 +283,10 @@ g1point *hook_KRYPTO_bn128mul(g1point *pt, mpz_t scalar) {
   return projectPoint(pt->h.hdr, s * g1pt);
 }
 
-struct list;
-mpz_ptr hook_LIST_size(struct list *);
-void *hook_LIST_get_long(struct list *, ssize_t);
+mpz_ptr hook_LIST_size(list *);
+void *hook_LIST_get_long(list *, ssize_t);
 
-bool hook_KRYPTO_bn128ate(struct list *g1, struct list *g2) {
+bool hook_KRYPTO_bn128ate(list *g1, list *g2) {
   initBN128();
   mpz_ptr g1size = hook_LIST_size(g1);
   mpz_ptr g2size = hook_LIST_size(g2);
