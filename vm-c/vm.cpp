@@ -21,7 +21,7 @@ std::vector<mpz_ptr> k_to_zs(list* l) {
 std::vector<mpz_ptr> set_to_zs(set* s) {
   std::vector<mpz_ptr> result;
 
-  iter i = set_iterator(s);
+  setiter i = set_iterator(s);
   while(zinj *elem = (zinj*) set_iterator_next(&i)) {
      result.push_back(elem->data);
   }
