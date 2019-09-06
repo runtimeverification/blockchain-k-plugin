@@ -11,7 +11,7 @@
 #include "init.h"
 
 int init(int port, in_addr host) {
-  setKoreMemoryFunctionsForGMP();
+  initStaticObjects();
 
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) {
