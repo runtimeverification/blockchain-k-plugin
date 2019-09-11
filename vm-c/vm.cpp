@@ -201,7 +201,6 @@ CallResult run_transaction(CallContext ctx) {
   scheduleinj->h = hdr2;
   scheduleinj->data = (block*)schedule;
   block* inj = make_k_cell(iscreate, to, from, in.code, in.args, value, gasprice, gas, beneficiary, difficulty, number, gaslimit, move_int(timestamp), in.function);
-  static uint32_t tag = getTagForSymbolName("kseq{}");
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
   map init = hook_MAP_update(&withMode, configvar("$PGM"), inj);
