@@ -6,7 +6,7 @@
 #include <gmp.h>
 
 extern "C" {
-  void setKoreMemoryFunctionsForGMP(void);
+  void initStaticObjects(void);
   extern thread_local uint64_t INTERVAL;
   size_t hook_LIST_size_long(list *l);
   block* hook_LIST_get_long(list *l, size_t i);

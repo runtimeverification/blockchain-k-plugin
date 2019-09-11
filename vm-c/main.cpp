@@ -16,7 +16,6 @@ CallResult run_transaction(CallContext ctx);
 
 extern "C" {
   void freeAllKoreMem(void);
-  void initStaticObjects(void);
 }
 
 int init(int port, in_addr host);
@@ -42,8 +41,6 @@ int main(int argc, char **argv) {
   }
 
   int sock = init(port, host);
-
-  initStaticObjects();
 
   sockaddr_in peer;
   while(1) {
