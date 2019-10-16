@@ -1,5 +1,6 @@
 #include <vector>
 #include <unistd.h>
+#include <iostream>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
@@ -43,6 +44,13 @@ public:
         int nread = read(fd, &c, 1);
         return nread ? c : '\0';
     }
+
+    void SkipHeader(){
+        while( Peek() != '{' && Peek() != '\0'){
+          std::cout << Take();
+        }
+    }
+
     size_t Tell() const { return -1; } // 3
 
     Ch* PutBegin() { assert(false); return 0; }
@@ -198,9 +206,13 @@ struct block *hook_JSON_read(mpz_t fd_z) {
   Reader reader;
   int fd = mpz_get_si(fd_z);
   FDStream is(fd);
-
+  
+  is.SkipHeader();
+  std::cout<<"Header Skipped OK"<<std::endl; 
   bool result = reader.Parse<kParseStopWhenDoneFlag | kParseNumbersAsStringsFlag>(is, handler);
+  std::cout<<"Result Computed OK"<<std::endl; 
   if (result) {
+    std::cout<<"Result True"<<std::endl; 
     block *semifinal = handler.stack.back();
     if (semifinal->h.hdr == objHdr.hdr || semifinal->h.hdr == listWrapHdr.hdr) {
       inj *res = (inj *)koreAlloc(sizeof(inj));
@@ -211,11 +223,13 @@ struct block *hook_JSON_read(mpz_t fd_z) {
       return semifinal;
     }
   } else if (reader.GetParseErrorCode() == kParseErrorDocumentEmpty) {
+    std::cout<<"Result False 1"<<std::endl; 
     inj *error = (inj *)koreAlloc(sizeof(inj));
     error->h = ioErrorHdr;
     error->data = eof;
     return (block *)error;
   } else {
+    std::cout<<"Result false 2"<<std::endl; 
     inj *res = (inj *)koreAlloc(sizeof(inj));
     res->h = jsonHdr;
     res->data = undef;
