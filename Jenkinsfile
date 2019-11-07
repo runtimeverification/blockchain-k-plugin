@@ -53,6 +53,24 @@ pipeline {
             make install
           '''
         }
+        dir ('proxygen') {
+          checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'SubmoduleOption',
+                        disableSubmodules: false,
+                        parentCredentials: false,
+                        recursiveSubmodules: true,
+                        reference: '',
+                        trackingSubmodules: false]], 
+          userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
+          sh '''
+            cd proxygen
+            ./build.sh -m
+            trap 'cd $(pwd)' EXIT
+            make install
+            /sbin/ldconfig || true
+          '''
+        }
         sh 'make -j16'
       }
     }
