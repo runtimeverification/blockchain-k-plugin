@@ -65,10 +65,8 @@ pipeline {
           userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
           sh '''
             cd proxygen
-            ./build.sh -m -DCMAKE_INSTALL_PREFIX=install
-            trap 'cd $(pwd)' EXIT
-            make install
-            sudo /sbin/ldconfig
+            ./build.sh -m
+            ./install.sh
           '''
         }
         sh 'make -j16'
