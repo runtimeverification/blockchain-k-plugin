@@ -6,6 +6,31 @@
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
+#include <folly/Memory.h>
+#include <folly/io/async/EventBaseManager.h>
+#include <folly/portability/GFlags.h>
+#include <folly/portability/Unistd.h>
+#include <proxygen/httpserver/HTTPServer.h>
+#include <proxygen/httpserver/RequestHandlerFactory.h>
+
+#include "HttpHandler.h"
+#include "HttpStats.h"
+
+using namespace HttpService;
+using namespace proxygen;
+
+using folly::SocketAddress;
+
+using Protocol = HTTPServer::Protocol;
+
+void runKServer();
+void openSocket();
+
+static bool K_SHUTDOWNABLE;
+static uint32_t K_SCHEDULE_TAG;
+static int K_CHAINID;
+static int K_PORT = 9191;
+static int K_SOCKET;
 
 static std::string FRONTIER = "frontier";
 static std::string HOMESTEAD = "homestead";
@@ -15,93 +40,126 @@ static std::string BYZANTIUM = "byzantium";
 static std::string CONSTANTINOPLE = "constantinople";
 static std::string PETERSBURG = "petersburg";
 
-int main(int argc, char **argv) {
-  std::string usage = std::string("Usage: ") + argv[0] + " [OPTIONS] [-p PORT] [-h HOST]\n"
-	  "A KEVM-powered in-memory Web3 Ethereum client by Runtime Verification\n"
-	  "\n"
-	  "Network:\n"
-	  "  -h,--host=IP        Bind server to IP\n"
-	  "  -p,--port=PORT      Listen to requests on port PORT\n"
-	  "  -s,--shutdownable   Allow `firefly_shutdown` message to kill server\n"
-	  "\n"
-	  "Chain:\n"
-	  "  -k,--hardfork=FORK  Ethereum client implements hardfork FORK;\n"
-          "                      FORK is 'frontier', 'homestead', 'tangerine_whistle',\n"
-          "                      'spurious_dragon', 'byzantium', 'constantinople',\n"
-          "                      or 'petersburg'\n"
-	  "  -i,--networkId=ID   Set network chain id to ID\n";
-  int flag, port = 8545, chainId = 28346;
-  in_addr address;
-  inet_aton("127.0.0.1", &address);
-  int help = false, version = false, shutdownable = false;
-  uint32_t schedule_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
-  while(1) {
-    static struct option long_options[] = {
-      {"help", no_argument, &help, true},
-      {"verison", no_argument, &version, true},
-      {"host", required_argument, 0, 'h'},
-      {"hostname", required_argument, 0, 'h'},
-      {"port", required_argument, 0, 'p'},
-      {"shutdownable", no_argument, 0, 's'},
-      {"hardfork", required_argument, 0, 'k'},
-      {"networkId", required_argument, 0, 'i'},
-      {0, 0, 0, 0}
-    };
-    int option_index = 0;
-    flag = getopt_long(argc, argv, "h:p:sk:i:", long_options, &option_index);
-    if (flag == -1) {
-      break;
-    }
-    switch(flag) {
-    case 0:
-      break;
-    case 'h':
-      if (!inet_aton(optarg, &address)) {
-        std::cerr << "Invalid bind address" << std::endl;
-        return 1;
-      }
-      break;
-    case 'p':
-      port = std::stoi(optarg);
-      break;
-    case 'k':
-      if (optarg == FRONTIER) {
-        schedule_tag = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
-      } else if (optarg == HOMESTEAD) {
-        schedule_tag = getTagForSymbolName("LblHOMESTEAD'Unds'EVM{}");
-      } else if (optarg == TANGERINE_WHISTLE) {
-        schedule_tag = getTagForSymbolName("LblTANGERINE'Unds'WHISTLE'Unds'EVM{}");
-      } else if (optarg == SPURIOUS_DRAGON) {
-        schedule_tag = getTagForSymbolName("LblSPURIOUS'Unds'DRAGON'Unds'EVM{}");
-      } else if (optarg == BYZANTIUM) {
-        schedule_tag = getTagForSymbolName("LblBYZANTIUM'Unds'EVM{}");
-      } else if (optarg == CONSTANTINOPLE) {
-        schedule_tag = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
-      } else if (optarg == PETERSBURG) {
-        schedule_tag = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
-      } else {
-	std::cerr << "Invalid hardfork found: " << optarg << std::endl;
-	return 1;
-      }
-      break;
-    case 's':
-      shutdownable = true;
-      break;
-    case 'i':
-      chainId = std::stoi(optarg);
-      break;
-    default:
-      std::cerr << "Invalid option: " << (char)flag << std::endl;
-      return 1;
-    }
+DEFINE_int32(port, 8545, "Port to listen on with HTTP protocol");
+DEFINE_int32(kport, 9191, "The port on which the connection between the HTTP Server and the K Server is made");
+DEFINE_string(host, "localhost", "IP/Hostname to bind to");
+DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
+DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
+             "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
+             "'constantinople', 'petersburg'");
+DEFINE_int32(networkId, 28346, "Set network chain id");
+DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
+DEFINE_bool(vmversion, false, "Display current VM version");
+DEFINE_int32(threads, 0, "Number of threads to listen on. Numbers <= 0 "
+             "will use the number of cores on this machine.");
+
+class HttpHandlerFactory : public RequestHandlerFactory {
+ public:
+
+  void onServerStart(folly::EventBase* /*evb*/) noexcept override {
+    std::cout<<"Starting HTTP Server\n";
+    stats_.reset(new HttpStats);
+    k_socket_ = K_SOCKET;
   }
-  if (help) {
-    std::cout << usage;
-    return 0;
-  } else if (version) {
+
+  void onServerStop() noexcept override {
+    stats_.reset();
+    std::cout<<"Closing HTTP Server\n";
+  }
+
+  RequestHandler* onRequest(RequestHandler*, HTTPMessage*) noexcept override {
+    return new HttpHandler(stats_.get(), k_socket_);
+  }
+
+ private:
+  folly::ThreadLocalPtr<HttpStats> stats_;
+  int k_socket_ = 0;
+};
+
+int main(int argc, char **argv) {
+
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+  google::InstallFailureSignalHandler();
+
+  K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+
+  std::vector<HTTPServer::IPConfig> IPs = {
+    {SocketAddress(FLAGS_ip, FLAGS_port, true), Protocol::HTTP}
+  };
+
+  if (FLAGS_threads <= 0) {
+    FLAGS_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    CHECK(FLAGS_threads > 0);
+  }
+
+  if (FLAGS_vmversion) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
     return 0;
   }
+
+  K_CHAINID = FLAGS_networkId;
+  K_SHUTDOWNABLE = FLAGS_shutdownable;
+  K_PORT = FLAGS_kport;
+
+  if (FLAGS_hardfork == FRONTIER) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
+  } else if (FLAGS_hardfork == HOMESTEAD) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblHOMESTEAD'Unds'EVM{}");
+  } else if (FLAGS_hardfork == TANGERINE_WHISTLE) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblTANGERINE'Unds'WHISTLE'Unds'EVM{}");
+  } else if (FLAGS_hardfork == SPURIOUS_DRAGON) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblSPURIOUS'Unds'DRAGON'Unds'EVM{}");
+  } else if (FLAGS_hardfork == BYZANTIUM) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblBYZANTIUM'Unds'EVM{}");
+  } else if (FLAGS_hardfork == CONSTANTINOPLE) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
+  } else if (FLAGS_hardfork == PETERSBURG) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+  } else {
+      std::cerr << "Invalid hardfork found: " << FLAGS_hardfork << std::endl;
+      return 1;
+  }
+
+// Start KServer in a separate thread
+  std::thread t1([&] () {
+    runKServer();
+  });
+  t1.detach();
+
+  openSocket();
+
+  HTTPServerOptions options;
+  options.threads = static_cast<size_t>(FLAGS_threads);
+  options.idleTimeout = std::chrono::milliseconds(60000);
+  options.shutdownOn = {SIGINT, SIGTERM};
+  options.enableContentCompression = false;
+  options.handlerFactories = RequestHandlerChain()
+      .addThen<HttpHandlerFactory>()
+      .build();
+
+  // Increase the default flow control to 1MB/10MB
+  options.initialReceiveWindow = uint32_t(1 << 20);
+  options.receiveStreamWindowSize = uint32_t(1 << 20);
+  options.receiveSessionWindowSize = 10 * (1 << 20);
+  options.h2cEnabled = true;
+
+  HTTPServer server(std::move(options));
+  server.bind(IPs);
+
+  // Start HTTPServer mainloop in a separate thread
+  std::thread t2([&] () {
+    server.start();
+  });
+
+  t2.join();
+  return 0;
+}
+
+void runKServer() {
+  int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
+  in_addr address;
+  inet_aton("127.0.0.1", &address);
 
   // injections to KItem for initial configuration variables
 
@@ -118,7 +176,7 @@ int main(int argc, char **argv) {
   modeinj->h = injHeaderMode;
   modeinj->data = (block*)mode;
 
-  uint64_t schedule = (((uint64_t)schedule_tag) << 32) | 1;
+  uint64_t schedule = (((uint64_t)K_SCHEDULE_TAG) << 32) | 1;
   inj *scheduleinj = (inj *)koreAlloc(sizeof(inj));
   scheduleinj->h = injHeaderSchedule;
   scheduleinj->data = (block*)schedule;
@@ -155,12 +213,41 @@ int main(int argc, char **argv) {
   map init = hook_MAP_update(&withChain, configvar("$PGM"), (block *)kinj);
 
   // invoke the rewriter
-
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
+  std::cout << "Starting K Server on port " << K_PORT << std::endl;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(-1, init_config);
   printConfiguration("/dev/stderr", final_config);
 }
 
+void openSocket() {
+  struct sockaddr_in k_addr;
+  int sec = 0;
+  int ret;
+  if ((K_SOCKET = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  {
+      std::cerr << "\n Socket creation error \n";
+      return;
+  }
+
+  k_addr.sin_family = AF_INET;
+  k_addr.sin_port = htons(K_PORT);
+
+  // Convert IPv4 and IPv6 addresses from text to binary form
+  if(inet_pton(AF_INET, "127.0.0.1", &k_addr.sin_addr) <= 0)
+  {
+      std::cerr << "\nInvalid address/ Address not supported \n";
+      return;
+  }
+  do {
+    if (sec > 0) {
+      std::cerr << "Socket connection to K Server failed, retrying in " << sec << "..." << std::endl;
+    }
+    sleep(sec);
+    ret = connect(K_SOCKET, (struct sockaddr *)&k_addr, sizeof(k_addr));
+    sec++;
+  } while(ret == -1);
+  std::cout << "Socket connection to K Server is open\n";
+}
