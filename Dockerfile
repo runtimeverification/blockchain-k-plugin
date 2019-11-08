@@ -39,6 +39,7 @@ RUN apt-get update &&        \
     pkg-config               \
     protobuf-compiler        \
     rapidjson-dev            \
+    sudo                     \
     unzip                    \
     wget                     \
     zlib1g-dev
