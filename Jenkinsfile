@@ -66,7 +66,9 @@ pipeline {
           sh '''
             cd proxygen
             ./build.sh -m
-            ./install.sh
+            trap 'cd $(pwd)' EXIT
+            make install
+            sudo /sbin/ldconfig
           '''
         }
         sh 'make -j16'
