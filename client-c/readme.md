@@ -30,6 +30,7 @@ Other server options like `idleTimeout`, `shutdownOn`, `threads` are defined usi
 HttpHandlerFactory
 ------------------
 A class derived from `RequestHandlerFactory`, is a factory for `RequestHandlers`.
+The private variable `int k_socket_` keeps the connection to the `K Server`.
 
 Methods:
  - `void onServerStart(folly::EventBase* evb)`:
@@ -41,6 +42,31 @@ Methods:
 
 HTTPHandler
 -----------
+A class which implements the `RequestHandler` interface. In addition to the interface, the `HTTPHandler` class has three more private variables:
+ - `int k_socket_`
+ - `int bracket_counter_`
+ - `folly::Optional<proxygen::HTTPMethod> request_method_`
+
+Methods:
+ - `void onRequest(std::unique_ptr<HTTPMessage> headers)`:
+    - Method which is invoked when we have successfully fetched headers from a client. This is the first callback invoked by the handler.
+    - gets the type of the http request and stores it `request_method_`
+ - `void onBody(std::unique_ptr<folly::IOBuf> r_body)`:
+    - Invoked when we get part of body for the request.
+    - If the `request_method_` is `HTTPMethod::POST`, we send the received jsonrpc to K Server using `k_socket_`.
+    - After the jsonrpc message is processed, the result is received, a response is built and is sent back to the client.
 
 [TODO] websockets
 -----------------
+ In order to implement communication via websockets, we should:
+ 1. Check in `HttpHandler::onRequest` that the request is an upgrade request. This can be verified if `headers -> isIngressWebsocketUpgrade()` returns `true`.
+ 2. Determine the `Sec-WebSocket-Accept` value required for the handshake response.
+ Steps to calculate the `Sec-WebSocket-Accept` value:
+  - get `Sec-WebSocket-Key` string value from the headers
+  - append the magic value `258EAFA5-E914-47DA-95CA-C5AB0DC85B11` at the end of the `Sec-WebSocket-Key`
+  - hash the result with `sha1`
+  - encode the hash in `base_64`
+3. Build a response for the client, with the status `101 Switching Protocols` which contains the `Sec-Websocket-Accept` value. 
+Note: The response has be sent without `EOM`.
+4. The `onUpgrade` event handler should be invoked.
+5. Incoming data should be processed in the `onBody()` function, similar to how the POST messages are processed.
