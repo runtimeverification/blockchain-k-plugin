@@ -229,6 +229,7 @@ block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   KoreWriter writer(os);
 
   write_json(writer, json);
+  os.Put('\n');
   return dotk;
 }
 
