@@ -17,6 +17,7 @@ pipeline {
       }
     }
     stage("Test compilation") {
+      when { changeRequest() }
       steps {
         dir ('llvm-backend') {
           checkout([$class: 'GitSCM',
@@ -54,6 +55,12 @@ pipeline {
           '''
         }
         sh 'make -j16'
+      }
+    }
+    stage('Deploy') {
+      when { branch 'master' }
+      steps {
+        build job: 'rv-devops/master', parameters: [string(name: 'PR_REVIEWER', value: 'ehildenb'), booleanParam(name: 'UPDATE_DEPS_KEVM_PLUGIN', value: true)], propagate: false, wait: false
       }
     }
   }
