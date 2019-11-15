@@ -50,7 +50,7 @@ DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'fro
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
-DEFINE_int32(threads, 0, "Number of threads to listen on. Numbers <= 0 "
+DEFINE_int32(threads, 1, "Number of threads to listen on. Numbers <= 0 "
              "will use the number of cores on this machine.");
 
 class HttpHandlerFactory : public RequestHandlerFactory {
