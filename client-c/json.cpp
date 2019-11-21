@@ -187,6 +187,7 @@ void write_json(KoreWriter &writer, block *data) {
     writer.Key(inj->data->data, len(inj->data), false);
     write_json(writer, memb->val);
   } else {
+    printConfiguration("/dev/stderr", data);
     abort();
   }
 }
