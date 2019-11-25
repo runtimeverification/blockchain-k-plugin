@@ -152,26 +152,21 @@ struct KoreWriter : Writer<FDStream> {
 };
 
 bool write_json(KoreWriter &writer, block *data) {
-  bool return_value = false;
+  bool return_value = true;
   if (data == dotList) {
-    return_value = true;
-  }
-  if (data == null) {
+    continue;
+  } else if (data == null) {
     writer.Null();
-    return_value = true;
   } else if (data->h.hdr == boolHdr.hdr) {
     boolinj *inj = (boolinj *)data;
     writer.Bool(inj->data);
-    return_value = true;
   } else if (data->h.hdr == intHdr.hdr) {
     zinj *inj = (zinj *)data;
     string *str = hook_STRING_int2string(inj->data);
     writer.RawNumber(str->data, len(str), false);
-    return_value = true;
   } else if (data->h.hdr == strHdr.hdr) {
     stringinj *inj = (stringinj *)data;
     writer.String(inj->data->data, len(inj->data), false);
-    return_value = true;
   } else if (data->h.hdr == objHdr.hdr) {
     writer.StartObject();
     json *obj = (json *)data;
