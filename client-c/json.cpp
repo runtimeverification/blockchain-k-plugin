@@ -153,41 +153,41 @@ struct KoreWriter : Writer<FDStream> {
 
 bool write_json(KoreWriter &writer, block *data) {
   bool return_value = true;
-  if (data == dotList) {
-    continue;
-  } else if (data == null) {
-    writer.Null();
-  } else if (data->h.hdr == boolHdr.hdr) {
-    boolinj *inj = (boolinj *)data;
-    writer.Bool(inj->data);
-  } else if (data->h.hdr == intHdr.hdr) {
-    zinj *inj = (zinj *)data;
-    string *str = hook_STRING_int2string(inj->data);
-    writer.RawNumber(str->data, len(str), false);
-  } else if (data->h.hdr == strHdr.hdr) {
-    stringinj *inj = (stringinj *)data;
-    writer.String(inj->data->data, len(inj->data), false);
-  } else if (data->h.hdr == objHdr.hdr) {
-    writer.StartObject();
-    json *obj = (json *)data;
-    return_value = return_value && write_json(writer, (block *)obj->data);
-    writer.EndObject();
-  } else if (data->h.hdr == listWrapHdr.hdr) {
-    writer.StartArray();
-    json *obj = (json *)data;
-    return_value = return_value && write_json(writer, (block *)obj->data);
-    writer.EndArray();
-  } else if (data->h.hdr == listHdr.hdr) {
-    jsonlist *list = (jsonlist *)data;
-    return_value = return_value && write_json(writer, list->hd);
-    return_value = return_value && write_json(writer, (block *)list->tl);
-  } else if (data->h.hdr == membHdr.hdr) {
-    jsonmember *memb = (jsonmember *)data;
-    stringinj *inj = (stringinj *)memb->key;
-    writer.Key(inj->data->data, len(inj->data), false);
-    return_value = return_value && write_json(writer, memb->val);
-  } else {
-    return_value = false;
+  if (data != dotList) {
+    if (data == null) {
+      writer.Null();
+    } else if (data->h.hdr == boolHdr.hdr) {
+      boolinj *inj = (boolinj *)data;
+      writer.Bool(inj->data);
+    } else if (data->h.hdr == intHdr.hdr) {
+      zinj *inj = (zinj *)data;
+      string *str = hook_STRING_int2string(inj->data);
+      writer.RawNumber(str->data, len(str), false);
+    } else if (data->h.hdr == strHdr.hdr) {
+      stringinj *inj = (stringinj *)data;
+      writer.String(inj->data->data, len(inj->data), false);
+    } else if (data->h.hdr == objHdr.hdr) {
+      writer.StartObject();
+      json *obj = (json *)data;
+      return_value = return_value && write_json(writer, (block *)obj->data);
+      writer.EndObject();
+    } else if (data->h.hdr == listWrapHdr.hdr) {
+      writer.StartArray();
+      json *obj = (json *)data;
+      return_value = return_value && write_json(writer, (block *)obj->data);
+      writer.EndArray();
+    } else if (data->h.hdr == listHdr.hdr) {
+      jsonlist *list = (jsonlist *)data;
+      return_value = return_value && write_json(writer, list->hd);
+      return_value = return_value && write_json(writer, (block *)list->tl);
+    } else if (data->h.hdr == membHdr.hdr) {
+      jsonmember *memb = (jsonmember *)data;
+      stringinj *inj = (stringinj *)memb->key;
+      writer.Key(inj->data->data, len(inj->data), false);
+      return_value = return_value && write_json(writer, memb->val);
+    } else {
+      return_value = false;
+    }
   }
   return return_value;
 }
