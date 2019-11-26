@@ -66,7 +66,6 @@ pipeline {
                           , string(name: 'UPDATE_DEPS_REPOSITORY', value: 'kframework/evm-semantics') \
                           , string(name: 'UPDATE_DEPS_SUBMODULE_DIR', value: 'deps/plugin')           \
                           ]
-
       }
     }
   }
