@@ -27,6 +27,7 @@ static blockheader listWrapHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lb
 static block * eof = (block *)((((uint64_t)getTagForSymbolName("Lbl'Hash'EOF{}")) << 32) | 1);
 static blockheader ioErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortIOError{}, SortIOJSON{}}"));
 static blockheader jsonHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortJSON{}, SortIOJSON{}}"));
+static blockheader jsonPutResponseErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSON-RPC'Unds'putResponseError{}"));
 
 class FDStream {
 public:
@@ -229,8 +230,10 @@ block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   KoreWriter writer(os);
 
   if (! write_json(writer, json)) {
-    printConfiguration("/dev/stderr", json);
-    abort();
+    inj *res = (inj *)koreAlloc(sizeof(inj));
+    res->h = jsonPutResponseErrorHdr;
+    res->data = json;
+    return (block *)json;
   }
   return dotk;
 }
