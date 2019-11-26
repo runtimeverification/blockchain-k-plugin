@@ -1,6 +1,7 @@
 FROM ubuntu:bionic
 
 RUN    apt-get update         \
+    && apt-get upgrade --yes  \
     && apt-get install --yes  \
             bison             \
             clang-8           \
