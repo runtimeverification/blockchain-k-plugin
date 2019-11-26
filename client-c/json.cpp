@@ -14,6 +14,7 @@
 using namespace rapidjson;
 
 static block * dotk = (block *)((((uint64_t)getTagForSymbolName("dotk{}")) << 32) | 1);
+static blockheader kseqHeader = {getBlockHeaderForSymbol((uint64_t)getTagForSymbolName("kseq{}"))};
 static struct blockheader boolHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortJSON{}}"));
 static struct blockheader intHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortJSON{}}"));
 static struct blockheader strHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortString{}, SortJSON{}}"));
@@ -230,10 +231,17 @@ block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   KoreWriter writer(os);
 
   if (! write_json(writer, json)) {
+    block * retBlock = (block *)koreAlloc(sizeof(block) + 2 * sizeof(block *));
+    retBlock->h = kseqHeader;
+
     inj *res = (inj *)koreAlloc(sizeof(inj));
     res->h = jsonPutResponseErrorHdr;
     res->data = json;
-    return (block *)json;
+
+    memcpy(retBlock->children, &res, sizeof(block *));
+    memcpy(retBlock->children + 1, &dotk, sizeof(block *));
+
+    return retBlock;
   }
   return dotk;
 }
