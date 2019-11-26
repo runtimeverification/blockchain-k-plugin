@@ -169,22 +169,21 @@ bool write_json(KoreWriter &writer, block *data) {
     } else if (data->h.hdr == objHdr.hdr) {
       writer.StartObject();
       json *obj = (json *)data;
-      return_value = return_value && write_json(writer, (block *)obj->data);
+      return_value = write_json(writer, (block *)obj->data);
       writer.EndObject();
     } else if (data->h.hdr == listWrapHdr.hdr) {
       writer.StartArray();
       json *obj = (json *)data;
-      return_value = return_value && write_json(writer, (block *)obj->data);
+      return_value = write_json(writer, (block *)obj->data);
       writer.EndArray();
     } else if (data->h.hdr == listHdr.hdr) {
       jsonlist *list = (jsonlist *)data;
-      return_value = return_value && write_json(writer, list->hd);
-      return_value = return_value && write_json(writer, (block *)list->tl);
+      return_value = write_json(writer, list->hd) && write_json(writer, (block *)list->tl);
     } else if (data->h.hdr == membHdr.hdr) {
       jsonmember *memb = (jsonmember *)data;
       stringinj *inj = (stringinj *)memb->key;
       writer.Key(inj->data->data, len(inj->data), false);
-      return_value = return_value && write_json(writer, memb->val);
+      return_value = write_json(writer, memb->val);
     } else {
       return_value = false;
     }
