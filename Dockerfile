@@ -1,7 +1,26 @@
 FROM ubuntu:bionic
 
-RUN apt-get update && \
-    apt-get install -y cmake clang-8 zlib1g-dev bison flex libboost-test-dev libgmp-dev libmpfr-dev libyaml-dev libjemalloc-dev pkg-config protobuf-compiler libprotobuf-dev libcrypto++-dev libsecp256k1-dev rapidjson-dev libssl-dev libprocps-dev
+RUN    apt-get update         \
+    && apt-get upgrade --yes  \
+    && apt-get install --yes  \
+            bison             \
+            clang-8           \
+            cmake             \
+            flex              \
+            libboost-test-dev \
+            libcrypto++-dev   \
+            libgmp-dev        \
+            libjemalloc-dev   \
+            libmpfr-dev       \
+            libprocps-dev     \
+            libprotobuf-dev   \
+            libsecp256k1-dev  \
+            libssl-dev        \
+            libyaml-dev       \
+            pkg-config        \
+            protobuf-compiler \
+            rapidjson-dev     \
+            zlib1g-dev
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
