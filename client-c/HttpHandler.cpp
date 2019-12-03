@@ -41,16 +41,16 @@ void HttpHandler::onBody(std::unique_ptr<folly::IOBuf> r_body) noexcept {
   if (HTTPMethod::POST == request_method_) {
     std::string body = r_body -> moveToFbString().toStdString();
     std::string message;
-    char buffer[2] = {0};
+    char buffer[4096] = {0};
     int ret;
 
     send(k_socket_, body.c_str(), body.length(), 0);
 
     do {
-      ret = recv(k_socket_, buffer, 1, 0);
+      ret = recv(k_socket_, buffer, 4096, 0);
       buffer[ret] = 0x00;
       message += buffer;
-    } while (ret > 0 && false == doneReading(buffer[0]));
+    } while (ret > 0 && false == doneReading(buffer));
 
     ResponseBuilder(downstream_)
       .status(200, "OK")
@@ -71,11 +71,13 @@ void HttpHandler::requestComplete() noexcept {
 
 void HttpHandler::onError(ProxygenError /*err*/) noexcept { delete this; }
 
-bool HttpHandler::doneReading (char c) {
-  if('{' == c){
-    bracket_counter_++;
-  } else if ('}' == c) {
-    bracket_counter_--;
+bool HttpHandler::doneReading (char *buffer) {
+  for(int i = 0; i < strlen(buffer); i++){
+    if('{' == buffer[i]){
+      bracket_counter_++;
+    } else if ('}' == buffer[i]) {
+      bracket_counter_--;
+    }
   }
   return bracket_counter_ == 0;
 }

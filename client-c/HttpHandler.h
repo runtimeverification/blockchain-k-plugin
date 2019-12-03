@@ -36,7 +36,7 @@ class HttpHandler : public proxygen::RequestHandler {
 
   void onError(proxygen::ProxygenError err) noexcept override;
 
-  bool doneReading(char c);
+  bool doneReading(char *buffer);
 
  private:
   HttpStats* const stats_{nullptr};
