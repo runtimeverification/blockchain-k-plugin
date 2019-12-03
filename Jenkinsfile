@@ -27,7 +27,7 @@ pipeline {
                         parentCredentials: false,
                         recursiveSubmodules: true,
                         reference: '',
-                        trackingSubmodules: false]], 
+                        trackingSubmodules: false]],
           userRemoteConfigs: [[url: 'git@github.com:kframework/llvm-backend.git']]])
           sh '''
             mkdir build
