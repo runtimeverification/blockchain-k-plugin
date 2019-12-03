@@ -17,6 +17,7 @@ pipeline {
       }
     }
     stage("Test compilation") {
+      when { changeRequest() }
       steps {
         dir ('llvm-backend') {
           checkout([$class: 'GitSCM',
@@ -70,6 +71,17 @@ pipeline {
           '''
         }
         sh 'make -j16'
+      }
+    }
+    stage('Deploy') {
+      when { branch 'master' }
+      steps {
+        build job: 'rv-devops/master', propagate: false, wait: false                                  \
+            , parameters: [ booleanParam(name: 'UPDATE_DEPS_SUBMODULE', value: true)                  \
+                          , string(name: 'PR_REVIEWER', value: 'ehildenb')                            \
+                          , string(name: 'UPDATE_DEPS_REPOSITORY', value: 'kframework/evm-semantics') \
+                          , string(name: 'UPDATE_DEPS_SUBMODULE_DIR', value: 'deps/plugin')           \
+                          ]
       }
     }
   }

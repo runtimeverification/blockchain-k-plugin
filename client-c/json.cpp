@@ -14,19 +14,21 @@
 using namespace rapidjson;
 
 static block * dotk = (block *)((((uint64_t)getTagForSymbolName("dotk{}")) << 32) | 1);
+static blockheader kseqHeader = {getBlockHeaderForSymbol((uint64_t)getTagForSymbolName("kseq{}"))};
 static struct blockheader boolHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortJSON{}}"));
 static struct blockheader intHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortJSON{}}"));
 static struct blockheader strHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortString{}, SortJSON{}}"));
-static block *dotList = (block *)((((uint64_t)getTagForSymbolName("Lbl'Stop'List'LBraQuotUndsCommUndsUnds'EVM-DATA'Unds'JSONList'Unds'JSON'Unds'JSONList'QuotRBraUnds'JSONList{}")) << 32) | 1);
-static block *null = (block *)((((uint64_t)getTagForSymbolName("Lblnull'Unds'WEB3'Unds'JSON{}")) << 32) | 1);
-static block *undef = (block *)((((uint64_t)getTagForSymbolName("Lblundef'Unds'WEB3'Unds'JSON{}")) << 32) | 1);
-static blockheader listHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsCommUndsUnds'EVM-DATA'Unds'JSONList'Unds'JSON'Unds'JSONList{}"));
-static blockheader membHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'UndsColnUndsUnds'EVM-DATA'Unds'JSON'Unds'JSONKey'Unds'JSON{}"));
-static blockheader objHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LBraUndsRBraUnds'EVM-DATA'Unds'JSON'Unds'JSONList{}"));
-static blockheader listWrapHdr = getBlockHeaderForSymbol(getTagForSymbolName("Lbl'LSqBUndsRSqBUnds'EVM-DATA'Unds'JSON'Unds'JSONList{}"));
+static block *dotList = (block *)((((uint64_t)getTagForSymbolName("Lbl'Stop'List'LBraQuot'JSONs'QuotRBraUnds'JSONs{}")) << 32) | 1);
+static block *null = (block *)((((uint64_t)getTagForSymbolName("LblJSONnull{}")) << 32) | 1);
+static block *undef = (block *)((((uint64_t)getTagForSymbolName("LblJSON-RPCundef{}")) << 32) | 1);
+static blockheader listHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSONs{}"));
+static blockheader membHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSONEntry{}"));
+static blockheader objHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSONObject{}"));
+static blockheader listWrapHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSONList{}"));
 static block * eof = (block *)((((uint64_t)getTagForSymbolName("Lbl'Hash'EOF{}")) << 32) | 1);
 static blockheader ioErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortIOError{}, SortIOJSON{}}"));
 static blockheader jsonHdr = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortJSON{}, SortIOJSON{}}"));
+static blockheader jsonPutResponseErrorHdr = getBlockHeaderForSymbol(getTagForSymbolName("LblJSON-RPC'Unds'putResponseError{}"));
 
 class FDStream {
 public:
@@ -151,44 +153,44 @@ struct KoreWriter : Writer<FDStream> {
   KoreWriter(FDStream &os) : Writer(os) {}
 };
 
-void write_json(KoreWriter &writer, block *data) {
-  if (data == dotList) {
-    return;
+bool write_json(KoreWriter &writer, block *data) {
+  bool return_value = true;
+  if (data != dotList) {
+    if (data == null) {
+      writer.Null();
+    } else if (data->h.hdr == boolHdr.hdr) {
+      boolinj *inj = (boolinj *)data;
+      writer.Bool(inj->data);
+    } else if (data->h.hdr == intHdr.hdr) {
+      zinj *inj = (zinj *)data;
+      string *str = hook_STRING_int2string(inj->data);
+      writer.RawNumber(str->data, len(str), false);
+    } else if (data->h.hdr == strHdr.hdr) {
+      stringinj *inj = (stringinj *)data;
+      writer.String(inj->data->data, len(inj->data), false);
+    } else if (data->h.hdr == objHdr.hdr) {
+      writer.StartObject();
+      json *obj = (json *)data;
+      return_value = write_json(writer, (block *)obj->data);
+      writer.EndObject();
+    } else if (data->h.hdr == listWrapHdr.hdr) {
+      writer.StartArray();
+      json *obj = (json *)data;
+      return_value = write_json(writer, (block *)obj->data);
+      writer.EndArray();
+    } else if (data->h.hdr == listHdr.hdr) {
+      jsonlist *list = (jsonlist *)data;
+      return_value = write_json(writer, list->hd) && write_json(writer, (block *)list->tl);
+    } else if (data->h.hdr == membHdr.hdr) {
+      jsonmember *memb = (jsonmember *)data;
+      stringinj *inj = (stringinj *)memb->key;
+      writer.Key(inj->data->data, len(inj->data), false);
+      return_value = write_json(writer, memb->val);
+    } else {
+      return_value = false;
+    }
   }
-  if (data == null) {
-    writer.Null();
-  } else if (data->h.hdr == boolHdr.hdr) {
-    boolinj *inj = (boolinj *)data;
-    writer.Bool(inj->data);
-  } else if (data->h.hdr == intHdr.hdr) {
-    zinj *inj = (zinj *)data;
-    string *str = hook_STRING_int2string(inj->data);
-    writer.RawNumber(str->data, len(str), false);
-  } else if (data->h.hdr == strHdr.hdr) {
-    stringinj *inj = (stringinj *)data;
-    writer.String(inj->data->data, len(inj->data), false);
-  } else if (data->h.hdr == objHdr.hdr) {
-    writer.StartObject();
-    json *obj = (json *)data;
-    write_json(writer, (block *)obj->data);
-    writer.EndObject();
-  } else if (data->h.hdr == listWrapHdr.hdr) {
-    writer.StartArray();
-    json *obj = (json *)data;
-    write_json(writer, (block *)obj->data);
-    writer.EndArray();
-  } else if (data->h.hdr == listHdr.hdr) {
-    jsonlist *list = (jsonlist *)data;
-    write_json(writer, list->hd);
-    write_json(writer, (block *)list->tl);
-  } else if (data->h.hdr == membHdr.hdr) {
-    jsonmember *memb = (jsonmember *)data;
-    stringinj *inj = (stringinj *)memb->key;
-    writer.Key(inj->data->data, len(inj->data), false);
-    write_json(writer, memb->val);
-  } else {
-    abort();
-  }
+  return return_value;
 }
 
 extern "C" {
@@ -228,7 +230,19 @@ block *hook_JSON_write(block *json, mpz_ptr fd_z) {
   FDStream os(fd);
   KoreWriter writer(os);
 
-  write_json(writer, json);
+  if (! write_json(writer, json)) {
+    block * retBlock = (block *)koreAlloc(sizeof(block) + 2 * sizeof(block *));
+    retBlock->h = kseqHeader;
+
+    inj *res = (inj *)koreAlloc(sizeof(inj));
+    res->h = jsonPutResponseErrorHdr;
+    res->data = json;
+
+    memcpy(retBlock->children, &res, sizeof(block *));
+    memcpy(retBlock->children + 1, &dotk, sizeof(block *));
+
+    return retBlock;
+  }
   return dotk;
 }
 
