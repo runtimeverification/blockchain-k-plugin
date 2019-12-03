@@ -56,7 +56,7 @@ pipeline {
         }
         dir ('proxygen') {
           checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
+          branches: [[name: '*/v2019.11.11.00']],
           extensions: [[$class: 'SubmoduleOption',
                         disableSubmodules: false,
                         parentCredentials: false,
