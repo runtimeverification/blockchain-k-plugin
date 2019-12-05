@@ -1,7 +1,7 @@
 pipeline {
   agent {
     dockerfile {
-      additionalBuildArgs '--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+      reuseNode true
     }
   }
   options {
@@ -27,7 +27,7 @@ pipeline {
                         parentCredentials: false,
                         recursiveSubmodules: true,
                         reference: '',
-                        trackingSubmodules: false]], 
+                        trackingSubmodules: false]],
           userRemoteConfigs: [[url: 'git@github.com:kframework/llvm-backend.git']]])
           sh '''
             mkdir build
@@ -52,6 +52,22 @@ pipeline {
             cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
             make -j16
             make install
+          '''
+        }
+        dir ('proxygen') {
+          checkout([$class: 'GitSCM',
+          branches: [[name: 'refs/tags/v2019.11.11.00']],
+          extensions: [[$class: 'SubmoduleOption',
+                        disableSubmodules: false,
+                        parentCredentials: false,
+                        recursiveSubmodules: true,
+                        reference: '',
+                        trackingSubmodules: false]], 
+          userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
+          sh '''
+            cd proxygen
+            ./build.sh -m
+            ./install.sh
           '''
         }
         sh 'make -j16'
