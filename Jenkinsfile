@@ -66,7 +66,7 @@ pipeline {
           userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
           sh '''
             cd proxygen
-            ./build.sh -m
+            ./build.sh --no-jemalloc --no-install-dependencies
             ./install.sh
           '''
         }
