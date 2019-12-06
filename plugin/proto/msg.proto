@@ -21,6 +21,7 @@ message CallContext {
   bytes callValue = 4;
   bytes gasPrice = 5;
   bytes gasProvided = 6;
+  bytes chainId = 10;
   BlockHeader blockHeader = 7;
 
   // This may be used to override the VM configuration for the session. It used in tests to avoid

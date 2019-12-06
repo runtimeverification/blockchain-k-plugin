@@ -188,6 +188,7 @@ CallResult run_transaction(CallContext ctx) {
   mpz_ptr difficulty = to_z_unsigned(ctx.blockheader().difficulty());
   mpz_ptr number = to_z_unsigned(ctx.blockheader().number());
   mpz_ptr gaslimit = to_z_unsigned(ctx.blockheader().gaslimit());
+  mpz_ptr chainid = to_z_unsigned(ctx.chainid());
   mpz_t timestamp;
   mpz_init_set_ui(timestamp, ctx.blockheader().unixtimestamp());
   static uint64_t mode = (((uint64_t)getTagForSymbolName("LblNORMAL{}")) << 32) | 1;
@@ -200,10 +201,15 @@ CallResult run_transaction(CallContext ctx) {
   static blockheader hdr2 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortSchedule{}, SortKItem{}}"));
   scheduleinj->h = hdr2;
   scheduleinj->data = (block*)schedule;
+  zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
+  static blockheader hdr3 = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
+  chaininj->h = hdr3;
+  chaininj->data = chainid;
   block* inj = make_k_cell(iscreate, to, from, in.code, in.args, value, gasprice, gas, beneficiary, difficulty, number, gaslimit, move_int(timestamp), in.function);
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
-  map init = hook_MAP_update(&withMode, configvar("$PGM"), inj);
+  map withChain = hook_MAP_update(&withMode, configvar("$CHAINID"), (block *)chaininj);
+  map init = hook_MAP_update(&withChain, configvar("$PGM"), inj);
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
