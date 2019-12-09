@@ -42,6 +42,7 @@ class HttpHandler : public proxygen::RequestHandler {
   HttpStats* const stats_{nullptr};
   int k_socket_;
   int bracket_counter_;
+  int brace_counter_;
   folly::Optional<proxygen::HTTPMethod> request_method_;
 };
 
