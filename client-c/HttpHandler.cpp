@@ -73,12 +73,26 @@ void HttpHandler::onError(ProxygenError /*err*/) noexcept { delete this; }
 
 bool HttpHandler::doneReading (char *buffer) {
   for(int i = 0; i < strlen(buffer); i++){
-    if('{' == buffer[i]){
-      bracket_counter_++;
-    } else if ('}' == buffer[i]) {
-      bracket_counter_--;
+    switch (buffer[i]){
+      case '{': {
+        brace_counter_++;
+        break;
+        }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
     }
   }
-  return bracket_counter_ == 0;
+  return 0 == brace_counter_
+      && 0 == bracket_counter_;
 }
 }
