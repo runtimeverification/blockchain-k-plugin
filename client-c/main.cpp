@@ -23,7 +23,7 @@ using folly::SocketAddress;
 
 using Protocol = HTTPServer::Protocol;
 
-void runKServer();
+void runKServer(HTTPServer *server);
 void openSocket();
 
 static bool K_SHUTDOWNABLE;
@@ -121,14 +121,6 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-// Start KServer in a separate thread
-  std::thread t1([&] () {
-    runKServer();
-  });
-  t1.detach();
-
-  openSocket();
-
   HTTPServerOptions options;
   options.threads = static_cast<size_t>(FLAGS_threads);
   options.idleTimeout = std::chrono::milliseconds(60000);
@@ -147,6 +139,14 @@ int main(int argc, char **argv) {
   HTTPServer server(std::move(options));
   server.bind(IPs);
 
+  // Start KServer in a separate thread
+  std::thread t1([&] () {
+    runKServer(&server);
+  });
+  t1.detach();
+
+  openSocket();
+
   // Start HTTPServer mainloop in a separate thread
   std::thread t2([&] () {
     server.start();
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void runKServer() {
+void runKServer(HTTPServer *server) {
   int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -220,6 +220,7 @@ void runKServer() {
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(-1, init_config);
   printConfiguration("/dev/stderr", final_config);
+  server->stop();
 }
 
 void openSocket() {
