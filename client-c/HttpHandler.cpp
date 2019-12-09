@@ -29,6 +29,7 @@ namespace HttpService {
 HttpHandler::HttpHandler(HttpStats* stats, int k_socket): stats_(stats),
                                                           k_socket_(k_socket),
                                                           bracket_counter_(0),
+                                                          brace_counter_(0),
                                                           request_method_(folly::none) {
 }
 
