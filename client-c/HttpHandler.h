@@ -46,6 +46,7 @@ class HttpHandler : public proxygen::RequestHandler {
   int bracket_counter_;
   int brace_counter_;
   int object_counter_;
+  std::string body_;
   folly::Optional<proxygen::HTTPMethod> request_method_;
 };
 
