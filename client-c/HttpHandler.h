@@ -38,11 +38,15 @@ class HttpHandler : public proxygen::RequestHandler {
 
   bool doneReading(char *buffer);
 
+  void countBrackets(const char *buffer);
+
  private:
   HttpStats* const stats_{nullptr};
   int k_socket_;
   int bracket_counter_;
   int brace_counter_;
+  int object_counter_;
+  std::string body_;
   folly::Optional<proxygen::HTTPMethod> request_method_;
 };
 

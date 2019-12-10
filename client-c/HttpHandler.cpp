@@ -29,6 +29,8 @@ namespace HttpService {
 HttpHandler::HttpHandler(HttpStats* stats, int k_socket): stats_(stats),
                                                           k_socket_(k_socket),
                                                           bracket_counter_(0),
+                                                          brace_counter_(0),
+                                                          object_counter_(0),
                                                           request_method_(folly::none) {
 }
 
@@ -40,11 +42,18 @@ void HttpHandler::onRequest(std::unique_ptr<HTTPMessage> headers) noexcept {
 void HttpHandler::onBody(std::unique_ptr<folly::IOBuf> r_body) noexcept {
   if (HTTPMethod::POST == request_method_) {
     std::string body = r_body -> moveToFbString().toStdString();
+    body_.append(body);
+    countBrackets(body.c_str());
+  }
+}
+
+void HttpHandler::onEOM() noexcept {
+
     std::string message;
     char buffer[4096] = {0};
     int ret;
 
-    send(k_socket_, body.c_str(), body.length(), 0);
+    send(k_socket_, body_.c_str(), body_.length(), 0);
 
     do {
       ret = recv(k_socket_, buffer, 4096, 0);
@@ -58,10 +67,7 @@ void HttpHandler::onBody(std::unique_ptr<folly::IOBuf> r_body) noexcept {
       .header(HTTP_HEADER_CONNECTION, "keep-alive")
       .body(folly::IOBuf::copyBuffer(message))
       .sendWithEOM();
-  }
 }
-
-void HttpHandler::onEOM() noexcept {}
 
 void HttpHandler::onUpgrade(UpgradeProtocol /*protocol*/) noexcept {}
 
@@ -91,8 +97,38 @@ bool HttpHandler::doneReading (char *buffer) {
         break;
       }
     }
+    if(0 == brace_counter_ && 0 == bracket_counter_){
+      object_counter_--;
+    }
   }
   return 0 == brace_counter_
-      && 0 == bracket_counter_;
+      && 0 == bracket_counter_
+      && 0 == object_counter_;
+}
+
+void HttpHandler::countBrackets(const char *buffer) {
+  for(int i = 0; i < strlen(buffer); i++) {
+    switch(buffer[i]){
+      case '{':{
+        brace_counter_++;
+        break;
+      }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
+    }
+    if(0 == brace_counter_ && 0 == bracket_counter_) {
+      object_counter_++;
+    }
+  }
 }
 }
