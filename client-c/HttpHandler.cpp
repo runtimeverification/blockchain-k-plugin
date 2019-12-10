@@ -30,6 +30,7 @@ HttpHandler::HttpHandler(HttpStats* stats, int k_socket): stats_(stats),
                                                           k_socket_(k_socket),
                                                           bracket_counter_(0),
                                                           brace_counter_(0),
+                                                          object_counter_(0),
                                                           request_method_(folly::none) {
 }
 
@@ -45,13 +46,14 @@ void HttpHandler::onBody(std::unique_ptr<folly::IOBuf> r_body) noexcept {
     char buffer[4096] = {0};
     int ret;
 
+    countBrackets(body.c_str());
     send(k_socket_, body.c_str(), body.length(), 0);
 
     do {
       ret = recv(k_socket_, buffer, 4096, 0);
       buffer[ret] = 0x00;
       message += buffer;
-    } while (ret > 0 && false == doneReading(buffer) && false == peek(k_socket_));
+    } while (ret > 0 && false == doneReading(buffer));
 
     ResponseBuilder(downstream_)
       .status(200, "OK")
@@ -72,12 +74,6 @@ void HttpHandler::requestComplete() noexcept {
 
 void HttpHandler::onError(ProxygenError /*err*/) noexcept { delete this; }
 
-bool HttpHandler::peek(int socket) {
-  char *buffer[2] = {0};
-  int ret = recv(socket, buffer, 1, MSG_PEEK);
-  return buffer[0] == '{' 
-      || buffer[0] == '[';
-}
 bool HttpHandler::doneReading (char *buffer) {
   for(int i = 0; i < strlen(buffer); i++){
     switch (buffer[i]){
@@ -98,8 +94,40 @@ bool HttpHandler::doneReading (char *buffer) {
         break;
       }
     }
+    if(0 == brace_counter_ && 0 == bracket_counter_ ){
+      object_counter_--;
+    }
   }
   return 0 == brace_counter_
-      && 0 == bracket_counter_;
+      && 0 == bracket_counter_
+      && 0 == object_counter_;
+}
+
+void HttpHandler::countBrackets(const char *buffer) {
+  for(int i = 0; i < strlen(buffer); i++) {
+    switch(buffer[i]){
+      case '{':{
+        brace_counter_++;
+        break;
+      }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
+    }
+    if(0 == brace_counter_ && 0 == bracket_counter_) {
+      object_counter_++;
+    }
+  }
+  bracket_counter_ = 0;
+  brace_counter_ = 0;
 }
 }
