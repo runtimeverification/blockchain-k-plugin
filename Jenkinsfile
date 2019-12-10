@@ -65,9 +65,8 @@ pipeline {
                         trackingSubmodules: false]], 
           userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
           sh '''
-            cd proxygen
-            ./build.sh --no-jemalloc --no-install-dependencies
-            ./install.sh
+            cd proxygen && ./build.sh --no-jemalloc --no-install-dependencies
+            cd _build   && make install
           '''
         }
         sh 'make -j16'
