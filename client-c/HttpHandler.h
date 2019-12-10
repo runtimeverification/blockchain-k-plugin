@@ -38,6 +38,7 @@ class HttpHandler : public proxygen::RequestHandler {
 
   bool doneReading(char *buffer);
 
+  bool peek(int socket);
  private:
   HttpStats* const stats_{nullptr};
   int k_socket_;

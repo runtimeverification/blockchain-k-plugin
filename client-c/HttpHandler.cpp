@@ -51,7 +51,7 @@ void HttpHandler::onBody(std::unique_ptr<folly::IOBuf> r_body) noexcept {
       ret = recv(k_socket_, buffer, 4096, 0);
       buffer[ret] = 0x00;
       message += buffer;
-    } while (ret > 0 && false == doneReading(buffer));
+    } while (ret > 0 && false == doneReading(buffer) && false == peek(k_socket_));
 
     ResponseBuilder(downstream_)
       .status(200, "OK")
@@ -72,6 +72,12 @@ void HttpHandler::requestComplete() noexcept {
 
 void HttpHandler::onError(ProxygenError /*err*/) noexcept { delete this; }
 
+bool HttpHandler::peek(int socket) {
+  char *buffer[2] = {0};
+  int ret = recv(socket, buffer, 1, MSG_PEEK);
+  return buffer[0] == '{' 
+      || buffer[0] == '[';
+}
 bool HttpHandler::doneReading (char *buffer) {
   for(int i = 0; i < strlen(buffer); i++){
     switch (buffer[i]){
