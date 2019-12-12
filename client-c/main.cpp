@@ -220,6 +220,7 @@ void runKServer(HTTPServer *server) {
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(-1, init_config);
   printConfiguration("/dev/stderr", final_config);
+  shutdown(K_SOCKET, SHUT_RDWR);
   server->stop();
 }
 
