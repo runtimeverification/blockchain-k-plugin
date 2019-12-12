@@ -227,7 +227,7 @@ void runKServer(HTTPServer *server) {
 void openSocket() {
   struct sockaddr_in k_addr;
   int sec = 0;
-  int ret;
+  int ret = -1;
   if ((K_SOCKET = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
       std::cerr << "\n Socket creation error \n";
@@ -240,16 +240,16 @@ void openSocket() {
   // Convert IPv4 and IPv6 addresses from text to binary form
   if(inet_pton(AF_INET, "127.0.0.1", &k_addr.sin_addr) <= 0)
   {
-      std::cerr << "\nInvalid address/ Address not supported \n";
-      return;
+    std::cerr << "\nInvalid address/ Address not supported \n";
+    return;
   }
-  do {
-    if (sec > 0) {
-      std::cerr << "Socket connection to K Server failed, retrying in " << sec << "..." << std::endl;
-    }
+  while (ret != 0 && sec < 4) {
     sleep(sec);
     ret = connect(K_SOCKET, (struct sockaddr *)&k_addr, sizeof(k_addr));
     sec++;
-  } while(ret == -1);
+  }
+  if (ret != 0) {
+    std::cerr << "Socket connection to K Server failed, tried " << sec << " times." << std::endl;
+  }
   std::cout << "Socket connection to K Server is open\n";
 }
