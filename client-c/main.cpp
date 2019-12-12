@@ -31,6 +31,7 @@ static uint32_t K_SCHEDULE_TAG;
 static int K_CHAINID;
 static int K_PORT = 9191;
 static int K_SOCKET;
+static int K_DEPTH;
 
 static std::string FRONTIER = "frontier";
 static std::string HOMESTEAD = "homestead";
@@ -42,6 +43,7 @@ static std::string PETERSBURG = "petersburg";
 
 DEFINE_int32(port, 8545, "Port to listen on with HTTP protocol");
 DEFINE_int32(kport, 9191, "The port on which the connection between the HTTP Server and the K Server is made");
+DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
@@ -101,6 +103,7 @@ int main(int argc, char **argv) {
   K_CHAINID = FLAGS_networkId;
   K_SHUTDOWNABLE = FLAGS_shutdownable;
   K_PORT = FLAGS_kport;
+  K_DEPTH = FLAGS_depth;
 
   if (FLAGS_hardfork == FRONTIER) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
@@ -218,7 +221,7 @@ void runKServer(HTTPServer *server) {
   arr[0] = &init;
   std::cout << "Starting K Server on port " << K_PORT << std::endl;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
-  block* final_config = take_steps(-1, init_config);
+  block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
   shutdown(K_SOCKET, SHUT_RDWR);
   server->stop();
