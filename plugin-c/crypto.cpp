@@ -9,6 +9,7 @@
 #include <libff/common/profiling.hpp>
 #include "runtime/alloc.h"
 #include "runtime/header.h"
+#include "blake2.h"
 
 using namespace CryptoPP;
 using namespace libff;
@@ -157,6 +158,24 @@ struct string *hook_KRYPTO_ecdsaPubKey(struct string *prikey) {
   size_t outputlen = 65;
   secp256k1_ec_pubkey_serialize(ctx, keystring, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
   return hexEncode(keystring+1, outputlen-1);
+}
+
+struct string *hook_KRYPTO_blake2compress(struct string *params) {
+    if (len(params) != 213) {
+        return hexEncode(nullptr, 0);
+    }
+    unsigned char *data = (unsigned char *)params->data;
+    uint32_t  rounds = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+    uint64_t *h      = (uint64_t *)&data[4];
+    uint64_t *m      = (uint64_t *)&data[68];
+    uint64_t *t      = (uint64_t *)&data[196];
+    unsigned char f  = data[212];
+
+    if (f > 1) return hexEncode(nullptr, 0);
+
+    blake2b_compress(h, m, t, f, rounds);
+
+    return hexEncode((unsigned char *)h, 64);
 }
 
 struct g1point {
