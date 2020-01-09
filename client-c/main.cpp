@@ -40,6 +40,41 @@ DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
 
+int brace_counter_, bracket_counter_, object_counter_;
+
+void countBrackets(const char *buffer) {
+  for(int i = 0; i < strlen(buffer); i++) {
+    switch(buffer[i]){
+      case '{':{
+        brace_counter_++;
+        break;
+      }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
+    }
+    if(0 == brace_counter_ && 0 == bracket_counter_) {
+      object_counter_++;
+    }
+  }
+}
+
+bool doneReading(const char *buffer) {
+  countBrackets(buffer);
+  return 0 == brace_counter_
+      && 0 == bracket_counter_
+      && 0 == object_counter_;
+}
+
 int main(int argc, char **argv) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -97,11 +132,20 @@ int main(int argc, char **argv) {
         body.append(data, data_length);
         return true;
       });
-      // Need to count brackets
       send(K_PORT, body.c_str(), body.length(), 0);
 
+      std::string message;
+      char buffer[4096] = {0};
+      int ret;
+
+      do {
+        ret = recv(K_PORT, buffer, 4096, 0);
+        buffer[ret] = 0x00;
+        message += buffer;
+      } while (ret > 0 && !doneReading(buffer));
+
       // Need to read actual response and send it over
-      res.set_content(body, "text/plain");
+      res.set_content(message, "application/json");
     });
 
   // need to stop the server at some point with svr.stop()
