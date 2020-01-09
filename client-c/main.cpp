@@ -12,6 +12,8 @@
 #include <folly/portability/Unistd.h>
 #include <proxygen/httpserver/HTTPServer.h>
 #include <proxygen/httpserver/RequestHandlerFactory.h>
+#include <regex>
+#include <httplib.h>
 
 #include "HttpHandler.h"
 #include "HttpStats.h"
@@ -23,7 +25,7 @@ using folly::SocketAddress;
 
 using Protocol = HTTPServer::Protocol;
 
-void runKServer(HTTPServer *server);
+void runKServer();
 void openSocket();
 
 static bool K_SHUTDOWNABLE;
@@ -124,42 +126,62 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-  HTTPServerOptions options;
-  options.threads = static_cast<size_t>(FLAGS_threads);
-  options.idleTimeout = std::chrono::milliseconds(60000);
-  options.shutdownOn = {SIGINT, SIGTERM};
-  options.enableContentCompression = false;
-  options.handlerFactories = RequestHandlerChain()
-      .addThen<HttpHandlerFactory>()
-      .build();
+  //HTTPServerOptions options;
+  //options.threads = static_cast<size_t>(FLAGS_threads);
+  //options.idleTimeout = std::chrono::milliseconds(60000);
+  //options.shutdownOn = {SIGINT, SIGTERM};
+  //options.enableContentCompression = false;
+  //options.handlerFactories = RequestHandlerChain()
+  //    .addThen<HttpHandlerFactory>()
+  //    .build();
 
   // Increase the default flow control to 1MB/10MB
-  options.initialReceiveWindow = uint32_t(1 << 20);
-  options.receiveStreamWindowSize = uint32_t(1 << 20);
-  options.receiveSessionWindowSize = 10 * (1 << 20);
-  options.h2cEnabled = true;
+  //options.initialReceiveWindow = uint32_t(1 << 20);
+  //options.receiveStreamWindowSize = uint32_t(1 << 20);
+  //options.receiveSessionWindowSize = 10 * (1 << 20);
+  //options.h2cEnabled = true;
 
-  HTTPServer server(std::move(options));
-  server.bind(IPs);
+  //HTTPServer server(std::move(options));
+  //server.bind(IPs);
 
   // Start KServer in a separate thread
   std::thread t1([&] () {
-    runKServer(&server);
+    runKServer();
   });
   t1.detach();
 
   openSocket();
 
   // Start HTTPServer mainloop in a separate thread
-  std::thread t2([&] () {
-    server.start();
-  });
+  //std::thread t2([&] () {
+  //  server.start();
+  //});
 
-  t2.join();
+  httplib::Server svr;
+
+  svr.Post(R"(.*)",
+    [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
+      std::string body;
+      content_reader([&](const char *data, size_t data_length) {
+        body.append(data, data_length);
+        return true;
+      });
+      // Need to count brackets
+      send(K_PORT, body.c_str(), body.length(), 0);
+
+      // Need to read actual response and send it over
+      res.set_content(body, "text/plain");
+    });
+
+  // need to stop the server at some point with svr.stop()
+  svr.listen(FLAGS_ip.c_str(), FLAGS_port);
+
+  //t2.join();
+  //t1.join();
   return 0;
 }
 
-void runKServer(HTTPServer *server) {
+void runKServer() {
   int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -224,7 +246,7 @@ void runKServer(HTTPServer *server) {
   block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
   shutdown(K_SOCKET, SHUT_RDWR);
-  server->stop();
+  //server->stop();
 }
 
 void openSocket() {
