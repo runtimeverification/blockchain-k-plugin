@@ -8,10 +8,7 @@
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
-#include <folly/Memory.h>
-#include <folly/io/async/EventBaseManager.h>
-#include <folly/portability/GFlags.h>
-#include <folly/portability/Unistd.h>
+#include <gflags/gflags.h>
 
 void runKServer();
 void openSocket();
@@ -46,8 +43,6 @@ DEFINE_bool(vmversion, false, "Display current VM version");
 int main(int argc, char **argv) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
-  google::InstallFailureSignalHandler();
 
   K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
 
