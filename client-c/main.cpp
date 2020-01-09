@@ -1,8 +1,10 @@
 #include <iostream>
+#include <regex>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <httplib.h>
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
@@ -10,20 +12,6 @@
 #include <folly/io/async/EventBaseManager.h>
 #include <folly/portability/GFlags.h>
 #include <folly/portability/Unistd.h>
-#include <proxygen/httpserver/HTTPServer.h>
-#include <proxygen/httpserver/RequestHandlerFactory.h>
-#include <regex>
-#include <httplib.h>
-
-#include "HttpHandler.h"
-#include "HttpStats.h"
-
-using namespace HttpService;
-using namespace proxygen;
-
-using folly::SocketAddress;
-
-using Protocol = HTTPServer::Protocol;
 
 void runKServer();
 void openSocket();
@@ -54,31 +42,6 @@ DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'fro
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
-DEFINE_int32(threads, 1, "Number of threads to listen on. Numbers <= 0 "
-             "will use the number of cores on this machine.");
-
-class HttpHandlerFactory : public RequestHandlerFactory {
- public:
-
-  void onServerStart(folly::EventBase* /*evb*/) noexcept override {
-    std::cout<<"Starting HTTP Server\n";
-    stats_.reset(new HttpStats);
-    k_socket_ = K_SOCKET;
-  }
-
-  void onServerStop() noexcept override {
-    stats_.reset();
-    std::cout<<"Closing HTTP Server\n";
-  }
-
-  RequestHandler* onRequest(RequestHandler*, HTTPMessage*) noexcept override {
-    return new HttpHandler(stats_.get(), k_socket_);
-  }
-
- private:
-  folly::ThreadLocalPtr<HttpStats> stats_;
-  int k_socket_ = 0;
-};
 
 int main(int argc, char **argv) {
 
@@ -87,15 +50,6 @@ int main(int argc, char **argv) {
   google::InstallFailureSignalHandler();
 
   K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
-
-  std::vector<HTTPServer::IPConfig> IPs = {
-    {SocketAddress(FLAGS_ip, FLAGS_port, true), Protocol::HTTP}
-  };
-
-  if (FLAGS_threads <= 0) {
-    FLAGS_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    CHECK(FLAGS_threads > 0);
-  }
 
   if (FLAGS_vmversion) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
@@ -125,24 +79,6 @@ int main(int argc, char **argv) {
       std::cerr << "Invalid hardfork found: " << FLAGS_hardfork << std::endl;
       return 1;
   }
-
-  //HTTPServerOptions options;
-  //options.threads = static_cast<size_t>(FLAGS_threads);
-  //options.idleTimeout = std::chrono::milliseconds(60000);
-  //options.shutdownOn = {SIGINT, SIGTERM};
-  //options.enableContentCompression = false;
-  //options.handlerFactories = RequestHandlerChain()
-  //    .addThen<HttpHandlerFactory>()
-  //    .build();
-
-  // Increase the default flow control to 1MB/10MB
-  //options.initialReceiveWindow = uint32_t(1 << 20);
-  //options.receiveStreamWindowSize = uint32_t(1 << 20);
-  //options.receiveSessionWindowSize = 10 * (1 << 20);
-  //options.h2cEnabled = true;
-
-  //HTTPServer server(std::move(options));
-  //server.bind(IPs);
 
   // Start KServer in a separate thread
   std::thread t1([&] () {
