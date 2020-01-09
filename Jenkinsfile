@@ -54,21 +54,6 @@ pipeline {
             make install
           '''
         }
-        dir ('proxygen') {
-          checkout([$class: 'GitSCM',
-          branches: [[name: 'refs/tags/v2019.11.11.00']],
-          extensions: [[$class: 'SubmoduleOption',
-                        disableSubmodules: false,
-                        parentCredentials: false,
-                        recursiveSubmodules: true,
-                        reference: '',
-                        trackingSubmodules: false]], 
-          userRemoteConfigs: [[url: 'git@github.com:facebook/proxygen.git']]])
-          sh '''
-            cd proxygen && ./build.sh --no-jemalloc --no-install-dependencies
-            cd _build   && make install
-          '''
-        }
         sh 'make -j16'
       }
     }
