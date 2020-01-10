@@ -219,26 +219,30 @@ void openSocket() {
   std::cout << "Socket connection to K Server is open\n";
 }
 
+void bracketHelper(char c) {
+  switch(c){
+    case '{':{
+      brace_counter_++;
+      break;
+    }
+    case '}':{
+      brace_counter_--;
+      break;
+    }
+    case '[':{
+      bracket_counter_++;
+      break;
+    }
+    case ']':{
+      bracket_counter_--;
+      break;
+    }
+  }
+}
+
 void countBrackets(const char *buffer, size_t len) {
   for(int i = 0; i < len; i++) {
-    switch(buffer[i]){
-      case '{':{
-        brace_counter_++;
-        break;
-      }
-      case '}':{
-        brace_counter_--;
-        break;
-      }
-      case '[':{
-        bracket_counter_++;
-        break;
-      }
-      case ']':{
-        bracket_counter_--;
-        break;
-      }
-    }
+    bracketHelper(buffer[i]);
     if(0 == brace_counter_ && 0 == bracket_counter_) {
       object_counter_++;
     }
@@ -247,24 +251,7 @@ void countBrackets(const char *buffer, size_t len) {
 
 bool doneReading (const char *buffer) {
   for(int i = 0; i < strlen(buffer); i++){
-    switch (buffer[i]){
-      case '{': {
-        brace_counter_++;
-        break;
-        }
-      case '}':{
-        brace_counter_--;
-        break;
-      }
-      case '[':{
-        bracket_counter_++;
-        break;
-      }
-      case ']':{
-        bracket_counter_--;
-        break;
-      }
-    }
+    bracketHelper(buffer[i]);
     if(0 == brace_counter_ && 0 == bracket_counter_){
       object_counter_--;
     }
