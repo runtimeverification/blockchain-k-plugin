@@ -12,8 +12,8 @@
 
 void runKServer(httplib::Server *svr);
 void openSocket();
-void countBrackets(const char *buffer, size_t len) {
-bool doneReading (const char *buffer) {
+void countBrackets(const char *buffer, size_t len);
+bool doneReading (const char *buffer);
 
 static bool K_SHUTDOWNABLE;
 static uint32_t K_SCHEDULE_TAG;
