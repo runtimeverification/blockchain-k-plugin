@@ -10,8 +10,10 @@
 #include "init.h"
 #include <gflags/gflags.h>
 
-void runKServer();
+void runKServer(httplib::Server *svr);
 void openSocket();
+void countBrackets(const char *buffer, size_t len) {
+bool doneReading (const char *buffer) {
 
 static bool K_SHUTDOWNABLE;
 static uint32_t K_SCHEDULE_TAG;
@@ -19,6 +21,8 @@ static int K_CHAINID;
 static int K_PORT = 9191;
 static int K_SOCKET;
 static int K_DEPTH;
+
+int brace_counter_, bracket_counter_, object_counter_;
 
 static std::string FRONTIER = "frontier";
 static std::string HOMESTEAD = "homestead";
@@ -39,41 +43,6 @@ DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'fro
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
-
-int brace_counter_, bracket_counter_, object_counter_;
-
-void countBrackets(const char *buffer) {
-  for(int i = 0; i < strlen(buffer); i++) {
-    switch(buffer[i]){
-      case '{':{
-        brace_counter_++;
-        break;
-      }
-      case '}':{
-        brace_counter_--;
-        break;
-      }
-      case '[':{
-        bracket_counter_++;
-        break;
-      }
-      case ']':{
-        bracket_counter_--;
-        break;
-      }
-    }
-    if(0 == brace_counter_ && 0 == bracket_counter_) {
-      object_counter_++;
-    }
-  }
-}
-
-bool doneReading(const char *buffer) {
-  countBrackets(buffer);
-  return 0 == brace_counter_
-      && 0 == bracket_counter_
-      && 0 == object_counter_;
-}
 
 int main(int argc, char **argv) {
 
@@ -110,53 +79,49 @@ int main(int argc, char **argv) {
       return 1;
   }
 
+  httplib::Server svr;
+
   // Start KServer in a separate thread
   std::thread t1([&] () {
-    runKServer();
+    runKServer(&svr);
   });
   t1.detach();
 
   openSocket();
 
-  // Start HTTPServer mainloop in a separate thread
-  //std::thread t2([&] () {
-  //  server.start();
-  //});
-
-  httplib::Server svr;
-
   svr.Post(R"(.*)",
     [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
       std::string body;
       content_reader([&](const char *data, size_t data_length) {
+        countBrackets(data, data_length);
         body.append(data, data_length);
         return true;
       });
-      send(K_PORT, body.c_str(), body.length(), 0);
+
+      send(K_SOCKET, body.c_str(), body.length(), 0);
 
       std::string message;
       char buffer[4096] = {0};
       int ret;
 
       do {
-        ret = recv(K_PORT, buffer, 4096, 0);
-        buffer[ret] = 0x00;
+        ret = recv(K_SOCKET, buffer, 4095, 0);
+        buffer[ret] = '\0';
         message += buffer;
       } while (ret > 0 && !doneReading(buffer));
 
-      // Need to read actual response and send it over
       res.set_content(message, "application/json");
     });
 
-  // need to stop the server at some point with svr.stop()
-  svr.listen(FLAGS_ip.c_str(), FLAGS_port);
+  std::thread t2([&] () {
+    svr.listen(FLAGS_ip.c_str(), FLAGS_port);
+  });
 
-  //t2.join();
-  //t1.join();
+  t2.join();
   return 0;
 }
 
-void runKServer() {
+void runKServer(httplib::Server *svr) {
   int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -221,7 +186,7 @@ void runKServer() {
   block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
   shutdown(K_SOCKET, SHUT_RDWR);
-  //server->stop();
+  svr->stop();
 }
 
 void openSocket() {
@@ -252,4 +217,59 @@ void openSocket() {
     std::cerr << "Socket connection to K Server failed, tried " << sec << " times." << std::endl;
   }
   std::cout << "Socket connection to K Server is open\n";
+}
+
+void countBrackets(const char *buffer, size_t len) {
+  for(int i = 0; i < len; i++) {
+    switch(buffer[i]){
+      case '{':{
+        brace_counter_++;
+        break;
+      }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
+    }
+    if(0 == brace_counter_ && 0 == bracket_counter_) {
+      object_counter_++;
+    }
+  }
+}
+
+bool doneReading (const char *buffer) {
+  for(int i = 0; i < strlen(buffer); i++){
+    switch (buffer[i]){
+      case '{': {
+        brace_counter_++;
+        break;
+        }
+      case '}':{
+        brace_counter_--;
+        break;
+      }
+      case '[':{
+        bracket_counter_++;
+        break;
+      }
+      case ']':{
+        bracket_counter_--;
+        break;
+      }
+    }
+    if(0 == brace_counter_ && 0 == bracket_counter_){
+      object_counter_--;
+    }
+  }
+  return 0 == brace_counter_
+      && 0 == bracket_counter_
+      && 0 == object_counter_;
 }
