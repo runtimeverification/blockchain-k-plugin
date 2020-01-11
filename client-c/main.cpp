@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
+#define CPPHTTPLIB_THREAD_POOL_COUNT 1
 #include <httplib.h>
 #include "runtime/alloc.h"
 #include "version.h"
@@ -117,6 +118,8 @@ int main(int argc, char **argv) {
   });
 
   t2.join();
+
+  shutdown(K_SOCKET, SHUT_RDWR);
   return 0;
 }
 
@@ -184,7 +187,6 @@ void runKServer(httplib::Server *svr) {
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
-  shutdown(K_SOCKET, SHUT_RDWR);
   svr->stop();
 }
 
