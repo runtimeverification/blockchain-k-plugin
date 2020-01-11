@@ -13,7 +13,7 @@
 void runKServer(httplib::Server *svr);
 void openSocket();
 void countBrackets(const char *buffer, size_t len);
-bool doneReading (const char *buffer);
+bool doneReading (const char *buffer, int len);
 
 static bool K_SHUTDOWNABLE;
 static uint32_t K_SCHEDULE_TAG;
@@ -105,10 +105,9 @@ int main(int argc, char **argv) {
       int ret;
 
       do {
-        ret = recv(K_SOCKET, buffer, 4095, 0);
-        buffer[ret] = '\0';
-        message += buffer;
-      } while (ret > 0 && !doneReading(buffer));
+        ret = recv(K_SOCKET, buffer, 4096, 0);
+        message.append(buffer, ret);
+      } while (ret > 0 && !doneReading(buffer, ret));
 
       res.set_content(message, "application/json");
     });
@@ -249,8 +248,8 @@ void countBrackets(const char *buffer, size_t len) {
   }
 }
 
-bool doneReading (const char *buffer) {
-  for(int i = 0; i < strlen(buffer); i++){
+bool doneReading (const char *buffer, int len) {
+  for(int i = 0; i < len; i++){
     bracketHelper(buffer[i]);
     if(0 == brace_counter_ && 0 == bracket_counter_){
       object_counter_--;
