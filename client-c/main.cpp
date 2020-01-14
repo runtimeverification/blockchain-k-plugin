@@ -1,30 +1,20 @@
 #include <iostream>
+#include <regex>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
+#define CPPHTTPLIB_THREAD_POOL_COUNT 1
+#include <httplib.h>
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
-#include <folly/Memory.h>
-#include <folly/io/async/EventBaseManager.h>
-#include <folly/portability/GFlags.h>
-#include <folly/portability/Unistd.h>
-#include <proxygen/httpserver/HTTPServer.h>
-#include <proxygen/httpserver/RequestHandlerFactory.h>
+#include <gflags/gflags.h>
 
-#include "HttpHandler.h"
-#include "HttpStats.h"
-
-using namespace HttpService;
-using namespace proxygen;
-
-using folly::SocketAddress;
-
-using Protocol = HTTPServer::Protocol;
-
-void runKServer(HTTPServer *server);
+void runKServer(httplib::Server *svr);
 void openSocket();
+void countBrackets(const char *buffer, size_t len);
+bool doneReading (const char *buffer, int len);
 
 static bool K_SHUTDOWNABLE;
 static uint32_t K_SCHEDULE_TAG;
@@ -32,6 +22,8 @@ static int K_CHAINID;
 static int K_PORT = 9191;
 static int K_SOCKET;
 static int K_DEPTH;
+
+int brace_counter_, bracket_counter_, object_counter_;
 
 static std::string FRONTIER = "frontier";
 static std::string HOMESTEAD = "homestead";
@@ -52,48 +44,12 @@ DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'fro
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
-DEFINE_int32(threads, 1, "Number of threads to listen on. Numbers <= 0 "
-             "will use the number of cores on this machine.");
-
-class HttpHandlerFactory : public RequestHandlerFactory {
- public:
-
-  void onServerStart(folly::EventBase* /*evb*/) noexcept override {
-    std::cout<<"Starting HTTP Server\n";
-    stats_.reset(new HttpStats);
-    k_socket_ = K_SOCKET;
-  }
-
-  void onServerStop() noexcept override {
-    stats_.reset();
-    std::cout<<"Closing HTTP Server\n";
-  }
-
-  RequestHandler* onRequest(RequestHandler*, HTTPMessage*) noexcept override {
-    return new HttpHandler(stats_.get(), k_socket_);
-  }
-
- private:
-  folly::ThreadLocalPtr<HttpStats> stats_;
-  int k_socket_ = 0;
-};
 
 int main(int argc, char **argv) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
-  google::InstallFailureSignalHandler();
 
   K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
-
-  std::vector<HTTPServer::IPConfig> IPs = {
-    {SocketAddress(FLAGS_ip, FLAGS_port, true), Protocol::HTTP}
-  };
-
-  if (FLAGS_threads <= 0) {
-    FLAGS_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    CHECK(FLAGS_threads > 0);
-  }
 
   if (FLAGS_vmversion) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
@@ -124,42 +80,50 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-  HTTPServerOptions options;
-  options.threads = static_cast<size_t>(FLAGS_threads);
-  options.idleTimeout = std::chrono::milliseconds(60000);
-  options.shutdownOn = {SIGINT, SIGTERM};
-  options.enableContentCompression = false;
-  options.handlerFactories = RequestHandlerChain()
-      .addThen<HttpHandlerFactory>()
-      .build();
-
-  // Increase the default flow control to 1MB/10MB
-  options.initialReceiveWindow = uint32_t(1 << 20);
-  options.receiveStreamWindowSize = uint32_t(1 << 20);
-  options.receiveSessionWindowSize = 10 * (1 << 20);
-  options.h2cEnabled = true;
-
-  HTTPServer server(std::move(options));
-  server.bind(IPs);
+  httplib::Server svr;
 
   // Start KServer in a separate thread
   std::thread t1([&] () {
-    runKServer(&server);
+    runKServer(&svr);
   });
   t1.detach();
 
   openSocket();
 
-  // Start HTTPServer mainloop in a separate thread
+  svr.Post(R"(.*)",
+    [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
+      std::string body;
+      content_reader([&](const char *data, size_t data_length) {
+        countBrackets(data, data_length);
+        body.append(data, data_length);
+        return true;
+      });
+
+      send(K_SOCKET, body.c_str(), body.length(), 0);
+
+      std::string message;
+      char buffer[4096] = {0};
+      int ret;
+
+      do {
+        ret = recv(K_SOCKET, buffer, 4096, 0);
+        message.append(buffer, ret);
+      } while (ret > 0 && !doneReading(buffer, ret));
+
+      res.set_content(message, "application/json");
+    });
+
   std::thread t2([&] () {
-    server.start();
+    svr.listen(FLAGS_ip.c_str(), FLAGS_port);
   });
 
   t2.join();
+
+  shutdown(K_SOCKET, SHUT_RDWR);
   return 0;
 }
 
-void runKServer(HTTPServer *server) {
+void runKServer(httplib::Server *svr) {
   int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -223,8 +187,7 @@ void runKServer(HTTPServer *server) {
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
-  shutdown(K_SOCKET, SHUT_RDWR);
-  server->stop();
+  svr->stop();
 }
 
 void openSocket() {
@@ -255,4 +218,46 @@ void openSocket() {
     std::cerr << "Socket connection to K Server failed, tried " << sec << " times." << std::endl;
   }
   std::cout << "Socket connection to K Server is open\n";
+}
+
+void bracketHelper(char c) {
+  switch(c){
+    case '{':{
+      brace_counter_++;
+      break;
+    }
+    case '}':{
+      brace_counter_--;
+      break;
+    }
+    case '[':{
+      bracket_counter_++;
+      break;
+    }
+    case ']':{
+      bracket_counter_--;
+      break;
+    }
+  }
+}
+
+void countBrackets(const char *buffer, size_t len) {
+  for(int i = 0; i < len; i++) {
+    bracketHelper(buffer[i]);
+    if(0 == brace_counter_ && 0 == bracket_counter_) {
+      object_counter_++;
+    }
+  }
+}
+
+bool doneReading (const char *buffer, int len) {
+  for(int i = 0; i < len; i++){
+    bracketHelper(buffer[i]);
+    if(0 == brace_counter_ && 0 == bracket_counter_){
+      object_counter_--;
+    }
+  }
+  return 0 == brace_counter_
+      && 0 == bracket_counter_
+      && 0 == object_counter_;
 }
