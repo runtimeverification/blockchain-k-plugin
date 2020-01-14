@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 
       do {
         ret = recv(K_SOCKET, buffer, 4096, 0);
-        message.append(buffer, ret);
+        if (ret > 0) message.append(buffer, ret);
       } while (ret > 0 && !doneReading(buffer, ret));
 
       res.set_content(message, "application/json");
@@ -119,7 +119,6 @@ int main(int argc, char **argv) {
 
   t2.join();
 
-  shutdown(K_SOCKET, SHUT_RDWR);
   return 0;
 }
 
@@ -187,6 +186,7 @@ void runKServer(httplib::Server *svr) {
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(K_DEPTH, init_config);
   printConfiguration("/dev/stderr", final_config);
+  shutdown(K_SOCKET, SHUT_RDWR);
   svr->stop();
 }
 
