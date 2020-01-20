@@ -38,6 +38,7 @@ DEFINE_int32(kport, 9191, "The port on which the connection between the HTTP Ser
 DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
+DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
 DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg'");
@@ -185,7 +186,7 @@ void runKServer(httplib::Server *svr) {
   std::cout << "Starting K Server on port " << K_PORT << std::endl;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(K_DEPTH, init_config);
-  printConfiguration("/dev/stderr", final_config);
+  if (FLAGS_dump) printConfiguration("/dev/stderr", final_config);
   shutdown(K_SOCKET, SHUT_RDWR);
   svr->stop();
 }
