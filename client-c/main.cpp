@@ -17,6 +17,7 @@ void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
 
 static bool K_SHUTDOWNABLE;
+static bool K_NOTIFICATIONS;
 static uint32_t K_SCHEDULE_TAG;
 static int K_CHAINID;
 static int K_PORT = 9191;
@@ -39,6 +40,7 @@ DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
+DEFINE_bool(notifications, false, "Process incoming notifications as rpc messages");
 DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg'");
@@ -61,6 +63,7 @@ int main(int argc, char **argv) {
   K_SHUTDOWNABLE = FLAGS_shutdownable;
   K_PORT = FLAGS_kport;
   K_DEPTH = FLAGS_depth;
+  K_NOTIFICATIONS = FLAGS_notifications;
 
   if (FLAGS_hardfork == FRONTIER) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
@@ -124,7 +127,8 @@ int main(int argc, char **argv) {
 }
 
 void runKServer(httplib::Server *svr) {
-  int port = K_PORT, chainId = K_CHAINID, shutdownable = K_SHUTDOWNABLE;
+  int port = K_PORT, chainId = K_CHAINID;
+  bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS;
   in_addr address;
   inet_aton("127.0.0.1", &address);
 
@@ -159,6 +163,10 @@ void runKServer(httplib::Server *svr) {
   shutdownableinj->h = injHeaderBool;
   shutdownableinj->data = shutdownable;
 
+  boolinj *notificationsinj = (boolinj *)koreAlloc(sizeof(boolinj));
+  notificationsinj->h = injHeaderBool;
+  notificationsinj->data = notifications;
+
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
   chaininj->h = injHeaderInt;
   mpz_t chainid;
@@ -177,7 +185,8 @@ void runKServer(httplib::Server *svr) {
   map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
   map withShutdownable = hook_MAP_update(&withSocket, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
   map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
-  map init = hook_MAP_update(&withChain, configvar("$PGM"), (block *)kinj);
+  map withNotifications = hook_MAP_update(&withChain, configvar("$NOTIFICATIONS"), (block*)notificationsinj);
+  map init = hook_MAP_update(&withNotifications, configvar("$PGM"), (block *)kinj);
 
   // invoke the rewriter
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
