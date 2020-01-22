@@ -40,7 +40,7 @@ DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
-DEFINE_bool(respond_to_notifications, false, "Process incoming notifications as rpc messages");
+DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification messages as normal messages");
 DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg'");
