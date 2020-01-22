@@ -40,7 +40,7 @@ DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
-DEFINE_bool(notifications, false, "Process incoming notifications as rpc messages");
+DEFINE_bool(respond_to_notifications, false, "Process incoming notifications as rpc messages");
 DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg'");
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   K_SHUTDOWNABLE = FLAGS_shutdownable;
   K_PORT = FLAGS_kport;
   K_DEPTH = FLAGS_depth;
-  K_NOTIFICATIONS = FLAGS_notifications;
+  K_NOTIFICATIONS = FLAGS_respond_to_notifications;
 
   if (FLAGS_hardfork == FRONTIER) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
