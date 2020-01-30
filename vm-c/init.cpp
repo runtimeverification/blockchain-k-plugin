@@ -1,8 +1,7 @@
 #include <iostream>
 #include<cstdlib>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "runtime/header.h"
@@ -13,15 +12,19 @@
 int init(int port, in_addr host) {
   initStaticObjects();
 
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  unlink(SOCKET_NAME);
+
+  int sock = socket(AF_UNIX, SOCK_STREAM, 0);
   if (sock == -1) {
     perror("socket");
     exit(1);
   }
-  sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr = host;
+
+  sockaddr_un addr;
+  memset(&addr, 0, sizeof(struct sockaddr_un));
+  addr.sun_family = AF_UNIX;
+  strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path) - 1);
+
   int sec = 0;
   int ret;
   do {
@@ -29,7 +32,7 @@ int init(int port, in_addr host) {
       std::cerr << "Socket in use, retrying in " << sec << "..." << std::endl;
     }
     sleep(sec);
-    ret = bind(sock, (sockaddr *)&addr, sizeof(addr));
+    ret = bind(sock, (const struct sockaddr *)&addr, sizeof(struct sockaddr_un));
     sec++;
   } while(ret == -1 && errno == EADDRINUSE);
   if (ret) {

@@ -5,6 +5,9 @@
 #include "runtime/header.h"
 #include <gmp.h>
 
+// TODO: Generate the socket name instead of using a static one
+#define SOCKET_NAME "/tmp/asdfasdfasdfasdf.socket"
+
 extern "C" {
   void initStaticObjects(void);
   extern void set_gc_interval(uint64_t interval);

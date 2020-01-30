@@ -1,7 +1,7 @@
 #include <iostream>
 #include <regex>
 #include <sys/socket.h>
-#include <arpa/inet.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <getopt.h>
 #define CPPHTTPLIB_THREAD_POOL_COUNT 1
@@ -201,27 +201,22 @@ void runKServer(httplib::Server *svr) {
 }
 
 void openSocket() {
-  struct sockaddr_in k_addr;
+  struct sockaddr_un k_addr;
   int sec = 0;
   int ret = -1;
-  if ((K_SOCKET = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  if ((K_SOCKET = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
   {
       std::cerr << "\n Socket creation error \n";
       return;
   }
 
-  k_addr.sin_family = AF_INET;
-  k_addr.sin_port = htons(K_PORT);
+  memset(&k_addr, 0, sizeof(struct sockaddr_un));
+  k_addr.sun_family = AF_UNIX;
+  strncpy(k_addr.sun_path, SOCKET_NAME, sizeof(k_addr.sun_path) - 1);
 
-  // Convert IPv4 and IPv6 addresses from text to binary form
-  if(inet_pton(AF_INET, "127.0.0.1", &k_addr.sin_addr) <= 0)
-  {
-    std::cerr << "\nInvalid address/ Address not supported \n";
-    return;
-  }
   while (ret != 0 && sec < 4) {
     sleep(sec);
-    ret = connect(K_SOCKET, (struct sockaddr *)&k_addr, sizeof(k_addr));
+    ret = connect(K_SOCKET, (const struct sockaddr *)&k_addr, sizeof(struct sockaddr_un));
     sec++;
   }
   if (ret != 0) {
