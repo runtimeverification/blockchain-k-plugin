@@ -33,6 +33,7 @@ static std::string SPURIOUS_DRAGON = "spurious_dragon";
 static std::string BYZANTIUM = "byzantium";
 static std::string CONSTANTINOPLE = "constantinople";
 static std::string PETERSBURG = "petersburg";
+static std::string ISTANBUL = "istanbul";
 
 DEFINE_int32(port, 8545, "Port to listen on with HTTP protocol");
 DEFINE_int32(kport, 9191, "The port on which the connection between the HTTP Server and the K Server is made");
@@ -41,9 +42,9 @@ DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
 DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification messages as normal messages");
-DEFINE_string(hardfork, "petersburg", "Ethereum client hardfork. Supported: 'frontier', "
+DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
-             "'constantinople', 'petersburg'");
+             "'constantinople', 'petersburg', 'istanbul'");
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+  K_SCHEDULE_TAG = getTagForSymbolName("LblISTANBUL'Unds'EVM{}");
 
   if (FLAGS_vmversion) {
     std::cout << argv[0] << " version " << VM_VERSION << std::endl;
@@ -79,6 +80,8 @@ int main(int argc, char **argv) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblCONSTANTINOPLE'Unds'EVM{}");
   } else if (FLAGS_hardfork == PETERSBURG) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblPETERSBURG'Unds'EVM{}");
+  } else if (FLAGS_hardfork == ISTANBUL) {
+    K_SCHEDULE_TAG = getTagForSymbolName("LblISTANBUL'Unds'EVM{}");
   } else {
       std::cerr << "Invalid hardfork found: " << FLAGS_hardfork << std::endl;
       return 1;
