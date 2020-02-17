@@ -300,21 +300,17 @@ bool doneReading (const char *buffer, int len) {
 }
 
 void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::message_ptr msg) {
-  std::cout << "on_message called with hdl: " << hdl.lock().get()
-    << " and message: " << msg->get_payload()
-    << std::endl;
-  // check for a special command to instruct the server to stop listening so
-  // it can be cleanly exited.
-  if (msg->get_payload() == "stop-listening") {
+  std::string input = msg->get_payload();
+  std::string message;
+  char buffer[4096] = {0};
+  int ret;
+
+  // check for a special command to instruct the server to stop listening so it can be cleanly exited.
+  if (input == "stop-listening") {
       svr->stop_listening();
       return;
   }
 
-  std::string input = msg->get_payload();
-  std::string message;
-
-  char buffer[4096] = {0};
-  int ret;
   countBrackets(input.c_str(), input.length());
   send(K_SOCKET, input.c_str(), input.length(), 0);
 
