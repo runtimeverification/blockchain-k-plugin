@@ -288,7 +288,6 @@ void countBrackets(const char *buffer, size_t len) {
 }
 
 bool doneReading (const char *buffer, int len) {
-  std::cout<<buffer<<std::endl;
   for(int i = 0; i < len; i++){
     bracketHelper(buffer[i]);
     if(0 == brace_counter_ && 0 == bracket_counter_) {
@@ -316,12 +315,13 @@ void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::messag
 
   char buffer[4096] = {0};
   int ret;
+  countBrackets(input.c_str(), input.length());
   send(K_SOCKET, input.c_str(), input.length(), 0);
 
   do {
     ret = recv(K_SOCKET, buffer, 4096, 0);
     if (ret > 0) message.append(buffer, ret);
-  } while (ret > 0 && !doneReading(message.c_str(), ret));
+  } while (ret > 0 && !doneReading(buffer, ret));
   try {
       svr->send(hdl, message, msg->get_opcode());
   } catch (websocketpp::exception const & e) {
