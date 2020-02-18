@@ -18,6 +18,7 @@ using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
+void on_http(WSserver *svr, websocketpp::connection_hdl hdl);
 void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::message_ptr msg);
 void runKServer(void *svr);
 void openSocket();
@@ -107,6 +108,7 @@ int main(int argc, char **argv) {
   t1.detach();
 
   ws_svr.set_message_handler(bind(&on_message,&ws_svr,::_1,::_2));
+  ws_svr.set_http_handler(bind(&on_http, &ws_svr, ::_1));
   openSocket();
 
   http_svr.Post(R"(.*)",
@@ -324,4 +326,23 @@ void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::messag
       std::cout << "Echo failed because: "
                 << "(" << e.what() << ")" << std::endl;
   }
+}
+
+void on_http(WSserver *svr, websocketpp::connection_hdl hdl) {
+    WSserver::connection_ptr con = svr->get_con_from_hdl(hdl);
+    std::string input, output;
+    char buffer[4096] = {0};
+    int ret;
+
+    input = con->get_request_body();
+    std::cout<<"message received: "<<input<<std::endl;
+    countBrackets(input.c_str(), input.length());
+    send(K_SOCKET, input.c_str(), input.length(), 0);
+    do {
+      ret = recv(K_SOCKET, buffer, 4096, 0);
+      if (ret > 0) output.append(buffer, ret);
+    } while (ret > 0 && !doneReading(buffer, ret));
+
+    con->set_status(websocketpp::http::status_code::ok);
+    con->set_body(output);
 }
