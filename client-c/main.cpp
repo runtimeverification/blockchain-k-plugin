@@ -101,12 +101,12 @@ int main(int argc, char **argv) {
   });
   t1.detach();
 
-  server.set_message_handler(bind(&on_message, &server,::_1,::_2));
-  server.set_http_handler(bind(&on_http, &server, ::_1));
   openSocket();
 
   std::thread t2([&] () {
     server.init_asio();
+    server.set_message_handler(bind(&on_message, &server, ::_1, ::_2));
+    server.set_http_handler(bind(&on_http, &server, ::_1));
     server.set_access_channels(websocketpp::log::alevel::none);
     server.listen(FLAGS_port);
     server.start_accept();
