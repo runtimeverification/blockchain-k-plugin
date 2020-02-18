@@ -1,7 +1,3 @@
-[submodule "deps/cpp-httplib"]
-	path = deps/cpp-httplib
-	url = https://github.com/yhirose/cpp-httplib.git
-	ignore = untracked
 [submodule "deps/websocketpp"]
 	path = deps/websocketpp
 	url = https://github.com/zaphoyd/websocketpp.git

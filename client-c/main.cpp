@@ -1,13 +1,10 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <iostream>
-#include <regex>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
-#define CPPHTTPLIB_THREAD_POOL_COUNT 1
-#include <httplib.h>
 #include "runtime/alloc.h"
 #include "version.h"
 #include "init.h"
@@ -20,7 +17,7 @@ using websocketpp::lib::bind;
 
 void on_http(WSserver *svr, websocketpp::connection_hdl hdl);
 void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::message_ptr msg);
-void runKServer(void *svr);
+void runKServer(WSserver *svr);
 void openSocket();
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
@@ -57,7 +54,6 @@ DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'front
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
-DEFINE_bool(websockets, false, "Use websocket communication instead of HTTP POST messages");
 
 int main(int argc, char **argv) {
 
@@ -97,60 +93,30 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-  httplib::Server http_svr;
-  WSserver ws_svr;
+  WSserver server;
 
   // Start KServer in a separate thread
   std::thread t1([&] () {
-    void *server = FLAGS_websockets == true ? (void *)&ws_svr : (void *)&http_svr;
-    runKServer(server);
+    runKServer(&server);
   });
   t1.detach();
 
-  ws_svr.set_message_handler(bind(&on_message,&ws_svr,::_1,::_2));
-  ws_svr.set_http_handler(bind(&on_http, &ws_svr, ::_1));
+  server.set_message_handler(bind(&on_message, &server,::_1,::_2));
+  server.set_http_handler(bind(&on_http, &server, ::_1));
   openSocket();
 
-  http_svr.Post(R"(.*)",
-    [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
-      std::string body;
-      content_reader([&](const char *data, size_t data_length) {
-        countBrackets(data, data_length);
-        body.append(data, data_length);
-        return true;
-      });
-
-      send(K_SOCKET, body.c_str(), body.length(), 0);
-
-      std::string message;
-      char buffer[4096] = {0};
-      int ret;
-
-      do {
-        ret = recv(K_SOCKET, buffer, 4096, 0);
-        if (ret > 0) message.append(buffer, ret);
-      } while (ret > 0 && !doneReading(buffer, ret));
-
-      res.set_content(message, "application/json");
-    });
-
   std::thread t2([&] () {
-    if(FLAGS_websockets == true) {
-      ws_svr.init_asio();
-      ws_svr.listen(FLAGS_port);
-      ws_svr.start_accept();
-      ws_svr.run();
-    } else {
-      http_svr.listen(FLAGS_ip.c_str(), FLAGS_port);
-    }
+    server.init_asio();
+    server.listen(FLAGS_port);
+    server.start_accept();
+    server.run();
   });
 
   t2.join();
-
   return 0;
 }
 
-void runKServer(void *server) {
+void runKServer(WSserver *server) {
   int port = K_PORT, chainId = K_CHAINID;
   bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS;
   in_addr address;
@@ -221,12 +187,7 @@ void runKServer(void *server) {
   block* final_config = take_steps(K_DEPTH, init_config);
   if (FLAGS_dump) printConfiguration("/dev/stderr", final_config);
   shutdown(K_SOCKET, SHUT_RDWR);
-
-  if(FLAGS_websockets == true) {
-    ((WSserver *) server)->stop();
-  } else {
-    ((httplib::Server *) server)->stop();
-  }
+  server->stop();
 }
 
 void openSocket() {
@@ -302,26 +263,25 @@ bool doneReading (const char *buffer, int len) {
 }
 
 void on_message(WSserver *svr, websocketpp::connection_hdl hdl, WSserver::message_ptr msg) {
-  std::string input = msg->get_payload();
-  std::string message;
+  std::string input, output;
   char buffer[4096] = {0};
   int ret;
 
+  input = msg->get_payload();
   // check for a special command to instruct the server to stop listening so it can be cleanly exited.
   if (input == "stop-listening") {
       svr->stop_listening();
       return;
   }
-
   countBrackets(input.c_str(), input.length());
   send(K_SOCKET, input.c_str(), input.length(), 0);
-
   do {
     ret = recv(K_SOCKET, buffer, 4096, 0);
-    if (ret > 0) message.append(buffer, ret);
+    if (ret > 0) output.append(buffer, ret);
   } while (ret > 0 && !doneReading(buffer, ret));
+
   try {
-      svr->send(hdl, message, msg->get_opcode());
+      svr->send(hdl, output, msg->get_opcode());
   } catch (websocketpp::exception const & e) {
       std::cout << "Echo failed because: "
                 << "(" << e.what() << ")" << std::endl;
@@ -335,7 +295,6 @@ void on_http(WSserver *svr, websocketpp::connection_hdl hdl) {
     int ret;
 
     input = con->get_request_body();
-    std::cout<<"message received: "<<input<<std::endl;
     countBrackets(input.c_str(), input.length());
     send(K_SOCKET, input.c_str(), input.length(), 0);
     do {
