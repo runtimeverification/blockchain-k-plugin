@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
 
   std::thread t2([&] () {
     server.init_asio();
+    server.set_access_channels(websocketpp::log::alevel::none);
     server.listen(FLAGS_port);
     server.start_accept();
     server.run();
