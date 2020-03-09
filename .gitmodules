@@ -1,3 +1,6 @@
 [submodule "deps/websocketpp"]
 	path = deps/websocketpp
 	url = https://github.com/zaphoyd/websocketpp.git
+[submodule "deps/uwebsockets"]
+	path = deps/uwebsockets
+	url = https://github.com/uNetworking/uWebSockets.git
