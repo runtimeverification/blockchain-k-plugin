@@ -1,4 +1,4 @@
-CPPFLAGS += -I llvm-backend/build/include -I llvm-backend/include -I vm-c -I dummy-version -I plugin -I vm-c/kevm -I plugin-c -I libff/build/install/include -I deps/websocketpp
+CPPFLAGS += -I llvm-backend/build/include -I llvm-backend/include -I vm-c -I dummy-version -I plugin -I vm-c/kevm -I plugin-c -I libff/build/install/include -I deps/uwebsockets/src -I deps/uwebsockets/uSockets/src
 CXX=clang++-8
 
 .PHONY: build
