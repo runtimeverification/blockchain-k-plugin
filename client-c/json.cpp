@@ -35,13 +35,26 @@ public:
     typedef char Ch;
     FDStream(int fd) : fd(fd) {
     }
-    Ch Peek() const { // 1
-        char c;
-        int nread = recv(fd, &c, 1, MSG_PEEK);
-        return nread ? c : '\0';
+    Ch buffer = -1;
+    Ch Peek() { // 1
+        if (buffer != -1) {
+	  return buffer;
+	}
+        int nread = read(fd, &buffer, 1);
+	if (nread) {
+          return buffer;
+	} else {
+          buffer = -1;
+	  return '\0';
+	}
     }
     Ch Take() { // 2
         char c;
+	if (buffer != -1) {
+          c = buffer;
+	  buffer = -1;
+	  return c;
+	}
         int nread = read(fd, &c, 1);
         return nread ? c : '\0';
     }
