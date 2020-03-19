@@ -155,11 +155,11 @@ void runKServer(httplib::Server *svr) {
 
   int input[2], output[2];
   if (pipe(input)) {
-    perror("pipe");
+    perror("input pipe");
     exit(1);
   }
   if (pipe(output)) {
-    perror("pipe");
+    perror("output pipe");
     exit(1);
   }
 
