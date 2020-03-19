@@ -12,7 +12,6 @@
 #include <gflags/gflags.h>
 
 void runKServer(httplib::Server *svr);
-void openSocket();
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
 
@@ -20,9 +19,9 @@ static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
 static uint32_t K_SCHEDULE_TAG;
 static int K_CHAINID;
-static int K_PORT = 9191;
-static int K_SOCKET;
 static int K_DEPTH;
+static int K_WRITE_FD;
+static int K_READ_FD;
 
 int brace_counter_, bracket_counter_, object_counter_;
 
@@ -36,7 +35,6 @@ static std::string PETERSBURG = "petersburg";
 static std::string ISTANBUL = "istanbul";
 
 DEFINE_int32(port, 8545, "Port to listen on with HTTP protocol");
-DEFINE_int32(kport, 9191, "The port on which the connection between the HTTP Server and the K Server is made");
 DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
@@ -62,7 +60,6 @@ int main(int argc, char **argv) {
 
   K_CHAINID = FLAGS_networkId;
   K_SHUTDOWNABLE = FLAGS_shutdownable;
-  K_PORT = FLAGS_kport;
   K_DEPTH = FLAGS_depth;
   K_NOTIFICATIONS = FLAGS_respond_to_notifications;
 
@@ -95,8 +92,6 @@ int main(int argc, char **argv) {
   });
   t1.detach();
 
-  openSocket();
-
   svr.Post(R"(.*)",
     [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
       std::string body;
@@ -106,14 +101,14 @@ int main(int argc, char **argv) {
         return true;
       });
 
-      send(K_SOCKET, body.c_str(), body.length(), 0);
+      write(K_WRITE_FD, body.c_str(), body.length());
 
       std::string message;
       char buffer[4096] = {0};
       int ret;
 
       do {
-        ret = recv(K_SOCKET, buffer, 4096, 0);
+        ret = read(K_READ_FD, buffer, 4096);
         if (ret > 0) message.append(buffer, ret);
       } while (ret > 0 && !doneReading(buffer, ret));
 
@@ -130,7 +125,7 @@ int main(int argc, char **argv) {
 }
 
 void runKServer(httplib::Server *svr) {
-  int port = K_PORT, chainId = K_CHAINID;
+  int chainId = K_CHAINID;
   bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS;
   in_addr address;
   inet_aton("127.0.0.1", &address);
@@ -142,6 +137,9 @@ void runKServer(httplib::Server *svr) {
   static blockheader injHeaderInt                = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortInt{}, SortKItem{}}"));
   static blockheader injHeaderBool               = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortBool{}, SortKItem{}}"));
   static blockheader injHeaderEthereumSimulation = getBlockHeaderForSymbol(getTagForSymbolName("inj{SortEthereumSimulation{}, SortKItem{}}"));
+
+  initStaticObjects();
+  set_gc_interval(10000);
 
   // create `Init` configuration variable entries
 
@@ -155,12 +153,29 @@ void runKServer(httplib::Server *svr) {
   scheduleinj->h = injHeaderSchedule;
   scheduleinj->data = (block*)schedule;
 
-  int sock = init(port, address);
-  zinj *sockinj = (zinj *)koreAlloc(sizeof(zinj));
-  sockinj->h = injHeaderInt;
-  mpz_t sock_z;
-  mpz_init_set_si(sock_z, sock);
-  sockinj->data = move_int(sock_z);
+  int input[2], output[2];
+  if (pipe(input)) {
+    perror("input pipe");
+    exit(1);
+  }
+  if (pipe(output)) {
+    perror("output pipe");
+    exit(1);
+  }
+
+  zinj *inputinj = (zinj *)koreAlloc(sizeof(zinj));
+  inputinj->h = injHeaderInt;
+  mpz_t input_z;
+  mpz_init_set_si(input_z, input[0]);
+  inputinj->data = move_int(input_z);
+  K_WRITE_FD = input[1];
+
+  zinj *outputinj = (zinj *)koreAlloc(sizeof(zinj));
+  outputinj->h = injHeaderInt;
+  mpz_t output_z;
+  mpz_init_set_si(output_z, output[1]);
+  outputinj->data = move_int(output_z);
+  K_READ_FD = output[0];
 
   boolinj *shutdownableinj = (boolinj *)koreAlloc(sizeof(boolinj));
   shutdownableinj->h = injHeaderBool;
@@ -185,8 +200,9 @@ void runKServer(httplib::Server *svr) {
 
   map withSched = hook_MAP_element(configvar("$SCHEDULE"), (block *)scheduleinj);
   map withMode = hook_MAP_update(&withSched, configvar("$MODE"), (block *)modeinj);
-  map withSocket = hook_MAP_update(&withMode, configvar("$SOCK"), (block *)sockinj);
-  map withShutdownable = hook_MAP_update(&withSocket, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
+  map withInput = hook_MAP_update(&withMode, configvar("$INPUT"), (block *)inputinj);
+  map withOutput = hook_MAP_update(&withInput, configvar("$OUTPUT"), (block *)outputinj);
+  map withShutdownable = hook_MAP_update(&withOutput, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
   map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
   map withNotifications = hook_MAP_update(&withChain, configvar("$NOTIFICATIONS"), (block*)notificationsinj);
   map init = hook_MAP_update(&withNotifications, configvar("$PGM"), (block *)kinj);
@@ -195,42 +211,12 @@ void runKServer(httplib::Server *svr) {
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
   void *arr[1];
   arr[0] = &init;
-  std::cout << "Starting K Server on port " << K_PORT << std::endl;
   block* init_config = (block *)evaluateFunctionSymbol(tag2, arr);
   block* final_config = take_steps(K_DEPTH, init_config);
   if (FLAGS_dump) printConfiguration("/dev/stderr", final_config);
-  shutdown(K_SOCKET, SHUT_RDWR);
+  close(K_WRITE_FD);
+  close(K_READ_FD);
   svr->stop();
-}
-
-void openSocket() {
-  struct sockaddr_in k_addr;
-  int sec = 0;
-  int ret = -1;
-  if ((K_SOCKET = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-  {
-      std::cerr << "\n Socket creation error \n";
-      return;
-  }
-
-  k_addr.sin_family = AF_INET;
-  k_addr.sin_port = htons(K_PORT);
-
-  // Convert IPv4 and IPv6 addresses from text to binary form
-  if(inet_pton(AF_INET, "127.0.0.1", &k_addr.sin_addr) <= 0)
-  {
-    std::cerr << "\nInvalid address/ Address not supported \n";
-    return;
-  }
-  while (ret != 0 && sec < 4) {
-    sleep(sec);
-    ret = connect(K_SOCKET, (struct sockaddr *)&k_addr, sizeof(k_addr));
-    sec++;
-  }
-  if (ret != 0) {
-    std::cerr << "Socket connection to K Server failed, tried " << sec << " times." << std::endl;
-  }
-  std::cout << "Socket connection to K Server is open\n";
 }
 
 void bracketHelper(char c) {

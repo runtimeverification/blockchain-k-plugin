@@ -5,6 +5,7 @@ CXX=clang++-8
 build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o vm-c/init.o vm-c/main.o vm-c/vm.o vm-c/kevm/semantics.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
+vm-c/kevm/semantics.o: plugin/proto/msg.pb.h
 
 %.pb.h: %.proto
 	protoc --cpp_out=. $<
