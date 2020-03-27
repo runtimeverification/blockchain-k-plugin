@@ -2,7 +2,7 @@ CPPFLAGS += -I llvm-backend/build/include -I llvm-backend/include -I dummy-versi
 CXX=clang++-8
 
 .PHONY: build
-build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
+build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/bn128.o plugin-c/hash.o plugin-c/secp256k1.o plugin-c/world.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
 
