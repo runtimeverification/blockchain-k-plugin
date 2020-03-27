@@ -18,7 +18,7 @@ bool doneReading (const char *buffer, int len);
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
 static uint32_t K_SCHEDULE_TAG;
-static int K_CHAINID;
+static long long K_CHAINID;
 static int K_DEPTH;
 static int K_WRITE_FD;
 static int K_READ_FD;
@@ -43,7 +43,7 @@ DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification m
 DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg', 'istanbul'");
-DEFINE_int32(networkId, 28346, "Set network chain id");
+DEFINE_int64(networkId, 28346, "Set network chain id");
 DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 }
 
 void runKServer(httplib::Server *svr) {
-  int chainId = K_CHAINID;
+  long long chainId = K_CHAINID;
   bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS;
   in_addr address;
   inet_aton("127.0.0.1", &address);
