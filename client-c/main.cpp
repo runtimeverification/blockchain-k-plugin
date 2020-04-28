@@ -44,7 +44,6 @@ DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'front
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg', 'istanbul'");
 DEFINE_int32(networkId, 28346, "Set network chain id");
-DEFINE_string(ip, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(vmversion, false, "Display current VM version");
 
 int main(int argc, char **argv) {
@@ -116,7 +115,7 @@ int main(int argc, char **argv) {
     });
 
   std::thread t2([&] () {
-    svr.listen(FLAGS_ip.c_str(), FLAGS_port);
+    svr.listen(FLAGS_host.c_str(), FLAGS_port);
   });
 
   t2.join();
