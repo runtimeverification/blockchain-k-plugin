@@ -3,6 +3,7 @@
 #include <cryptopp/ripemd.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
+#include <cryptopp/blake2.h>
 #include <gmp.h>
 #include "blake2.h"
 #include "plugin_util.h"
@@ -63,6 +64,20 @@ struct string *hook_HASH_ripemd160raw(struct string *str) {
 struct string *hook_HASH_ripemd160(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
+}
+
+struct string *hook_HASH_blake2b256raw(struct string *str) {
+  BLAKE2b h(false,32);
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest));
+}
+
+struct string *hook_HASH_blake2b256(struct string *str) {
+  BLAKE2b h(false,32);
+  unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }

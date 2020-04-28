@@ -16,12 +16,14 @@ The `Bytes -> Bytes` overload returns:
 - 32-byte long bytestring for `Sha3_256`
 - 32-byte long bytestring for `Keccak256`
 - 20-byte long bytestring for `RipEmd160`
+- 32-byte long bytestring for `Blake2b256`
 
 ``` {.k .cryptography-hashes}
-    syntax Bytes  ::= Keccak256 ( Bytes )       [function, hook(HASH.keccak256raw)]
-                    | "Sha2_256" "(" Bytes ")"  [function, hook(HASH.sha256raw)]
-                    | "Sha3_256" "(" Bytes ")"  [function, hook(HASH.sha3_256raw)]
-                    | RipEmd160 ( Bytes )       [function, hook(HASH.ripemd160raw)]
+    syntax Bytes  ::= Keccak256 ( Bytes )      [function, hook(HASH.keccak256raw)]
+                    | "Sha2_256" "(" Bytes ")" [function, hook(HASH.sha256raw)]
+                    | "Sha3_256" "(" Bytes ")" [function, hook(HASH.sha3_256raw)]
+                    | RipEmd160 ( Bytes )      [function, hook(HASH.ripemd160raw)]
+                    | Blake2b256 ( Bytes )     [function, hook(HASH.blake2b256raw)]
 ```
 
 The `String -> String` overload returns:
@@ -30,12 +32,14 @@ The `String -> String` overload returns:
 - 64-character hex-encoded string for `Sha3_256`
 - 64-character hex-encoded string for `Keccak256`
 - 40-character hex-encoded string for `RipEmd160`
+- 64-character hex-encoded string for `Blake2b256`
 
 ``` {.k .cryptography-hashes}
     syntax String ::= Keccak256 ( String )      [function, hook(HASH.keccak256)]
                     | "Sha2_256" "(" String ")" [function, hook(HASH.sha256)]
                     | "Sha3_256" "(" String ")" [function, hook(HASH.sha3_256)]
                     | RipEmd160 ( String )      [function, hook(HASH.ripemd160)]
+                    | Blake2b256 ( String )     [function, hook(HASH.blake2b256)]
 ```
 
 This is a helper function and part of the BLAKE2 hash function.
