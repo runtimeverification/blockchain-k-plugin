@@ -54,6 +54,21 @@ struct string *hook_HASH_sha256(struct string *str) {
   return hexEncode(digest, sizeof(digest));
 }
 
+struct string *hook_HASH_sha512raw(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest));
+}
+
+struct string *hook_HASH_sha512(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
+}
+
+
 struct string *hook_HASH_ripemd160raw(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
