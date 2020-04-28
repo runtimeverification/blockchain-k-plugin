@@ -11,14 +11,14 @@ using namespace CryptoPP;
 
 extern "C" {
 
-struct string *hook_HASH_sha3raw(struct string *str) {
+struct string *hook_HASH_sha3_256raw(struct string *str) {
   SHA3_256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return raw(digest, sizeof(digest)); 
 }
 
-struct string *hook_HASH_sha3(struct string *str) {
+struct string *hook_HASH_sha3_256(struct string *str) {
   SHA3_256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));

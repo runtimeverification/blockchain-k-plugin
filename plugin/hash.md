@@ -20,7 +20,7 @@ The `Bytes -> Bytes` overload returns:
 ``` {.k .cryptography-hashes}
     syntax Bytes  ::= Keccak256 ( Bytes )       [function, hook(HASH.keccak256raw)]
                     | "Sha2_256" "(" Bytes ")"  [function, hook(HASH.sha256raw)]
-                    | "Sha3_256" "(" Bytes ")"  [function, hook(HASH.sha3raw)]
+                    | "Sha3_256" "(" Bytes ")"  [function, hook(HASH.sha3_256raw)]
                     | RipEmd160 ( Bytes )       [function, hook(HASH.ripemd160raw)]
 ```
 
@@ -34,7 +34,7 @@ The `String -> String` overload returns:
 ``` {.k .cryptography-hashes}
     syntax String ::= Keccak256 ( String )      [function, hook(HASH.keccak256)]
                     | "Sha2_256" "(" String ")" [function, hook(HASH.sha256)]
-                    | "Sha3_256" "(" String ")" [function, hook(HASH.sha3)]
+                    | "Sha3_256" "(" String ")" [function, hook(HASH.sha3_256)]
                     | RipEmd160 ( String )      [function, hook(HASH.ripemd160)]
 ```
 
