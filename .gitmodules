@@ -2,3 +2,6 @@
 	path = deps/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib.git
 	ignore = untracked
+[submodule "deps/libcryptopp"]
+	path = deps/libcryptopp
+	url = https://github.com/weidai11/cryptopp
