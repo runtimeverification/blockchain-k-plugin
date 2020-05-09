@@ -2,3 +2,6 @@
 	path = deps/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib.git
 	ignore = untracked
+[submodule "deps/libff"]
+	path = deps/libff
+	url = https://github.com/scipr-lab/libff
