@@ -1,4 +1,5 @@
-FROM runtimeverificationinc/ubuntu:bionic
+ARG K_COMMIT
+FROM runtimeverificationinc/kframework-k:ubuntu-bionic-${K_COMMIT}
 
 RUN    apt-get update                \
     && apt-get upgrade --yes         \
@@ -9,7 +10,6 @@ RUN    apt-get update                \
             flex                     \
             git                      \
             libboost-test-dev        \
-            libcrypto++-dev          \
             libgflags-dev            \
             libgmp-dev               \
             libjemalloc-dev          \

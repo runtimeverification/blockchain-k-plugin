@@ -1,5 +1,10 @@
 pipeline {
-  agent { dockerfile { } }
+  agent {
+    dockerfile {
+      label 'docker'
+      additionalBuildArgs '--build-arg K_COMMIT=$(cat deps/k_release)'
+    }
+  }
   options { ansiColor('xterm') }
   stages {
     stage('Init title') {
@@ -9,42 +14,8 @@ pipeline {
     stage('Test compilation') {
       when { changeRequest() }
       steps {
-        dir ('llvm-backend') {
-          checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'SubmoduleOption',
-                        disableSubmodules: false,
-                        parentCredentials: false,
-                        recursiveSubmodules: true,
-                        reference: '',
-                        trackingSubmodules: false]],
-          userRemoteConfigs: [[url: 'git@github.com:kframework/llvm-backend.git']]])
-          sh '''
-            mkdir build
-            cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release
-            make include
-          '''
-        }
-        dir ('libff') {
-          checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'SubmoduleOption',
-                        disableSubmodules: false,
-                        parentCredentials: false,
-                        recursiveSubmodules: true,
-                        reference: '',
-                        trackingSubmodules: false]], 
-          userRemoteConfigs: [[url: 'git@github.com:scipr-lab/libff.git']]])
-          sh '''
-            mkdir build
-            cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
-            make -j16
-            make install
-          '''
-        }
-        sh 'make -j16'
+        sh 'make -j16 CXX=clang++-8 build-deps'
+        sh 'make -j16 CXX=clang++-8 build-test'
       }
     }
     stage('Deploy') {
