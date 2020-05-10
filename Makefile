@@ -24,7 +24,7 @@ CPPFLAGS += -I $(join $(K_RELEASE), /include) $(INCLUDES) -I $(join $(PREFIX), /
 
 OBJS := client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
 
-.PHONY: build build-check clean cpp-httplib libcryptopp libff
+.PHONY: build build-check clean cpp-httplib libcryptopp libff libsecp256k1
 
 build-deps: cpp-httplib libcryptopp libff
 build-test: CPPFLAGS += -I dummy-version -I plugin -I plugin-c
@@ -63,3 +63,13 @@ libff: $(PREFIX)/lib/libff.a
 $(PREFIX)/lib/libff.a: deps/libff
 	@mkdir -p deps/libff/build
 	cd deps/libff/build && $(LIBFF_EXPORTS) CC=$(CC) CXX=$(CXX) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) && $(MAKE) install
+
+# libsecp256k1
+
+libsecp256k1: $(PREFIX)/lib/pkgconfig/libsecp256k1.pc
+$(PREFIX)/lib/pkgconfig/libsecp256k1.pc:
+	cd deps/secp256k1/                                               \
+	    && ./autogen.sh                                              \
+	    && ./configure --enable-module-recovery --prefix="$(PREFIX)" \
+	    && $(MAKE)                                                   \
+	    && $(MAKE) install
