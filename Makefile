@@ -6,7 +6,8 @@ PREFIX      ?= "$(CURDIR)/build"
 ifeq ($(shell uname -s),Darwin)
 K_RELEASE ?= /usr/local/lib/kframework  # look for K framework as a brew package
 INCLUDES += -I /usr/local/include       # add brew includes path
-CXX ?= /usr/local/opt/llvm/bin/clang++  # prefer brew clang++ because it is more recent than apple clang
+CC  ?= /usr/local/opt/llvm/bin/clang    # prefer brew clang because it is more recent than apple clang
+CXX ?= /usr/local/opt/llvm/bin/clang++
 # fix build errors on OSX for libff
 # 1. libff cmake script fails to find brew installed openssl; force it to look at OPENSSL_ROOT_DIR
 OPENSSL_VER = $(shell brew desc openssl | cut -f1 -d:)
@@ -15,7 +16,8 @@ LIBFF_EXPORTS = OPENSSL_ROOT_DIR=/usr/local/opt/openssl@$(OPENSSL_VER)
 LIBFF_CONF_FLAGS += -DWITH_PROCPS=OFF
 else
 K_RELEASE ?= /usr/lib/kframework
-CXX ?= clang++                          # use system clang++
+CC  ?= clang++                          # use system clang
+CXX ?= clang++
 endif
 
 CPPFLAGS += -I $(join $(K_RELEASE), /include) $(INCLUDES) -I $(join $(PREFIX), /include)
@@ -53,11 +55,11 @@ $(PREFIX)/include/httplib.h: deps/cpp-httplib/httplib.h
 
 libcryptopp: $(PREFIX)/lib/libcryptopp.a
 $(PREFIX)/lib/libcryptopp.a: deps/cryptopp
-	cd deps/cryptopp && $(MAKE) && $(MAKE) install PREFIX=$(PREFIX)
+	cd deps/cryptopp && CC=$(CC) CXX=$(CXX) $(MAKE) && $(MAKE) install PREFIX=$(PREFIX)
 
 # libff
 
 libff: $(PREFIX)/lib/libff.a
 $(PREFIX)/lib/libff.a: deps/libff
 	@mkdir -p deps/libff/build
-	cd deps/libff/build && $(LIBFF_EXPORTS) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CONF_FLAGS) && $(MAKE) install
+	cd deps/libff/build && $(LIBFF_EXPORTS) CC=$(CC) CXX=$(CXX) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CONF_FLAGS) && $(MAKE) install
