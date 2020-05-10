@@ -9,11 +9,17 @@ The various features of this plugin depend on several cryptographic libraries.
 To simplify life for plugin users, this Makefile includes logic to install its
 cryptographic library dependencies in case the packaged version is obsolete
 (e.g. `cryptopp` on Debian based distributions) or non-existent (e.g.
-`cpp-httplib`). These libraries and header files are installed at the path:
+`cpp-httplib`). If being invoked from a super-project, you can call this
+project's Makefile as follows:
 
-`./build`
+`make PREFIX=/path/to/install/prefix <library>`
 
-relative to base of this module, to simplify linkage with any super-project.
+to build `<library>` and install it at the given prefix. We currently provide:
+
+- `cpp-httplib`
+- `libff`
+- `libcryptopp`
+- `libsecp256k1`
 
 ## Build Instructions
 
@@ -56,6 +62,9 @@ The dependency `libsecp256k1` is not included in brew core, but can be installed
 ```
 brew install --build-from-source path/to/blockchain-k-plugin/deps/libsecp256k1.rb
 ```
+
+In case the packaged version of `libsecp256k1` is too old or none is available,
+we include a pinned version as a submodule. See the details above.
 
 ##### Manual Installation
 
