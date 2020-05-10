@@ -13,7 +13,7 @@ CXX ?= /usr/local/opt/llvm/bin/clang++
 OPENSSL_VER = $(shell brew desc openssl | cut -f1 -d:)
 LIBFF_EXPORTS = OPENSSL_ROOT_DIR=/usr/local/opt/openssl@$(OPENSSL_VER)
 # 2. libff on osx must be compiled support for /proc filesystem disabled
-LIBFF_CONF_FLAGS += -DWITH_PROCPS=OFF
+LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF
 else
 K_RELEASE ?= /usr/lib/kframework
 CC  ?= clang++                          # use system clang
@@ -62,4 +62,4 @@ $(PREFIX)/lib/libcryptopp.a: deps/cryptopp
 libff: $(PREFIX)/lib/libff.a
 $(PREFIX)/lib/libff.a: deps/libff
 	@mkdir -p deps/libff/build
-	cd deps/libff/build && $(LIBFF_EXPORTS) CC=$(CC) CXX=$(CXX) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CONF_FLAGS) && $(MAKE) install
+	cd deps/libff/build && $(LIBFF_EXPORTS) CC=$(CC) CXX=$(CXX) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) && $(MAKE) install
