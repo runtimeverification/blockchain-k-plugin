@@ -1,4 +1,7 @@
 
+# set default install prefix if not set
+PREFIX      ?= "$(CURDIR)/build"
+
 # set OS specific flags
 ifeq ($(shell uname -s),Darwin)
 K_RELEASE ?= /usr/local/lib/kframework  # look for K framework as a brew package
@@ -15,7 +18,7 @@ K_RELEASE ?= /usr/lib/kframework
 CXX ?= clang++                          # use system clang++
 endif
 
-CPPFLAGS += -I $(join $(K_RELEASE), /include) $(INCLUDES) -I build/include
+CPPFLAGS += -I $(join $(K_RELEASE), /include) $(INCLUDES) -I $(join $(PREFIX), /include)
 
 OBJS := client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
 
@@ -41,20 +44,20 @@ clean:
 
 # cpp-httplib
 
-cpp-httplib: build/include/httplib.h
-build/include/httplib.h: deps/cpp-httplib/httplib.h
-	@mkdir -p build/include
-	cp deps/cpp-httplib/httplib.h build/include/
+cpp-httplib: $(PREFIX)/include/httplib.h
+$(PREFIX)/include/httplib.h: deps/cpp-httplib/httplib.h
+	@mkdir -p "$(PREFIX)/include"
+	cp deps/cpp-httplib/httplib.h "$(PREFIX)/include/"
 
 # libcryptopp
 
-libcryptopp: build/lib/libcryptopp.a
-build/lib/libcryptopp.a: deps/cryptopp
-	cd deps/cryptopp && $(MAKE) && $(MAKE) install PREFIX=$(CURDIR)/build
+libcryptopp: $(PREFIX)/lib/libcryptopp.a
+$(PREFIX)/lib/libcryptopp.a: deps/cryptopp
+	cd deps/cryptopp && $(MAKE) && $(MAKE) install PREFIX=$(PREFIX)
 
 # libff
 
-libff: build/lib/libff.a
-build/lib/libff.a: deps/libff
+libff: $(PREFIX)/lib/libff.a
+$(PREFIX)/lib/libff.a: deps/libff
 	@mkdir -p deps/libff/build
-	cd deps/libff/build && $(LIBFF_EXPORTS) cmake .. -DCMAKE_INSTALL_PREFIX=$(CURDIR)/build $(LIBFF_CONF_FLAGS) && $(MAKE) install
+	cd deps/libff/build && $(LIBFF_EXPORTS) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CONF_FLAGS) && $(MAKE) install
