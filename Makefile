@@ -16,7 +16,7 @@ LIBFF_EXPORTS = OPENSSL_ROOT_DIR=/usr/local/opt/openssl@$(OPENSSL_VER)
 LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF
 else
 K_RELEASE ?= /usr/lib/kframework
-CC  ?= clang++                          # use system clang
+CC  ?= clang                            # use system clang
 CXX ?= clang++
 endif
 
