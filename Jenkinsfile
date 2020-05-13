@@ -14,8 +14,8 @@ pipeline {
     stage('Test compilation') {
       when { changeRequest() }
       steps {
-        sh 'make -j16 CXX=clang++-8 build-deps'
-        sh 'make -j16 CXX=clang++-8 build-test'
+        sh 'make -j16 build-deps'
+        sh 'make -j16 build-test'
       }
     }
     stage('Deploy') {
