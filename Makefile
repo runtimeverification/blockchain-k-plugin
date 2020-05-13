@@ -55,14 +55,19 @@ $(PREFIX)/include/httplib.h: deps/cpp-httplib/httplib.h
 
 libcryptopp: $(PREFIX)/lib/libcryptopp.a
 $(PREFIX)/lib/libcryptopp.a: deps/cryptopp
-	cd deps/cryptopp && CC=$(CC) CXX=$(CXX) $(MAKE) && $(MAKE) install PREFIX=$(PREFIX)
+	cd deps/cryptopp                      \
+	  && $(MAKE)                          \
+	  && $(MAKE) install PREFIX=$(PREFIX)
 
 # libff
 
 libff: $(PREFIX)/lib/libff.a
 $(PREFIX)/lib/libff.a: deps/libff
 	@mkdir -p deps/libff/build
-	cd deps/libff/build && $(LIBFF_EXPORTS) CC=$(CC) CXX=$(CXX) cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) && $(MAKE) install
+	cd deps/libff/build                                                   \
+	  && $(LIBFF_EXPORTS)                                                 \
+	       cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) \
+	  && $(MAKE) install
 
 # libsecp256k1
 
