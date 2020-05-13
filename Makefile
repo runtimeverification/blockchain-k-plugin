@@ -1,23 +1,29 @@
 
 # set default install prefix if not set
-PREFIX      ?= "$(CURDIR)/build"
+PREFIX ?= "$(CURDIR)/build"
 
-# set OS specific flags
+# set OSX specific flags
 ifeq ($(shell uname -s),Darwin)
-K_RELEASE ?= /usr/local/lib/kframework  # look for K framework as a brew package
-INCLUDES += -I /usr/local/include       # add brew includes path
-CC  ?= /usr/local/opt/llvm/bin/clang    # prefer brew clang because it is more recent than apple clang
-CXX ?= /usr/local/opt/llvm/bin/clang++
+# look for K framework as a brew package
+K_RELEASE ?= /usr/local/lib/kframework
+# add brew includes path
+INCLUDES += -I /usr/local/include
+ # prefer brew clang because it is more recent than apple clang
+ifeq "$(origin CC)"  "default"
+export CC := /usr/local/opt/llvm/bin/clang
+endif
+ifeq "$(origin CXX)" "default"
+export CXX := /usr/local/opt/llvm/bin/clang++
+endif
 # fix build errors on OSX for libff
 # 1. libff cmake script fails to find brew installed openssl; force it to look at OPENSSL_ROOT_DIR
 OPENSSL_VER = $(shell brew desc openssl | cut -f1 -d:)
 LIBFF_EXPORTS = OPENSSL_ROOT_DIR=/usr/local/opt/openssl@$(OPENSSL_VER)
 # 2. libff on osx must be compiled support for /proc filesystem disabled
 LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF
+# set Linux flags
 else
 K_RELEASE ?= /usr/lib/kframework
-CC  ?= clang                            # use system clang
-CXX ?= clang++
 endif
 
 CPPFLAGS += -I $(join $(K_RELEASE), /include) $(INCLUDES) -I $(join $(PREFIX), /include)
