@@ -17,8 +17,8 @@ export CXX := /usr/local/opt/llvm/bin/clang++
 endif
 # fix build errors on OSX for libff
 # 1. libff cmake script fails to find brew installed openssl; force it to look at OPENSSL_ROOT_DIR
-OPENSSL_VER = $(shell brew desc openssl | cut -f1 -d:)
-LIBFF_EXPORTS = OPENSSL_ROOT_DIR=/usr/local/opt/openssl@$(OPENSSL_VER)
+OPENSSL_VER := $(shell brew desc openssl | cut -f1 -d:)
+LIBFF_EXPORTS := OPENSSL_ROOT_DIR=/usr/local/opt/$(OPENSSL_VER)
 # 2. libff on osx must be compiled support for /proc filesystem disabled
 LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF
 # set Linux flags
