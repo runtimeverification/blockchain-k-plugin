@@ -2,7 +2,7 @@ pipeline {
   agent {
     dockerfile {
       label 'docker'
-      additionalBuildArgs '--build-arg K_COMMIT=$(cat deps/k.release | cut --delimiter='-' --field='2') --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+      additionalBuildArgs '--build-arg K_COMMIT=$(cat deps/k.release | cut --delimiter="-" --field="2") --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
     }
   }
   options { ansiColor('xterm') }
