@@ -14,23 +14,6 @@ pipeline {
     stage('Test compilation') {
       when { changeRequest() }
       steps {
-        dir ('llvm-backend') {
-          checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'SubmoduleOption',
-                        disableSubmodules: false,
-                        parentCredentials: false,
-                        recursiveSubmodules: true,
-                        reference: '',
-                        trackingSubmodules: false]],
-          userRemoteConfigs: [[url: 'git@github.com:kframework/llvm-backend.git']]])
-          sh '''
-            mkdir build
-            cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release
-            make include
-          '''
-        }
         dir ('libff') {
           checkout([$class: 'GitSCM',
           branches: [[name: '*/master']],

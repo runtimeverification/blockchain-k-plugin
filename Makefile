@@ -1,4 +1,4 @@
-CPPFLAGS += -I llvm-backend/build/include -I llvm-backend/include -I dummy-version -I plugin -I plugin-c -I libff/build/install/include -I deps/cpp-httplib
+CPPFLAGS += -I /usr/lib/kframework/include -I dummy-version -I plugin -I plugin-c -I libff/build/install/include -I deps/cpp-httplib
 CXX=clang++-8
 
 .PHONY: build
