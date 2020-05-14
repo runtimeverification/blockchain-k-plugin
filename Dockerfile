@@ -23,7 +23,6 @@ RUN    apt-get update                \
             pkg-config               \
             protobuf-compiler        \
             rapidjson-dev            \
-            sudo                     \
             zlib1g-dev
 
 ARG USER_ID=1000
