@@ -7,10 +7,8 @@ else
 K_RELEASE ?= /usr/lib/kframework
 endif
 
-K_INCLUDE     := $(K_RELEASE)/include
-LOCAL_INCLUDE := $(PREFIX)/include
 
-CPPFLAGS += -I $(K_INCLUDE) -I $(LOCAL_INCLUDE) -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+CPPFLAGS += -I $(K_RELEASE)/include -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CXX = clang++-8
 
 .PHONY: build libff
