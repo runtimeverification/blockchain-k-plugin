@@ -15,8 +15,8 @@ pipeline {
       when { changeRequest() }
       steps {
         sh '''
-          make -j16 libff
-          make -j16
+          make -j16 CXX=clang++-8 libff
+          make -j16 CXX=clang++-8
         '''
       }
     }
