@@ -29,6 +29,7 @@ plugin-c/blockchain.o: plugin/proto/msg.pb.h
 .PHONY: clean
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
+	cd deps/secp256k1 && $(MAKE) clean
 
 # libff
 
@@ -39,3 +40,13 @@ $(PREFIX)/lib/libff.a:
 	  && cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) \
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
+
+# libsecp256k1
+
+libsecp256k1: $(PREFIX)/lib/pkgconfig/libsecp256k1.pc
+$(PREFIX)/lib/pkgconfig/libsecp256k1.pc:
+	cd deps/secp256k1/                                             \
+	    && ./autogen.sh                                            \
+	    && ./configure --enable-module-recovery --prefix=$(PREFIX) \
+	    && $(MAKE)                                                 \
+	    && $(MAKE) install
