@@ -28,7 +28,7 @@ plugin-c/blockchain.o: plugin/proto/msg.pb.h
 
 .PHONY: clean
 clean:
-	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build
+	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
 
 # libff
 
