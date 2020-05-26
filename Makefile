@@ -1,21 +1,20 @@
 # set default install prefix if not set
 PREFIX ?= $(CURDIR)/build
+
+K_RELEASE ?= $(dir $(shell which kompile))..
+
 # set OS specific defaults
-# 1. K installation
-# 2. include path
-# 3. C++ compiler
-# 4. extra flags need for libff compilation
 ifeq ($(shell uname -s),Darwin)
-K_RELEASE ?= /usr/local/lib/kframework
-CPPFLAGS += -I /usr/local/include
-LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/$(shell brew desc openssl | cut -f1 -d:)
+# 1. OSX doesn't have /proc/ filesystem
+# 2. fix cmake openssl detection for brew
+LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF \
+                     -DOPENSSL_ROOT_DIR=/usr/local/opt/$(shell brew desc openssl | cut -f1 -d:)
 else
-K_RELEASE ?= /usr/lib/kframework
 # llvm-backend code doesn't play nice with g++
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
-INCLUDES := -I $(K_RELEASE)/include -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 .PHONY: build libff
