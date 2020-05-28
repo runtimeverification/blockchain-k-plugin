@@ -5,6 +5,8 @@
 [submodule "deps/libff"]
 	path = deps/libff
 	url = https://github.com/scipr-lab/libff
+	ignore = untracked
 [submodule "deps/secp256k1"]
 	path = deps/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1
+	ignore = untracked
