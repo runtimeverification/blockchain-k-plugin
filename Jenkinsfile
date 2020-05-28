@@ -14,25 +14,10 @@ pipeline {
     stage('Test compilation') {
       when { changeRequest() }
       steps {
-        dir ('libff') {
-          checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'SubmoduleOption',
-                        disableSubmodules: false,
-                        parentCredentials: false,
-                        recursiveSubmodules: true,
-                        reference: '',
-                        trackingSubmodules: false]], 
-          userRemoteConfigs: [[url: 'git@github.com:scipr-lab/libff.git']]])
-          sh '''
-            mkdir build
-            cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
-            make -j16
-            make install
-          '''
-        }
-        sh 'make -j16'
+        sh '''
+          make -j16 CXX=clang++-8 libff
+          make -j16 CXX=clang++-8
+        '''
       }
     }
     stage('Deploy') {

@@ -1,7 +1,23 @@
-CPPFLAGS += -I /usr/lib/kframework/include -I dummy-version -I plugin -I plugin-c -I libff/build/install/include -I deps/cpp-httplib
-CXX=clang++-8
+# set default install prefix if not set
+PREFIX ?= $(CURDIR)/build
 
-.PHONY: build
+K_RELEASE ?= $(dir $(shell which kompile))..
+
+# set OS specific defaults
+ifeq ($(shell uname -s),Darwin)
+# 1. OSX doesn't have /proc/ filesystem
+# 2. fix cmake openssl detection for brew
+LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF \
+                     -DOPENSSL_ROOT_DIR=/usr/local/opt/$(shell brew desc openssl | cut -f1 -d:)
+else
+# llvm-backend code doesn't play nice with g++
+export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
+endif
+
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+CPPFLAGS += --std=c++14 $(INCLUDES)
+
+.PHONY: build libff
 build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
@@ -11,4 +27,25 @@ plugin-c/blockchain.o: plugin/proto/msg.pb.h
 
 .PHONY: clean
 clean:
-	rm -rf */*.o */*/*.o plugin/proto/*.pb.*
+	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
+	cd deps/secp256k1 && $(MAKE) clean
+
+# libff
+
+libff: $(PREFIX)/lib/libff.a
+$(PREFIX)/lib/libff.a:
+	@mkdir -p deps/libff/build
+	cd deps/libff/build                                                 \
+	  && cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) \
+	  && $(MAKE)                                                        \
+	  && $(MAKE) install
+
+# libsecp256k1
+
+libsecp256k1: $(PREFIX)/lib/pkgconfig/libsecp256k1.pc
+$(PREFIX)/lib/pkgconfig/libsecp256k1.pc:
+	cd deps/secp256k1/                                             \
+	    && ./autogen.sh                                            \
+	    && ./configure --enable-module-recovery --prefix=$(PREFIX) \
+	    && $(MAKE)                                                 \
+	    && $(MAKE) install
