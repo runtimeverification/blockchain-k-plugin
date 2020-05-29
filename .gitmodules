@@ -13,3 +13,4 @@
 [submodule "deps/cryptopp"]
 	path = deps/cryptopp
 	url = https://github.com/weidai11/cryptopp
+	ignore = untracked
