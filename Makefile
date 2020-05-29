@@ -17,7 +17,7 @@ endif
 INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
-.PHONY: build libff
+.PHONY: build libff libsecp256k1
 build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
