@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cryptopp/blake2.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/ripemd.h>
 #include <cryptopp/sha.h>
@@ -37,6 +38,20 @@ static string *raw(unsigned char *digest, size_t len) {
   struct string *result = allocString(len);
   memcpy(result->data, digest, len);
   return result;
+}
+
+struct string *hook_KRYPTO_blake2b256raw(struct string *str) {
+  BLAKE2b h(false,32);
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest));
+}
+
+struct string *hook_KRYPTO_blake2b256(struct string *str) {
+  BLAKE2b h(false,32);
+  unsigned char digest[32];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha3raw(struct string *str) {
