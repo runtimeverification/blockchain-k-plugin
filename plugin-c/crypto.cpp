@@ -40,6 +40,20 @@ static string *raw(unsigned char *digest, size_t len) {
   return result;
 }
 
+struct string *hook_KRYPTO_sha512raw(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest));
+}
+
+struct string *hook_KRYPTO_sha512(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
+}
+
 struct string *hook_KRYPTO_blake2b256raw(struct string *str) {
   BLAKE2b h(false,32);
   unsigned char digest[32];
