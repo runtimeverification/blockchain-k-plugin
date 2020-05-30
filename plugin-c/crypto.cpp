@@ -1,11 +1,8 @@
-#include <cstdint>
-#include <cryptopp/blake2.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/ripemd.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <secp256k1_recovery.h>
-#include <gmp.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
 #include "blake2.h"
@@ -26,20 +23,6 @@ struct string *hook_KRYPTO_sha512raw(struct string *str) {
 struct string *hook_KRYPTO_sha512(struct string *str) {
   SHA512 h;
   unsigned char digest[64];
-  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return hexEncode(digest, sizeof(digest));
-}
-
-struct string *hook_KRYPTO_blake2b256raw(struct string *str) {
-  BLAKE2b h(false,32);
-  unsigned char digest[32];
-  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, sizeof(digest));
-}
-
-struct string *hook_KRYPTO_blake2b256(struct string *str) {
-  BLAKE2b h(false,32);
-  unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
   return hexEncode(digest, sizeof(digest));
 }

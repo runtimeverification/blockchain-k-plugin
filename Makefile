@@ -18,7 +18,7 @@ INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version 
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 .PHONY: build libcryptopp libff libsecp256k1
-build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
+build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/world.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
 
