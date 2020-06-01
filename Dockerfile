@@ -4,10 +4,8 @@ FROM runtimeverificationinc/kframework-k:ubuntu-bionic-${K_COMMIT}
 RUN    apt-get update                \
     && apt-get upgrade --yes         \
     && apt-get install --yes         \
-            bison                    \
             clang-8                  \
             cmake                    \
-            flex                     \
             git                      \
             libboost-test-dev        \
             libcrypto++-dev          \
@@ -19,7 +17,6 @@ RUN    apt-get update                \
             libprotobuf-dev          \
             libsecp256k1-dev         \
             libssl-dev               \
-            libyaml-dev              \
             pkg-config               \
             protobuf-compiler        \
             rapidjson-dev            \
