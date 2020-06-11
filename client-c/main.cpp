@@ -17,7 +17,7 @@
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
-void writeWithPrefix (int, std::string, std::string);
+void prettyWriteJSONWithPrefix (int, std::string, std::string);
 
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 
       write(K_WRITE_FD, body.c_str(), body.length());
       if (FLAGS_dump_rpc) {
-        writeWithPrefix(DUMP_RPC_FD, "   > ", body);
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, "   > ", body);
       }
 
       std::string message;
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 
       res.set_content(message, "application/json");
       if (FLAGS_dump_rpc) {
-        writeWithPrefix(DUMP_RPC_FD, " <   ", message);
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, " <   ", message);
       }
     });
 
@@ -282,7 +282,7 @@ bool doneReading (const char *buffer, int len) {
       && 0 == object_counter_;
 }
 
-void writeWithPrefix(int fd, std::string prefix, std::string msg) {
+void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string msg) {
   rapidjson::Document doc;
   doc.Parse(msg.c_str());
   rapidjson::StringBuffer buffer;
