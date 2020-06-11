@@ -14,8 +14,7 @@
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
-void writeJSONinput  (int, std::string);
-void writeJSONoutput (int, std::string);
+void writeWithPrefix (int, std::string, std::string);
 
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
@@ -111,7 +110,7 @@ int main(int argc, char **argv) {
 
       write(K_WRITE_FD, body.c_str(), body.length());
       if (FLAGS_dump_rpc) {
-        writeJSONinput(DUMP_RPC_FD, body);
+        writeWithPrefix(DUMP_RPC_FD, "   > ", body);
       }
 
       std::string message;
@@ -125,7 +124,7 @@ int main(int argc, char **argv) {
 
       res.set_content(message, "application/json");
       if (FLAGS_dump_rpc) {
-        writeJSONoutput(DUMP_RPC_FD, message);
+        writeWithPrefix(DUMP_RPC_FD, " <  ", message);
       }
     });
 
@@ -283,14 +282,8 @@ std::string prependWith(std::string prefix, std::string msg) {
   return prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
 }
 
-void writeJSONinput(int fd, std::string msg) {
-  std::string msgNew = prependWith("   > ", msg);
-  write(fd, msgNew.c_str(), msgNew.length());
-  return;
-}
-
-void writeJSONoutput(int fd, std::string msg) {
-  std::string msgNew = prependWith(" <   ", msg);
+void writeWithPrefix(int fd, std::string prefix, std::string msg) {
+  std::string msgNew = prependWith(prefix, msg);
   write(fd, msgNew.c_str(), msgNew.length());
   return;
 }
