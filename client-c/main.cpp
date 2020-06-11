@@ -10,6 +10,9 @@
 #include "version.h"
 #include "init.h"
 #include <gflags/gflags.h>
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
@@ -280,6 +283,12 @@ bool doneReading (const char *buffer, int len) {
 }
 
 void writeWithPrefix(int fd, std::string prefix, std::string msg) {
-  std::string msgNew = "\n" + prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
+  rapidjson::Document d;
+  d.Parse(msg.c_str());
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> prettywriter(buffer);
+  d.Accept(prettywriter);
+  std::string jsonPretty = buffer.GetString();
+  std::string msgNew = "\n" + prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix);
   write(fd, msgNew.c_str(), msgNew.length());
 }
