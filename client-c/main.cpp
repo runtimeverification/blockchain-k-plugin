@@ -279,6 +279,6 @@ bool doneReading (const char *buffer, int len) {
 }
 
 void writeWithPrefix(int fd, std::string prefix, std::string msg) {
-  std::string msgNew = prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
+  std::string msgNew = "\n" + prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
   write(fd, msgNew.c_str(), msgNew.length());
 }
