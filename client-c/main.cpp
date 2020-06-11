@@ -284,12 +284,12 @@ bool doneReading (const char *buffer, int len) {
 
 void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string json) {
   rapidjson::Document doc;
-  doc.Parse(msg.c_str());
+  doc.Parse(json.c_str());
   rapidjson::StringBuffer buffer;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
   writer.SetIndent(' ', 2);
   doc.Accept(writer);
   std::string jsonPretty = buffer.GetString();
-  std::string msgNew = "\n" + prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix);
-  write(fd, msgNew.c_str(), msgNew.length());
+  std::string jsonPrefixed = "\n" + prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix);
+  write(fd, jsonPrefixed.c_str(), jsonPrefixed.length());
 }
