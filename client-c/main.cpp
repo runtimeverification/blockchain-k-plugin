@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
       res.set_content(message, "application/json");
       if (FLAGS_dump_rpc) {
-        writeWithPrefix(DUMP_RPC_FD, " <  ", message);
+        writeWithPrefix(DUMP_RPC_FD, " <   ", message);
       }
     });
 
