@@ -278,12 +278,7 @@ bool doneReading (const char *buffer, int len) {
       && 0 == object_counter_;
 }
 
-std::string prependWith(std::string prefix, std::string msg) {
-  return prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
-}
-
 void writeWithPrefix(int fd, std::string prefix, std::string msg) {
-  std::string msgNew = prependWith(prefix, msg);
+  std::string msgNew = prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
   write(fd, msgNew.c_str(), msgNew.length());
-  return;
 }
