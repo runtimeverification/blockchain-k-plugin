@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
   int DUMP_RPC_FD;
   if (FLAGS_dump_rpc) {
-    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), O_CREAT | O_WRONLY, 644);
+    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), O_CREAT | O_WRONLY, 00644);
   }
 
   svr.Post(R"(.*)",
@@ -135,6 +135,7 @@ int main(int argc, char **argv) {
   t2.join();
 
   if (FLAGS_dump_rpc) {
+    write(DUMP_RPC_FD, "\n", 1);
     close(DUMP_RPC_FD);
   }
 
