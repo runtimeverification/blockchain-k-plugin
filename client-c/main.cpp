@@ -280,15 +280,17 @@ bool doneReading (const char *buffer, int len) {
 }
 
 std::string prependWith(std::string prefix, std::string msg) {
-  return msg;
+  return prefix + std::regex_replace(msg, std::regex("\n"), "\n" + prefix);
 }
 
 void writeJSONinput(int fd, std::string msg) {
   std::string msgNew = prependWith("   > ", msg);
+  write(fd, msgNew.c_str(), msgNew.length());
   return;
 }
 
 void writeJSONoutput(int fd, std::string msg) {
   std::string msgNew = prependWith(" <   ", msg);
+  write(fd, msgNew.c_str(), msgNew.length());
   return;
 }
