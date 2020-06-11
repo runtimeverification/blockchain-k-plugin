@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
   int DUMP_RPC_FD;
   if (FLAGS_dump_rpc) {
-    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), std::ios::out);
+    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), O_CREAT);
   }
 
   svr.Post(R"(.*)",
