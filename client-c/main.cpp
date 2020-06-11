@@ -17,7 +17,7 @@
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
-void prettyWriteJSONWithPrefix (int, std::string, std::string);
+void prettyWriteJSONWithPrefix (int fd, std::string prefix, std::string json);
 
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
@@ -282,7 +282,7 @@ bool doneReading (const char *buffer, int len) {
       && 0 == object_counter_;
 }
 
-void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string msg) {
+void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string json) {
   rapidjson::Document doc;
   doc.Parse(msg.c_str());
   rapidjson::StringBuffer buffer;
