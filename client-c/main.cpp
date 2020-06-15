@@ -10,10 +10,14 @@
 #include "version.h"
 #include "init.h"
 #include <gflags/gflags.h>
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
+void prettyWriteJSONWithPrefix (int fd, std::string prefix, std::string json);
 
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
@@ -39,6 +43,8 @@ DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
+DEFINE_bool(dump_rpc, false, "Dump RPC messages to file specified by --dump-rpc-file");
+DEFINE_string(dump_rpc_file, "/dev/stdout", "File to dump RPC messages to");
 DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification messages as normal messages");
 DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
@@ -91,6 +97,11 @@ int main(int argc, char **argv) {
   });
   t1.detach();
 
+  int DUMP_RPC_FD;
+  if (FLAGS_dump_rpc) {
+    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), O_CREAT | O_WRONLY, 00644);
+  }
+
   svr.Post(R"(.*)",
     [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
       std::string body;
@@ -101,6 +112,9 @@ int main(int argc, char **argv) {
       });
 
       write(K_WRITE_FD, body.c_str(), body.length());
+      if (FLAGS_dump_rpc) {
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, "   > ", body);
+      }
 
       std::string message;
       char buffer[4096] = {0};
@@ -112,6 +126,9 @@ int main(int argc, char **argv) {
       } while (ret > 0 && !doneReading(buffer, ret));
 
       res.set_content(message, "application/json");
+      if (FLAGS_dump_rpc) {
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, " <   ", message);
+      }
     });
 
   std::thread t2([&] () {
@@ -119,6 +136,11 @@ int main(int argc, char **argv) {
   });
 
   t2.join();
+
+  if (FLAGS_dump_rpc) {
+    write(DUMP_RPC_FD, "\n", 1);
+    close(DUMP_RPC_FD);
+  }
 
   return 0;
 }
@@ -258,4 +280,16 @@ bool doneReading (const char *buffer, int len) {
   return 0 == brace_counter_
       && 0 == bracket_counter_
       && 0 == object_counter_;
+}
+
+void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string json) {
+  rapidjson::Document doc;
+  doc.Parse(json.c_str());
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+  writer.SetIndent(' ', 2);
+  doc.Accept(writer);
+  std::string jsonPretty = buffer.GetString();
+  std::string jsonPrefixed = "\n" + prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix);
+  write(fd, jsonPrefixed.c_str(), jsonPrefixed.length());
 }
