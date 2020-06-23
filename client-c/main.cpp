@@ -299,6 +299,6 @@ void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string json) {
   writer.SetIndent(' ', 2);
   doc.Accept(writer);
   std::string jsonPretty = buffer.GetString();
-  std::string jsonPrefixed = "\n" + prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix);
+  std::string jsonPrefixed = prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix) + "\n";
   write(fd, jsonPrefixed.c_str(), jsonPrefixed.length());
 }
