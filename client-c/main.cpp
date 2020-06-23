@@ -45,6 +45,7 @@ DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill serve
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
 DEFINE_bool(dump_rpc, false, "Dump RPC messages to file specified by --dump-rpc-file");
 DEFINE_string(dump_rpc_file, "/dev/stdout", "File to dump RPC messages to");
+DEFINE_bool(quiet, false, "Suppress logging output");
 DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification messages as normal messages");
 DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
@@ -110,6 +111,14 @@ int main(int argc, char **argv) {
         body.append(data, data_length);
         return true;
       });
+
+      if (!FLAGS_quiet) {
+        rapidjson::Document doc;
+        doc.Parse(body.c_str());
+        if (doc.IsObject() && doc.HasMember("method") && doc["method"].IsString()) {
+          fprintf(stdout, "%s\n", doc["method"].GetString());
+        }
+      }
 
       write(K_WRITE_FD, body.c_str(), body.length());
       if (FLAGS_dump_rpc) {
