@@ -22,6 +22,7 @@ void prettyWriteJSONWithPrefix (int fd, std::string prefix, std::string json);
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
 static bool K_TIMEFREEZE;
+static bool K_NOCODEMAX;
 static uint32_t K_SCHEDULE_TAG;
 static int K_CHAINID;
 static int K_DEPTH;
@@ -54,6 +55,7 @@ DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'front
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_bool(vmversion, false, "Display current VM version");
 DEFINE_bool(timeFreeze, false, "The timestamp on mined blocks will only be influnced by calls that modify it, and not by the actual passage of time");
+DEFINE_bool(allowUnlimitedContractSize, false, "Skips checking the contract size limit, for debugging purposes.");
 
 int main(int argc, char **argv) {
 
@@ -71,6 +73,7 @@ int main(int argc, char **argv) {
   K_DEPTH = FLAGS_depth;
   K_NOTIFICATIONS = FLAGS_respond_to_notifications;
   K_TIMEFREEZE = FLAGS_timeFreeze;
+  K_NOCODEMAX = FLAGS_allowUnlimitedContractSize;
 
   if (FLAGS_hardfork == FRONTIER) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
@@ -159,7 +162,7 @@ int main(int argc, char **argv) {
 
 void runKServer(httplib::Server *svr) {
   int chainId = K_CHAINID;
-  bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS, timeFreeze = K_TIMEFREEZE;
+  bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS, timeFreeze = K_TIMEFREEZE, noCodeMax = K_NOCODEMAX;
   in_addr address;
   inet_aton("127.0.0.1", &address);
 
@@ -222,6 +225,10 @@ void runKServer(httplib::Server *svr) {
   timefreezeinj->h = injHeaderBool;
   timefreezeinj->data = timeFreeze;
 
+  boolinj *nocodemaxinj = (boolinj *)koreAlloc(sizeof(boolinj));
+  nocodemaxinj->h = injHeaderBool;
+  nocodemaxinj->data = noCodeMax;
+
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
   chaininj->h = injHeaderInt;
   mpz_t chainid;
@@ -243,7 +250,8 @@ void runKServer(httplib::Server *svr) {
   map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
   map withNotifications = hook_MAP_update(&withChain, configvar("$NOTIFICATIONS"), (block*)notificationsinj);
   map withTimeFreeze = hook_MAP_update(&withNotifications, configvar("$TIMEFREEZE"), (block*)timefreezeinj);
-  map init = hook_MAP_update(&withTimeFreeze, configvar("$PGM"), (block *)kinj);
+  map withNoCodeMax = hook_MAP_update(&withTimeFreeze, configvar("$NOCODEMAX"), (block*)nocodemaxinj);
+  map init = hook_MAP_update(&withNoCodeMax, configvar("$PGM"), (block *)kinj);
 
   // invoke the rewriter
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
