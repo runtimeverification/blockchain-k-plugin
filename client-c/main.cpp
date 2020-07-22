@@ -261,7 +261,7 @@ void runKServer(httplib::Server *svr) {
   block* final_config = take_steps(K_DEPTH, init_config);
   if (FLAGS_dump) printConfiguration("/dev/stderr", final_config);
   close(K_WRITE_FD);
-  close(K_READ_FD);
+  close(output[1]);
   svr->stop();
 }
 
