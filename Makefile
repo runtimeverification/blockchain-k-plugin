@@ -20,7 +20,7 @@ CPPFLAGS += --std=c++14 $(INCLUDES)
 .PHONY: build libcryptopp libff libsecp256k1
 build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/world.o
 
-plugin-c/blockchain.o: plugin/proto/msg.pb.h
+plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
 
 %.pb.h: %.proto
 	protoc --cpp_out=. $<
