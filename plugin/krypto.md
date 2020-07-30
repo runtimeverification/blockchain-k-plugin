@@ -52,6 +52,21 @@ These functions compute the same hash function as those named above except that 
  // -------------------------------------------------------------------------------------------------------
 ```
 
+### Other Hooked Hash Functions
+
+These hooked hash functions are broken on default Ubuntu installations because of a bug in `libcrypto++` package.
+As such, we we hide them behind a separate tangle tag to avoid breaking projects that do not use them.
+
+-   `Blake2b256` takes a string and returns a 64-character hex-encoded string of the 32-byte Blake2b256 hash of the string.
+-   `Blake2b256raw` takes a string and returns the 32-byte Blake2b256 hash of the string.
+
+```libcrypto-extra
+```k
+    syntax String ::= Blake2b256 ( String )                           [function, hook(KRYPTO.keccak256raw)]
+                    | Blake2b256raw ( String )                        [function, hook(KRYPTO.sha256raw)]
+ // -------------------------------------------------------------------------------------------------------
+```
+
 ECDSA Functions
 ---------------
 
