@@ -8,7 +8,7 @@
 #include "runtime/header.h"
 
 extern "C" {
-inline string* allocString(size_t len);
+string* allocString(size_t len);
 string *hexEncode(unsigned char *digest, size_t len);
 string *raw(unsigned char *digest, size_t len);
 }

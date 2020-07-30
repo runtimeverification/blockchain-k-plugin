@@ -1,7 +1,7 @@
 #include "plugin_util.h"
 
 extern "C" {
-inline string* allocString(size_t len) {
+string* allocString(size_t len) {
   struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
   set_len(result, len);
   return result;
