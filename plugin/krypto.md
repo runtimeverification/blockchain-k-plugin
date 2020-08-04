@@ -32,7 +32,7 @@ In hooked hash functions, `String` inputs are interpreted as byte arrays, i.e. t
 ```k
     syntax String ::= Keccak256 ( String )                            [function, hook(KRYPTO.keccak256)]
                     | Sha256 ( String )                               [function, hook(KRYPTO.sha256)]
-                    | Sha512 ( String )                               [function, hook(KRYPTO.sha256)]
+                    | Sha512 ( String )                               [function, hook(KRYPTO.sha512)]
                     | "Sha3_256" "(" String ")"                       [function, hook(KRYPTO.sha3)]
                     | RipEmd160 ( String )                            [function, hook(KRYPTO.ripemd160)]
                     | Blake2Compress ( String )                       [function, hook(KRYPTO.blake2compress)]
@@ -46,7 +46,7 @@ These functions compute the same hash function as those named above except that 
 ```k
     syntax String ::= Keccak256raw ( String )                         [function, hook(KRYPTO.keccak256raw)]
                     | Sha256raw ( String )                            [function, hook(KRYPTO.sha256raw)]
-                    | Sha512raw ( String )                            [function, hook(KRYPTO.sha256raw)]
+                    | Sha512raw ( String )                            [function, hook(KRYPTO.sha512raw)]
                     | "Sha3_256raw" "(" String ")"                    [function, hook(KRYPTO.sha3raw)]
                     | RipEmd160raw ( String )                         [function, hook(KRYPTO.ripemd160raw)]
  // -------------------------------------------------------------------------------------------------------
@@ -61,9 +61,9 @@ As such, we we hide them behind a separate tangle tag to avoid breaking projects
 -   `Blake2b256raw` takes a string and returns the 32-byte Blake2b256 hash of the string.
 
 ```libcrypto-extra
-    syntax String ::= Blake2b256 ( String )                           [function, hook(KRYPTO.keccak256raw)]
-                    | Blake2b256raw ( String )                        [function, hook(KRYPTO.sha256raw)]
- // -------------------------------------------------------------------------------------------------------
+    syntax String ::= Blake2b256 ( String )                           [function, hook(KRYPTO.blake2b256)]
+                    | Blake2b256raw ( String )                        [function, hook(KRYPTO.blake2b256raw)]
+ // --------------------------------------------------------------------------------------------------------
 ```
 
 ECDSA Functions
