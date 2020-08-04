@@ -61,7 +61,6 @@ As such, we we hide them behind a separate tangle tag to avoid breaking projects
 -   `Blake2b256raw` takes a string and returns the 32-byte Blake2b256 hash of the string.
 
 ```libcrypto-extra
-```k
     syntax String ::= Blake2b256 ( String )                           [function, hook(KRYPTO.keccak256raw)]
                     | Blake2b256raw ( String )                        [function, hook(KRYPTO.sha256raw)]
  // -------------------------------------------------------------------------------------------------------
