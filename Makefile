@@ -25,7 +25,11 @@ plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
 %.pb.h: %.proto
 	protoc --cpp_out=. $<
 
-.PHONY: clean
+.PHONY: install clean
+install:
+	@mkdir -p $(PREFIX)
+	cp plugin/* $(PREFIX)
+
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
 	cd deps/secp256k1 && $(MAKE) clean
