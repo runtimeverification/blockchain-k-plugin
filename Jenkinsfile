@@ -23,14 +23,12 @@ pipeline {
     }
     stage('Deploy') {
       when { branch 'master' }
-        stage('Update Dependents') {
-        steps {
-          build job: 'rv-devops/master', propagate: false, wait: false                                                        \
-              , parameters: [ booleanParam ( name: 'UPDATE_DEPS'         , value: true                                      ) \
-                            , string       ( name: 'UPDATE_DEPS_REPO'    , value: 'runtimeverification/blockchain-k-plugin' ) \
-                            , string       ( name: 'UPDATE_DEPS_VERSION' , value: "${env.LONG_REV}")                          \
-                            ]
-        }
+      steps {
+        build job: 'rv-devops/master', propagate: false, wait: false                                                        \
+            , parameters: [ booleanParam ( name: 'UPDATE_DEPS'         , value: true                                      ) \
+                          , string       ( name: 'UPDATE_DEPS_REPO'    , value: 'runtimeverification/blockchain-k-plugin' ) \
+                          , string       ( name: 'UPDATE_DEPS_VERSION' , value: "${env.LONG_REV}")                          \
+                          ]
       }
     }
   }
