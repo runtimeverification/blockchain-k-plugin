@@ -1,42 +1,30 @@
-#include <cstdint>
 #include <cryptopp/keccak.h>
 #include <cryptopp/ripemd.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <secp256k1_recovery.h>
-#include <gmp.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
-#include "runtime/alloc.h"
-#include "runtime/header.h"
 #include "blake2.h"
+#include "plugin_util.h"
 
 using namespace CryptoPP;
 using namespace libff;
 
 extern "C" {
-static inline string* allocString(size_t len) {
-  struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
-  set_len(result, len);
-  return result;
+
+struct string *hook_KRYPTO_sha512raw(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, sizeof(digest));
 }
 
-static string *hexEncode(unsigned char *digest, size_t len) {
-  uint64_t hexLen = len * 2;
-  char byte[3];
-  struct string *result = allocString(hexLen);
-  for (size_t i = 0, j = 0; i < len; i++, j += 2) {
-    sprintf(byte, "%02x", digest[i]);
-    result->data[j] = byte[0];
-    result->data[j+1] = byte[1];
-  }
-  return result;
-}
-
-static string *raw(unsigned char *digest, size_t len) {
-  struct string *result = allocString(len);
-  memcpy(result->data, digest, len);
-  return result;
+struct string *hook_KRYPTO_sha512(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha3raw(struct string *str) {

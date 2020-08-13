@@ -17,8 +17,8 @@ endif
 INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
-.PHONY: build libff
-build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/world.o
+.PHONY: build libcryptopp libff libsecp256k1
+build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/world.o
 
 plugin-c/blockchain.o: plugin/proto/msg.pb.h
 
@@ -29,6 +29,14 @@ plugin-c/blockchain.o: plugin/proto/msg.pb.h
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
 	cd deps/secp256k1 && $(MAKE) clean
+
+# libcryptopp
+
+libcryptopp: $(PREFIX)/lib/libcryptopp.a
+$(PREFIX)/lib/libcryptopp.a:
+	cd deps/cryptopp                      \
+	  && $(MAKE)                          \
+	  && $(MAKE) install PREFIX=$(PREFIX)
 
 # libff
 

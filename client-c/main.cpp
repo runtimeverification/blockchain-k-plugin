@@ -10,13 +10,19 @@
 #include "version.h"
 #include "init.h"
 #include <gflags/gflags.h>
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 
 void runKServer(httplib::Server *svr);
 void countBrackets(const char *buffer, size_t len);
 bool doneReading (const char *buffer, int len);
+void prettyWriteJSONWithPrefix (int fd, std::string prefix, std::string json);
 
 static bool K_SHUTDOWNABLE;
 static bool K_NOTIFICATIONS;
+static bool K_TIMEFREEZE;
+static bool K_NOCODEMAX;
 static uint32_t K_SCHEDULE_TAG;
 static int K_CHAINID;
 static int K_DEPTH;
@@ -39,12 +45,17 @@ DEFINE_int32(depth, -1, "For debugging, stop execution at a certain depth.");
 DEFINE_string(host, "localhost", "IP/Hostname to bind to");
 DEFINE_bool(shutdownable, false, "Allow `firefly_shutdown` message to kill server");
 DEFINE_bool(dump, false, "Dump the K Server configuration on shutdown");
+DEFINE_bool(dump_rpc, false, "Dump RPC messages to file specified by --dump-rpc-file");
+DEFINE_string(dump_rpc_file, "/dev/stdout", "File to dump RPC messages to");
+DEFINE_bool(quiet, false, "Suppress logging output");
 DEFINE_bool(respond_to_notifications, false, "Respond to incoming notification messages as normal messages");
 DEFINE_string(hardfork, "istanbul", "Ethereum client hardfork. Supported: 'frontier', "
              "'homestead', 'tangerine_whistle', 'spurious_dragon', 'byzantium', "
              "'constantinople', 'petersburg', 'istanbul'");
 DEFINE_int32(networkId, 28346, "Set network chain id");
 DEFINE_bool(vmversion, false, "Display current VM version");
+DEFINE_bool(timeFreeze, false, "The timestamp on mined blocks will only be influnced by calls that modify it, and not by the actual passage of time");
+DEFINE_bool(allowUnlimitedContractSize, false, "Skips checking the contract size limit, for debugging purposes.");
 
 int main(int argc, char **argv) {
 
@@ -61,6 +72,8 @@ int main(int argc, char **argv) {
   K_SHUTDOWNABLE = FLAGS_shutdownable;
   K_DEPTH = FLAGS_depth;
   K_NOTIFICATIONS = FLAGS_respond_to_notifications;
+  K_TIMEFREEZE = FLAGS_timeFreeze;
+  K_NOCODEMAX = FLAGS_allowUnlimitedContractSize;
 
   if (FLAGS_hardfork == FRONTIER) {
     K_SCHEDULE_TAG = getTagForSymbolName("LblFRONTIER'Unds'EVM{}");
@@ -91,6 +104,11 @@ int main(int argc, char **argv) {
   });
   t1.detach();
 
+  int DUMP_RPC_FD;
+  if (FLAGS_dump_rpc) {
+    DUMP_RPC_FD = open(FLAGS_dump_rpc_file.c_str(), O_CREAT | O_WRONLY, 00644);
+  }
+
   svr.Post(R"(.*)",
     [&](const httplib::Request &req, httplib::Response &res, const httplib::ContentReader &content_reader) {
       std::string body;
@@ -100,7 +118,18 @@ int main(int argc, char **argv) {
         return true;
       });
 
+      if (!FLAGS_quiet) {
+        rapidjson::Document doc;
+        doc.Parse(body.c_str());
+        if (doc.IsObject() && doc.HasMember("method") && doc["method"].IsString()) {
+          fprintf(stdout, "%s\n", doc["method"].GetString());
+        }
+      }
+
       write(K_WRITE_FD, body.c_str(), body.length());
+      if (FLAGS_dump_rpc) {
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, "   > ", body);
+      }
 
       std::string message;
       char buffer[4096] = {0};
@@ -112,6 +141,9 @@ int main(int argc, char **argv) {
       } while (ret > 0 && !doneReading(buffer, ret));
 
       res.set_content(message, "application/json");
+      if (FLAGS_dump_rpc) {
+        prettyWriteJSONWithPrefix(DUMP_RPC_FD, " <   ", message);
+      }
     });
 
   std::thread t2([&] () {
@@ -120,12 +152,17 @@ int main(int argc, char **argv) {
 
   t2.join();
 
+  if (FLAGS_dump_rpc) {
+    write(DUMP_RPC_FD, "\n", 1);
+    close(DUMP_RPC_FD);
+  }
+
   return 0;
 }
 
 void runKServer(httplib::Server *svr) {
   int chainId = K_CHAINID;
-  bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS;
+  bool shutdownable = K_SHUTDOWNABLE, notifications = K_NOTIFICATIONS, timeFreeze = K_TIMEFREEZE, noCodeMax = K_NOCODEMAX;
   in_addr address;
   inet_aton("127.0.0.1", &address);
 
@@ -184,6 +221,14 @@ void runKServer(httplib::Server *svr) {
   notificationsinj->h = injHeaderBool;
   notificationsinj->data = notifications;
 
+  boolinj *timefreezeinj = (boolinj *)koreAlloc(sizeof(boolinj));
+  timefreezeinj->h = injHeaderBool;
+  timefreezeinj->data = timeFreeze;
+
+  boolinj *nocodemaxinj = (boolinj *)koreAlloc(sizeof(boolinj));
+  nocodemaxinj->h = injHeaderBool;
+  nocodemaxinj->data = noCodeMax;
+
   zinj *chaininj = (zinj *)koreAlloc(sizeof(zinj));
   chaininj->h = injHeaderInt;
   mpz_t chainid;
@@ -204,7 +249,9 @@ void runKServer(httplib::Server *svr) {
   map withShutdownable = hook_MAP_update(&withOutput, configvar("$SHUTDOWNABLE"), (block *)shutdownableinj);
   map withChain = hook_MAP_update(&withShutdownable, configvar("$CHAINID"), (block *)chaininj);
   map withNotifications = hook_MAP_update(&withChain, configvar("$NOTIFICATIONS"), (block*)notificationsinj);
-  map init = hook_MAP_update(&withNotifications, configvar("$PGM"), (block *)kinj);
+  map withTimeFreeze = hook_MAP_update(&withNotifications, configvar("$TIMEFREEZE"), (block*)timefreezeinj);
+  map withNoCodeMax = hook_MAP_update(&withTimeFreeze, configvar("$NOCODEMAX"), (block*)nocodemaxinj);
+  map init = hook_MAP_update(&withNoCodeMax, configvar("$PGM"), (block *)kinj);
 
   // invoke the rewriter
   static uint32_t tag2 = getTagForSymbolName("LblinitGeneratedTopCell{}");
@@ -214,7 +261,7 @@ void runKServer(httplib::Server *svr) {
   block* final_config = take_steps(K_DEPTH, init_config);
   if (FLAGS_dump) printConfiguration("/dev/stderr", final_config);
   close(K_WRITE_FD);
-  close(K_READ_FD);
+  close(output[1]);
   svr->stop();
 }
 
@@ -258,4 +305,16 @@ bool doneReading (const char *buffer, int len) {
   return 0 == brace_counter_
       && 0 == bracket_counter_
       && 0 == object_counter_;
+}
+
+void prettyWriteJSONWithPrefix(int fd, std::string prefix, std::string json) {
+  rapidjson::Document doc;
+  doc.Parse(json.c_str());
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+  writer.SetIndent(' ', 2);
+  doc.Accept(writer);
+  std::string jsonPretty = buffer.GetString();
+  std::string jsonPrefixed = prefix + std::regex_replace(jsonPretty, std::regex("\n"), "\n" + prefix) + "\n";
+  write(fd, jsonPrefixed.c_str(), jsonPrefixed.length());
 }

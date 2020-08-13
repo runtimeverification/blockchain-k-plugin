@@ -10,3 +10,7 @@
 	path = deps/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1
 	ignore = untracked
+[submodule "deps/cryptopp"]
+	path = deps/cryptopp
+	url = https://github.com/weidai11/cryptopp
+	ignore = untracked

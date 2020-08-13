@@ -8,7 +8,6 @@ RUN    apt-get update                \
             cmake                    \
             git                      \
             libboost-test-dev        \
-            libcrypto++-dev          \
             libgflags-dev            \
             libgmp-dev               \
             libjemalloc-dev          \
