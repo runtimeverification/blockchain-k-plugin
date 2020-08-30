@@ -26,9 +26,11 @@ plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
 	protoc --cpp_out=. $<
 
 .PHONY: install clean
+
+PLUGIN_NAMESPACE := blockchain-k-plugin
 install:
-	@mkdir -p $(PREFIX)
-	cp plugin/* $(PREFIX)
+	@mkdir -p $(PREFIX)/$(PLUGIN_NAMESPACE)
+	cp plugin/* $(PREFIX)/$(PLUGIN_NAMESPACE)
 
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
