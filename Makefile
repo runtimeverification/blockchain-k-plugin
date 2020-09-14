@@ -27,10 +27,19 @@ plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
 
 .PHONY: install clean
 
+DESTDIR         ?=
+INSTALL_PREFIX  ?= /usr/local
+INSTALL_DIR     := $(DESTDIR)$(INSTALL_PREFIX)
+INSTALL_INCLUDE := $(INSTALL_DIR)/include/kframework
+
 PLUGIN_NAMESPACE := blockchain-k-plugin
-install:
-	@mkdir -p $(PREFIX)/$(PLUGIN_NAMESPACE)
-	cp plugin/* $(PREFIX)/$(PLUGIN_NAMESPACE)
+K_SOURCES := krypto.md
+
+install: $(patsubst %, $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%, $(K_SOURCES))
+
+$(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
+	@mkdir -p $(dir $@)
+	cp $< $@
 
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
