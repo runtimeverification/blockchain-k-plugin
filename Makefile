@@ -20,12 +20,27 @@ CPPFLAGS += --std=c++14 $(INCLUDES)
 .PHONY: build libcryptopp libff libsecp256k1
 build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/world.o
 
-plugin-c/blockchain.o: plugin/proto/msg.pb.h
+plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
 
 %.pb.h: %.proto
 	protoc --cpp_out=. $<
 
-.PHONY: clean
+.PHONY: install clean
+
+DESTDIR         ?=
+INSTALL_PREFIX  ?= /usr/local
+INSTALL_DIR     := $(DESTDIR)$(INSTALL_PREFIX)
+INSTALL_INCLUDE := $(INSTALL_DIR)/include/kframework
+
+PLUGIN_NAMESPACE := blockchain-k-plugin
+K_SOURCES := krypto.md
+
+install: $(patsubst %, $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%, $(K_SOURCES))
+
+$(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
+	@mkdir -p $(dir $@)
+	cp $< $@
+
 clean:
 	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
 	cd deps/secp256k1 && $(MAKE) clean
