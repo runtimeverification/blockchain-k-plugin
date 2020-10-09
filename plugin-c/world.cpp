@@ -6,7 +6,7 @@
 #include "world.h"
 #include "runtime/header.h"
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 extern "C" {
   string* hook_BYTES_int2bytes(mpz_t, mpz_t, uint64_t);

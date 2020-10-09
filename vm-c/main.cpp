@@ -10,7 +10,7 @@
 extern FILE *vm_out_chan;
 extern FILE *vm_in_chan;
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 CallResult run_transaction(CallContext ctx);
 

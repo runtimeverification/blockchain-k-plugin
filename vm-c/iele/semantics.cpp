@@ -5,7 +5,7 @@
 #include "vm.h"
 #include <string>
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 bool get_error(mpz_ptr status) {
   return mpz_sgn(status) != 0;

@@ -7,7 +7,7 @@
 #include "semantics.h"
 #include "world.h"
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 std::vector<mpz_ptr> k_to_zs(list* l) {
   std::vector<mpz_ptr> result;
