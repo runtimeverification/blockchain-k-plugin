@@ -1,6 +1,7 @@
 #include "proto/msg.pb.h"
 #include "runtime/header.h"
 #include "semantics.h"
+#include "init.h"
 #include "world.h"
 #include "vm.h"
 #include <string>
