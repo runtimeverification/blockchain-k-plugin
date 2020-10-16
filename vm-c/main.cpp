@@ -42,6 +42,13 @@ int main(int argc, char **argv) {
 
   int sock = init(port, host);
 
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+  if (getsockname(sock, (struct sockaddr *)&sin, &len) == -1)
+    perror("getsockname");
+  else
+    std::cout << "Listening on " << argv[2] << ":" << ntohs(sin.sin_port) << std::endl;
+
   sockaddr_in peer;
   while(1) {
     socklen_t len = sizeof(peer);
