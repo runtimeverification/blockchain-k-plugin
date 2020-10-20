@@ -16,17 +16,6 @@ struct account {
   zinj *nonce;
 };
 
-struct jsonlist {
-  blockheader h;
-  block *hd;
-  jsonlist* tl;
-};
-
-struct json {
-  blockheader h;
-  jsonlist *data;
-};
-
 struct log {
   blockheader h;
   mpz_ptr acct;
