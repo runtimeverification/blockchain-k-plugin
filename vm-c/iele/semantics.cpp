@@ -1,11 +1,12 @@
 #include "proto/msg.pb.h"
 #include "runtime/header.h"
 #include "semantics.h"
+#include "init.h"
 #include "world.h"
 #include "vm.h"
 #include <string>
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 bool get_error(mpz_ptr status) {
   return mpz_sgn(status) != 0;
@@ -23,15 +24,8 @@ std::string get_output_data(list *l) {
 }
 
 uint64_t get_schedule(mpz_ptr number, CallContext *ctx) {
-  mpz_ptr danse = to_z(ctx->ieleconfig().danseblocknumber());
   static uint32_t danse_tag = getTagForSymbolName("LblDANSE'Unds'IELE-CONSTANTS'Unds'{}");
-  static uint32_t albe_tag = getTagForSymbolName("LblALBE'Unds'IELE-CONSTANTS'Unds'{}");
-  uint32_t tag;
-  if (mpz_cmp(number, danse) >= 0) {
-    tag = danse_tag;
-  } else {
-    tag = albe_tag;
-  }
+  uint32_t tag = danse_tag;
   return (((uint64_t)tag) << 32) | 1;
 }
 

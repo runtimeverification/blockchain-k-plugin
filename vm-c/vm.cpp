@@ -7,7 +7,7 @@
 #include "semantics.h"
 #include "world.h"
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 std::vector<mpz_ptr> k_to_zs(list* l) {
   std::vector<mpz_ptr> result;
@@ -216,10 +216,9 @@ CallResult run_transaction(CallContext ctx) {
   std::string gasLeft = of_z(extracted->gas);
   std::string refund = of_z(extracted->refund);
   std::string status = of_z(extracted->status);
-  std::string statusCode = std::string(extracted->statuscode->data, len(extracted->statuscode));
   bool error = get_error(extracted->status);
-  auto selfdestruct = set_to_zs(&extracted->selfdestruct);
-  auto touched = set_to_zs(&extracted->touched);
+  auto selfdestruct = k_to_zs(&extracted->selfdestruct);
+  auto touched = k_to_zs(&extracted->touched);
   auto accounts = k_to_accts(&extracted->accounts->data);
   auto logs = k_to_logs(&extracted->logs);
   CallResult result;
@@ -228,7 +227,6 @@ CallResult run_transaction(CallContext ctx) {
   result.set_gasremaining(gasLeft);
   result.set_gasrefund(refund);
   result.set_error(error);
-  result.set_statuscode(statusCode);
   for (mpz_ptr acct : selfdestruct) {
     result.add_deletedaccounts(of_z_width(20, acct));
   }

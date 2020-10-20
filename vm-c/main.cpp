@@ -10,7 +10,7 @@
 extern FILE *vm_out_chan;
 extern FILE *vm_in_chan;
 
-using namespace org::kframework::kevm::extvm;
+using namespace io::iohk::ethereum::extvm;
 
 CallResult run_transaction(CallContext ctx);
 
@@ -42,6 +42,13 @@ int main(int argc, char **argv) {
 
   int sock = init(port, host);
 
+  struct sockaddr_in sin;
+  socklen_t len = sizeof(sin);
+  if (getsockname(sock, (struct sockaddr *)&sin, &len) == -1)
+    perror("getsockname");
+  else
+    std::cout << "Listening on " << argv[2] << ":" << ntohs(sin.sin_port) << std::endl;
+
   sockaddr_in peer;
   while(1) {
     socklen_t len = sizeof(peer);
@@ -70,7 +77,7 @@ int main(int argc, char **argv) {
     fread(&buf[0], 1, len, _if);
     Hello h;
     bool success = h.ParseFromString(buf);
-    if (success && h.version() == "2.1") {
+    if (success && h.version() == "1.1") {
       while(1) {
         fread((char *)&len, 4, 1, _if);
         if (feof(_if)) {
