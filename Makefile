@@ -18,12 +18,7 @@ INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version 
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 .PHONY: build libcryptopp libff libsecp256k1
-build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/blockchain.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/world.o
-
-plugin-c/blockchain.o: plugin-c/proto/msg.pb.h
-
-%.pb.h: %.proto
-	protoc --cpp_out=. $<
+build: client-c/json.o client-c/main.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.o
 
 .PHONY: install clean
 
@@ -42,7 +37,7 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 	cp $< $@
 
 clean:
-	rm -rf */*.o */*/*.o plugin/proto/*.pb.* build deps/libff/build
+	rm -rf */*.o */*/*.o build deps/libff/build
 	cd deps/secp256k1 && $(MAKE) clean
 
 # libcryptopp
