@@ -1,5 +1,5 @@
-#ifndef INIT_H
-#define INIT_H
+#ifndef JSON_H
+#define JSON_H
 
 #include <netinet/in.h>
 #include "runtime/header.h"
