@@ -9,7 +9,7 @@
 #include "runtime/header.h"
 #include "runtime/alloc.h"
 
-#include "init.h"
+#include "json.h"
 
 using namespace rapidjson;
 
