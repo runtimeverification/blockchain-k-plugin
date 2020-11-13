@@ -18,7 +18,7 @@ INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version 
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 .PHONY: build libcryptopp libff libsecp256k1
-build: plugin-c/json.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.o
+build: plugin-c/json.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
 
 .PHONY: install clean
 
