@@ -34,40 +34,54 @@ class FDStream {
 public:
     typedef char Ch;
     FDStream(int fd) : fd(fd) {
+      fillreadbuf();
     }
-    Ch buffer = -1;
     Ch Peek() { // 1
-        if (buffer != -1) {
-          return buffer;
-        }
-        int nread = read(fd, &buffer, 1);
-        if (nread) {
-          return buffer;
-        } else {
-          buffer = -1;
-          return '\0';
-        }
+      if (rsize > 0) return readbuf[rhead];
+      if (fillreadbuf()) {
+        return readbuf[rhead];
+      } else {
+        return '\0';
+      }
     }
     Ch Take() { // 2
-        char c;
-        if (buffer != -1) {
-          c = buffer;
-          buffer = -1;
-          return c;
-        }
-        int nread = read(fd, &c, 1);
-        return nread ? c : '\0';
+      Ch c = Peek();
+      if (c) {
+        rhead = (rhead + 1) % BUF_SIZE;
+        rsize--;
+      }
+      return c;
     }
     size_t Tell() const { return -1; } // 3
 
     Ch* PutBegin() { assert(false); return 0; }
-    void Put(Ch c) { write(fd, &c, 1); }                  // 1
-    void Flush() { }                   // 2
+    void Put(Ch c) {                                      // 1
+      if (wsize == BUF_SIZE) Flush();
+      writebuf[wsize++] = c;
+    }
+    void Flush() {                     // 2
+      write(fd, writebuf, wsize);
+      wsize = 0;
+    }
     size_t PutEnd(Ch*) { assert(false); return 0; }
 private:
     FDStream(const FDStream&);
     FDStream& operator=(const FDStream&);
+    bool fillreadbuf() {
+      bool bytesread = false;
+      int readstart = (rhead + rsize) % BUF_SIZE;
+      int readlength = ((readstart >= rhead) ? BUF_SIZE : rhead) - readstart;
+      int n = read(fd, &readbuf[readstart], readlength);
+      if (n > 0) {
+        bytesread = true;
+        rsize += n;
+      }
+      return bytesread;
+    }
     int fd;
+    static const int BUF_SIZE = 8192;
+    Ch readbuf[BUF_SIZE], writebuf[BUF_SIZE];
+    int rhead = 0, rsize = 0, wsize = 0;
 };
 
 struct KoreHandler : BaseReaderHandler<UTF8<>, KoreHandler> {
