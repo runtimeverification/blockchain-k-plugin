@@ -27,6 +27,20 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
   return hexEncode(digest, sizeof(digest));
 }
 
+struct string *hook_KRYPTO_sha512_256raw(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return raw(digest, 32);
+}
+
+struct string *hook_KRYPTO_sha512_256(struct string *str) {
+  SHA512 h;
+  unsigned char digest[64];
+  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, 32);
+}
+
 struct string *hook_KRYPTO_sha3raw(struct string *str) {
   SHA3_256 h;
   unsigned char digest[32];
