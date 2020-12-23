@@ -38,7 +38,7 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
-	cd deps/secp256k1 && $(MAKE) clean
+	cd deps/secp256k1 && test ! -f Makefile || $(MAKE) clean
 
 # libcryptopp
 
