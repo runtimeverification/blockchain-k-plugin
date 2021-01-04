@@ -5,6 +5,7 @@
 #include <secp256k1_recovery.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
+#include <openssl/evp.h>
 #include "blake2.h"
 #include "plugin_util.h"
 
@@ -28,17 +29,27 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
 }
 
 struct string *hook_KRYPTO_sha512_256raw(struct string *str) {
-  SHA512 h;
-  unsigned char digest[64];
-  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, 32);
+  unsigned char digest[32];
+  unsigned int digest_len = 32;
+  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+  assert(ctx != NULL);
+  assert(EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL)              == 1);
+  assert(EVP_DigestUpdate(ctx, (unsigned char *)str->data, len(str)) == 1);
+  assert(EVP_DigestFinal_ex(ctx, digest, &digest_len)                == 1);
+  EVP_MD_CTX_free(ctx);
+  return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha512_256(struct string *str) {
-  SHA512 h;
-  unsigned char digest[64];
-  h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return hexEncode(digest, 32);
+  unsigned char digest[32];
+  unsigned int digest_len = 32;
+  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+  assert(ctx != NULL);
+  assert(EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL)              == 1);
+  assert(EVP_DigestUpdate(ctx, (unsigned char *)str->data, len(str)) == 1);
+  assert(EVP_DigestFinal_ex(ctx, digest, &digest_len)                == 1);
+  EVP_MD_CTX_free(ctx);
+  return hexEncode(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha3raw(struct string *str) {
