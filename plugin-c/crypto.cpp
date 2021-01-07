@@ -28,27 +28,24 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
   return hexEncode(digest, sizeof(digest));
 }
 
+bool sha512_256(struct string *input, unsigned char *result) {
+  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+  return ctr != NULL
+      && EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1
+      && EVP_DigestUpdate(ctx, input->data, len(input)) == 1
+      && EVP_DigestFinal_ex(ctx, result, NULL) == 1
+      && EVP_MD_CTX_free(ctx) == 1;
+}
+
 struct string *hook_KRYPTO_sha512_256raw(struct string *str) {
   unsigned char digest[32];
-  unsigned int digest_len = 32;
-  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-  assert(ctx != NULL);
-  assert(EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL)              == 1);
-  assert(EVP_DigestUpdate(ctx, (unsigned char *)str->data, len(str)) == 1);
-  assert(EVP_DigestFinal_ex(ctx, digest, &digest_len)                == 1);
-  EVP_MD_CTX_free(ctx);
+  if (sha512_256(digest, str)) exit(1);
   return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha512_256(struct string *str) {
   unsigned char digest[32];
-  unsigned int digest_len = 32;
-  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-  assert(ctx != NULL);
-  assert(EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL)              == 1);
-  assert(EVP_DigestUpdate(ctx, (unsigned char *)str->data, len(str)) == 1);
-  assert(EVP_DigestFinal_ex(ctx, digest, &digest_len)                == 1);
-  EVP_MD_CTX_free(ctx);
+  if (sha512_256(digest, str)) exit(1);
   return hexEncode(digest, sizeof(digest));
 }
 
