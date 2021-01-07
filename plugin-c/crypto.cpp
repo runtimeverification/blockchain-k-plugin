@@ -28,24 +28,25 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
   return hexEncode(digest, sizeof(digest));
 }
 
-bool sha512_256(struct string *input, unsigned char *result) {
+void sha512_256(struct string *input, unsigned char *result) {
   EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-  return ctr != NULL
-      && EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1
-      && EVP_DigestUpdate(ctx, input->data, len(input)) == 1
-      && EVP_DigestFinal_ex(ctx, result, NULL) == 1
-      && EVP_MD_CTX_free(ctx) == 1;
+  bool success = ctx != NULL                                 \
+      && EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1 \
+      && EVP_DigestUpdate(ctx, input->data, len(input)) == 1 \
+      && EVP_DigestFinal_ex(ctx, result, NULL) == 1;
+  if (! success) throw std::runtime_error("openssl sha512_256 EVP_Digest runtime error");
+  EVP_MD_CTX_free(ctx);
 }
 
 struct string *hook_KRYPTO_sha512_256raw(struct string *str) {
   unsigned char digest[32];
-  if (sha512_256(digest, str)) exit(1);
+  sha512_256(str, digest);
   return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha512_256(struct string *str) {
   unsigned char digest[32];
-  if (sha512_256(digest, str)) exit(1);
+  sha512_256(str, digest);
   return hexEncode(digest, sizeof(digest));
 }
 
