@@ -237,14 +237,14 @@ static alt_bn128_G2 getPoint(g2point *pt) {
 static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
   mpz_ptr x, y;
   if (pt.is_zero()) {
-    x = (mpz_ptr) malloc(sizeof(*x));
-    y = (mpz_ptr) malloc(sizeof(*y));
+    x = (mpz_ptr) koreAllocInteger(0);
+    y = (mpz_ptr) koreAllocInteger(0);
     mpz_init_set_ui(x, 0);
     mpz_init_set_ui(y, 0);
   } else {
     pt.to_affine_coordinates();
-    x = (mpz_ptr) malloc(sizeof(*x));
-    y = (mpz_ptr) malloc(sizeof(*y));
+    x = (mpz_ptr) koreAllocInteger(0);
+    y = (mpz_ptr) koreAllocInteger(0);
     mpz_init(x);
     mpz_init(y);
     pt.X.as_bigint().to_mpz(x);
