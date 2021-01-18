@@ -8,7 +8,7 @@ ifeq ($(shell uname -s),Darwin)
 # 1. OSX doesn't have /proc/ filesystem
 # 2. fix cmake openssl detection for brew
 LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF \
-                     -DOPENSSL_ROOT_DIR=/usr/local/opt/$(shell brew desc openssl | cut -f1 -d:)
+                     -DOPENSSL_ROOT_DIR=$(shell brew --prefix openssl)
 else
 # llvm-backend code doesn't play nice with g++
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
@@ -38,7 +38,7 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
-	cd deps/secp256k1 && $(MAKE) clean
+	cd deps/secp256k1 && test ! -f Makefile || $(MAKE) clean
 
 # libcryptopp
 
