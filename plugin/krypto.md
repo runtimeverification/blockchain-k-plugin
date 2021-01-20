@@ -33,6 +33,7 @@ In hooked hash functions, `String` inputs are interpreted as byte arrays, i.e. t
     syntax String ::= Keccak256 ( String )                            [function, hook(KRYPTO.keccak256)]
                     | Sha256 ( String )                               [function, hook(KRYPTO.sha256)]
                     | Sha512 ( String )                               [function, hook(KRYPTO.sha512)]
+                    | "Sha512_256" "(" String ")"                     [function, hook(KRYPTO.sha512_256)]
                     | "Sha3_256" "(" String ")"                       [function, hook(KRYPTO.sha3)]
                     | RipEmd160 ( String )                            [function, hook(KRYPTO.ripemd160)]
                     | Blake2Compress ( String )                       [function, hook(KRYPTO.blake2compress)]
@@ -47,6 +48,7 @@ These functions compute the same hash function as those named above except that 
     syntax String ::= Keccak256raw ( String )                         [function, hook(KRYPTO.keccak256raw)]
                     | Sha256raw ( String )                            [function, hook(KRYPTO.sha256raw)]
                     | Sha512raw ( String )                            [function, hook(KRYPTO.sha512raw)]
+                    | "Sha512_256raw" "(" String ")"                  [function, hook(KRYPTO.sha512_256raw)]
                     | "Sha3_256raw" "(" String ")"                    [function, hook(KRYPTO.sha3raw)]
                     | RipEmd160raw ( String )                         [function, hook(KRYPTO.ripemd160raw)]
  // -------------------------------------------------------------------------------------------------------

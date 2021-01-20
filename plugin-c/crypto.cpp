@@ -5,6 +5,7 @@
 #include <secp256k1_recovery.h>
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
+#include <openssl/evp.h>
 #include "blake2.h"
 #include "plugin_util.h"
 
@@ -24,6 +25,28 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
   SHA512 h;
   unsigned char digest[64];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
+  return hexEncode(digest, sizeof(digest));
+}
+
+void sha512_256(struct string *input, unsigned char *result) {
+  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+  bool success = ctx != NULL                                 \
+      && EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1 \
+      && EVP_DigestUpdate(ctx, input->data, len(input)) == 1 \
+      && EVP_DigestFinal_ex(ctx, result, NULL) == 1;
+  if (! success) throw std::runtime_error("openssl sha512_256 EVP_Digest runtime error");
+  EVP_MD_CTX_free(ctx);
+}
+
+struct string *hook_KRYPTO_sha512_256raw(struct string *str) {
+  unsigned char digest[32];
+  sha512_256(str, digest);
+  return raw(digest, sizeof(digest));
+}
+
+struct string *hook_KRYPTO_sha512_256(struct string *str) {
+  unsigned char digest[32];
+  sha512_256(str, digest);
   return hexEncode(digest, sizeof(digest));
 }
 
@@ -237,14 +260,14 @@ static alt_bn128_G2 getPoint(g2point *pt) {
 static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
   mpz_ptr x, y;
   if (pt.is_zero()) {
-    x = (mpz_ptr) malloc(sizeof(*x));
-    y = (mpz_ptr) malloc(sizeof(*y));
+    x = (mpz_ptr) koreAllocInteger(0);
+    y = (mpz_ptr) koreAllocInteger(0);
     mpz_init_set_ui(x, 0);
     mpz_init_set_ui(y, 0);
   } else {
     pt.to_affine_coordinates();
-    x = (mpz_ptr) malloc(sizeof(*x));
-    y = (mpz_ptr) malloc(sizeof(*y));
+    x = (mpz_ptr) koreAllocInteger(0);
+    y = (mpz_ptr) koreAllocInteger(0);
     mpz_init(x);
     mpz_init(y);
     pt.X.as_bigint().to_mpz(x);
