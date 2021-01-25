@@ -25,7 +25,7 @@ build: plugin-c/json.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.
 DESTDIR         ?=
 INSTALL_PREFIX  ?= /usr/local
 INSTALL_DIR     := $(DESTDIR)$(INSTALL_PREFIX)
-INSTALL_INCLUDE := $(INSTALL_DIR)/include/kframework
+INSTALL_INCLUDE := $(INSTALL_DIR)/include
 
 PLUGIN_NAMESPACE := blockchain-k-plugin
 K_SOURCES := krypto.md
