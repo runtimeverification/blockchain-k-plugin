@@ -14,9 +14,3 @@
 	path = deps/cryptopp
 	url = https://github.com/weidai11/cryptopp
 	ignore = untracked
-[submodule "bls/pairing-plus-binding"]
-	path = bls/pairing-plus-binding
-	url = https://github.com/nikhilvanjani/pairing-plus-binding
-[submodule "bls/bls_sigs_app"]
-	path = bls/bls_sigs_app
-	url = https://github.com/nikhilvanjani/bls_sigs_app
