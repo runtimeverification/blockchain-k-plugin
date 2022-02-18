@@ -56,15 +56,17 @@ These functions compute the same hash function as those named above except that 
 
 ### Other Hooked Hash Functions
 
-These hooked hash functions are broken on default Ubuntu installations because of a bug in `libcrypto++` package.
+These hooked hash functions are broken on default Ubuntu installations because of either a bug in `libcrypto++` package, or it isn't in that version of the library.
 As such, we we hide them behind a separate tangle tag to avoid breaking projects that do not use them.
 
 -   `Blake2b256` takes a string and returns a 64-character hex-encoded string of the 32-byte Blake2b256 hash of the string.
 -   `Blake2b256raw` takes a string and returns the 32-byte Blake2b256 hash of the string.
+-   `ED25519VerifyMessage` takes a public key, a message, and a signature and returns true if the message was signed by the private key.
 
 ```libcrypto-extra
     syntax String ::= Blake2b256 ( String )                           [function, hook(KRYPTO.blake2b256)]
                     | Blake2b256raw ( String )                        [function, hook(KRYPTO.blake2b256raw)]
+    syntax Bool   ::= ED25519VerifyMessage( String, String, String )  [function, hook(KRYPTO.ed25519verify)]
  // --------------------------------------------------------------------------------------------------------
 ```
 

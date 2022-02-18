@@ -21,6 +21,14 @@ pipeline {
         '''
       }
     }
+    stage('Krypto hook tests') {
+      when { changeRequest() }
+      steps {
+        sh '''
+          cd tests && make -j16
+        '''
+      }
+    }
     stage('Deploy') {
       when { branch 'master' }
       steps {
