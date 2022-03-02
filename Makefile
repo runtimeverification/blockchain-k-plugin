@@ -7,8 +7,9 @@ K_RELEASE ?= $(dir $(shell which kompile))..
 ifeq ($(shell uname -s),Darwin)
 # 1. OSX doesn't have /proc/ filesystem
 # 2. fix cmake openssl detection for brew
+SSL_ROOT ?= $(shell brew --prefix openssl)
 LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF \
-                     -DOPENSSL_ROOT_DIR=$(shell brew --prefix openssl)
+                     -DOPENSSL_ROOT_DIR=$(SSL_ROOT)
 else
 # llvm-backend code doesn't play nice with g++
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))

@@ -1,4 +1,6 @@
 **/*.o
 **/*.pb.cc
 **/*.pb.h
+**/*-kompiled
+**/.depend*
 build
