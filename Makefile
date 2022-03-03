@@ -21,11 +21,12 @@ CPPFLAGS += --std=c++14 $(INCLUDES)
 ifneq ($(APPLE_SILICON),)
     LIBFF_CMAKE_FLAGS += -DCURVE=ALT_BN128 -DUSE_ASM=Off
 
-    GMP_PREFIX += $(shell brew --prefix gmp)
-    MPFR_PREFIX += $(shell brew --prefix mpfr)
-    OPENSSL_PREFIX += $(shell brew --prefix openssl)
+    GMP_PREFIX ?= $(shell brew --prefix gmp)
+    MPFR_PREFIX ?= $(shell brew --prefix mpfr)
+    OPENSSL_PREFIX ?= $(shell brew --prefix openssl)
+    CRYPTOPP_PREFIX ?= $(shell brew --prefix cryptopp@8.6.0)
 
-    INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include
+    INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include
 endif
 
 .PHONY: build libcryptopp libff libsecp256k1
