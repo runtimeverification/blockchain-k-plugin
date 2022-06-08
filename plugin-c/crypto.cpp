@@ -285,7 +285,7 @@ bool hook_KRYPTO_bn128valid(g1point *pt) {
   initBN128();
   try {
     return getPoint(pt).is_well_formed();
-  } catch (std::invalid_argument) {
+  } catch (std::invalid_argument const&) {
     return false;
   }
 }
@@ -296,7 +296,7 @@ bool hook_KRYPTO_bn128g2valid(g2point *pt) {
   try {
     alt_bn128_G2 g2pt = getPoint(pt);
     return g2pt.is_well_formed() && -alt_bn128_G2::scalar_field::one() * g2pt + g2pt == alt_bn128_G2::zero();
-  } catch (std::invalid_argument) {
+  } catch (std::invalid_argument const&) {
     return false;
   }
 }
