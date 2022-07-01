@@ -28,55 +28,57 @@
       flake = false;
     };
     xbyak = {
-      url =
-        "github:herumi/xbyak/f0a8f7faa27121f28186c2a7f4222a9fc66c283d";
+      url = "github:herumi/xbyak/f0a8f7faa27121f28186c2a7f4222a9fc66c283d";
       flake = false;
     };
   };
-  outputs =
-    { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff, secp256k1, ate-pairing, xbyak }:
-    flake-utils.lib.eachSystem [
+  outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
+    , secp256k1, ate-pairing, xbyak }:
+    let
+      overlay = final: prev: {
+        blockchain-k-plugin-src = prev.stdenv.mkDerivation {
+          name = "blockchain-k-plugin-${self.rev or "dirty"}-src";
+
+          src = prev.lib.cleanSource (prev.nix-gitignore.gitignoreSourcePure [
+            ./.gitignore
+            "result*"
+            "*.nix"
+            "deps/*"
+          ] ./.);
+          dontBuild = true;
+          installPhase = ''
+            mkdir $out
+            cp -rv $src/* $out
+            chmod -R u+w $out
+            mkdir -p $out/deps/cpp-httplib
+            mkdir -p $out/deps/cryptopp
+            mkdir -p $out/deps/libff
+            mkdir -p $out/deps/secp256k1
+            cp -rv ${cpp-httplib}/* $out/deps/cpp-httplib/
+            cp -rv ${cryptopp}/* $out/deps/cryptopp/
+            cp -rv ${libff}/* $out/deps/libff/
+            chmod -R u+w $out
+            cp -rv ${ate-pairing}/* $out/deps/libff/depends/ate-pairing/
+            cp -rv ${xbyak}/* $out/deps/libff/depends/xbyak/
+            cp -rv ${secp256k1}/* $out/deps/secp256k1/
+          '';
+        };
+      };
+    in flake-utils.lib.eachSystem [
       "x86_64-linux"
       "x86_64-darwin"
       "aarch64-linux"
       "aarch64-darwin"
     ] (system:
       let
-        overlay = final: prev: {
-          blockchain-k-plugin-src = prev.stdenv.mkDerivation {
-            name = "blockchain-k-plugin-${self.rev or "dirty"}-src";
-
-            src = prev.lib.cleanSource (prev.nix-gitignore.gitignoreSourcePure [
-              ./.gitignore
-              "result*"
-              "*.nix"
-              "deps/*"
-            ] ./.);
-            dontBuild = true;
-            installPhase = ''
-              mkdir $out
-              cp -rv $src/* $out
-              chmod -R u+w $out
-              mkdir -p $out/deps/cpp-httplib
-              mkdir -p $out/deps/cryptopp
-              mkdir -p $out/deps/libff
-              mkdir -p $out/deps/secp256k1
-              cp -rv ${cpp-httplib}/* $out/deps/cpp-httplib/
-              cp -rv ${cryptopp}/* $out/deps/cryptopp/
-              cp -rv ${libff}/* $out/deps/libff/
-              chmod -R u+w $out
-              cp -rv ${ate-pairing}/* $out/deps/libff/depends/ate-pairing/
-              cp -rv ${xbyak}/* $out/deps/libff/depends/xbyak/
-              cp -rv ${secp256k1}/* $out/deps/secp256k1/
-            '';
-          };
-        };
         pkgs = import nixpkgs {
           inherit system;
           overlays = [ overlay ];
         };
       in {
-        inherit overlay;
+
         defaultPackage = pkgs.blockchain-k-plugin-src;
-      });
+      }) // {
+        inherit overlay;
+      };
 }
