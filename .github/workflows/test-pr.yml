@@ -10,7 +10,7 @@ concurrency:
 jobs:
 
   test-pr:
-    name: 'Build and test KAlgo'
+    name: 'Build and test Blockchain Plugin'
     runs-on: [self-hosted, linux, normal]
     steps:
       - name: 'Check out code'
