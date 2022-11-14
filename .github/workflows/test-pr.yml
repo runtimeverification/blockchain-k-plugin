@@ -1,0 +1,37 @@
+name: 'Test PR'
+on:
+  pull_request:
+    branches:
+      - 'master'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  test-pr:
+    name: 'Build and test KAlgo'
+    runs-on: [self-hosted, linux, normal]
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.JENKINS_GITHUB_PAT }}
+      - name: 'Set up Docker'
+        uses: ./.github/actions/with-docker
+        with:
+          tag: kalgo-ci-${{ github.sha }}
+          distro: focal
+          llvm-version
+      - name: 'Compile Deps'
+        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12 libcryptopp libff'
+      - name: 'Compile'
+        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12'
+      - name: 'Test'
+        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` -C tests'
+      - name: 'Tear down Docker'
+        if: always()
+        run: |
+          docker stop --time=0 kalgo-ci-${GITHUB_SHA}
