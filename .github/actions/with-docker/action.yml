@@ -32,7 +32,7 @@ runs:
     run: |
       set -euxo pipefail
 
-      K_VERSION=$(cat ${SUBDIR}ext/k_release | cut --characters=2-)
+      K_VERSION=$(cat ${SUBDIR}deps/k_release | cut --characters=2-)
 
       docker build . \
           --build-arg USER=$(id -un) --build-arg USER_ID=$(id -u)   \
