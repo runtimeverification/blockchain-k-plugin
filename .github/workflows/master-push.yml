@@ -16,13 +16,10 @@ jobs:
       - name: 'Update dependents'
         env:
           JENKINS_DEVOPS_TOKEN: ${{ secrets.JENKINS_DEVOPS_TOKEN }}
-          VERSION: ${{ needs.macos-build.outputs.version }}
         run: |
-          rev=$(git rev-parse HEAD)
           curl --fail 'https://ci.runtimeverification.com/jenkins/buildByToken/buildWithParameters' \
               --data job=Devops/master                                                              \
               --data token=${JENKINS_DEVOPS_TOKEN}                                                  \
               --data UPDATE_DEPS=true                                                               \
               --data UPDATE_DEPS_REPO=runtimeverification/blockchain-k-plugin                       \
-              --data UPDATE_DEPS_VERSION=${rev}
-
+              --data UPDATE_DEPS_VERSION=${GITHUB_SHA}
