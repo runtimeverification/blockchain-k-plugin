@@ -18,7 +18,7 @@ RUN    apt-get update             \
             clang-${LLVM_VERSION} \
             cmake                 \
             curl                  \
-            jq
+            libssl-dev
 
 ARG USER=github-user
 ARG GROUP=${USER}
