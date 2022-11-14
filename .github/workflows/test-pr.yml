@@ -24,7 +24,7 @@ jobs:
         with:
           tag: kalgo-ci-${{ github.sha }}
           distro: focal
-          llvm-version
+          llvm-version: 12
       - name: 'Compile Deps'
         run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12 libcryptopp libff'
       - name: 'Compile'
