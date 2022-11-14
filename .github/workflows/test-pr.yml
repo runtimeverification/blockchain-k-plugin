@@ -11,7 +11,7 @@ jobs:
 
   test-pr:
     name: 'Build and test Blockchain Plugin'
-    runs-on: [self-hosted, linux, normal]
+    runs-on: ubuntu-latest
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v3
