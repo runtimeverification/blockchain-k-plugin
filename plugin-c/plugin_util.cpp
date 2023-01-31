@@ -12,7 +12,7 @@ string *hexEncode(unsigned char *digest, size_t len) {
   char byte[3];
   struct string *result = allocString(hexLen);
   for (size_t i = 0, j = 0; i < len; i++, j += 2) {
-    sprintf(byte, "%02x", digest[i]);
+    snprintf(byte, sizeof(byte), "%02x", digest[i]);
     result->data[j] = byte[0];
     result->data[j+1] = byte[1];
   }
