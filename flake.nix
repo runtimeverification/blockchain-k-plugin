@@ -77,7 +77,7 @@
         };
       in {
 
-        defaultPackage = pkgs.blockchain-k-plugin-src;
+        packages.default = pkgs.blockchain-k-plugin-src;
       }) // {
         inherit overlay;
       };
