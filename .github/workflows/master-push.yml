@@ -15,11 +15,13 @@ jobs:
     steps:
       - name: 'Update dependents'
         env:
-          JENKINS_DEVOPS_TOKEN: ${{ secrets.JENKINS_DEVOPS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.JENKINS_GITHUB_PAT }}
         run: |
-          curl --fail 'https://ci.runtimeverification.com/jenkins/buildByToken/buildWithParameters' \
-              --data job=Devops/master                                                              \
-              --data token=${JENKINS_DEVOPS_TOKEN}                                                  \
-              --data UPDATE_DEPS=true                                                               \
-              --data UPDATE_DEPS_REPO=runtimeverification/blockchain-k-plugin                       \
-              --data UPDATE_DEPS_VERSION=${GITHUB_SHA}
+          version=v"${GITHUB_SHA}"
+          curl --fail                                                          \
+            -X POST                                                            \
+            -H "Accept: application/vnd.github+json"                           \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}"                         \
+            -H "X-GitHub-Api-Version: 2022-11-28"                              \
+            https://api.github.com/repos/runtimeverification/devops/dispatches \
+            -d '{"event_type":"on-demand-test","client_payload":{"repo":"runtimeverification/blockchain-k-plugin","version":"'${version}'"}}'
