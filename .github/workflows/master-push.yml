@@ -17,6 +17,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.JENKINS_GITHUB_PAT }}
         run: |
+          set -x
           version=v"${GITHUB_SHA}"
           curl --fail                                                          \
             -X POST                                                            \
