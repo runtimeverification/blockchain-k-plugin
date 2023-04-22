@@ -27,6 +27,10 @@ module ECDSA-TEST
     rule #parseHexWord("0x") => 0
     rule #parseHexWord(S)    => String2Base(replaceAll(S, "0x", ""), 16) requires (S =/=String "") andBool (S =/=String "0x")
 
+    syntax String ::= #unparseByteStack ( Bytes ) [function, klabel(unparseByteStack), symbol]
+ // ------------------------------------------------------------------------------------------
+    rule #unparseByteStack(WS) => Bytes2String(WS)
+
     configuration
        <k> $PGM:Pgm </k>
 
