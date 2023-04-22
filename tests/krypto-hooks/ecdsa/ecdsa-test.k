@@ -13,7 +13,7 @@ module ECDSA-TEST
 
     syntax Int ::= #addrFromPrivateKey ( String ) [function, klabel(addrFromPrivateKey)]
  // ------------------------------------------------------------------------------------
-    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256 ( ECDSAPubKey( KEY ) ) ) )
+    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256 ( Hex2Raw ( ECDSAPubKey( Hex2Raw ( KEY ) ) ) ) ) )
 
     syntax Int ::= #parseHexWord ( String ) [function]
  // --------------------------------------------------
@@ -40,6 +40,29 @@ module ECDSA-TEST
     syntax String ::= #unparseByteStack ( Bytes ) [function, klabel(unparseByteStack), symbol]
  // ------------------------------------------------------------------------------------------
     rule #unparseByteStack(WS) => Bytes2String(WS)
+
+    syntax String ::= #unparseData      ( Int, Int  ) [function]
+                    | #unparseDataBytes ( Bytes )     [function]
+ // ------------------------------------------------------------
+    rule #unparseData( DATA, LENGTH ) => #unparseDataBytes(#padToWidth(LENGTH,#asByteStack(DATA)))
+
+    rule #unparseDataBytes( DATA ) => replaceFirst(Base2String(#asInteger(#asByteStack(1) +Bytes DATA), 16), "1", "0x")
+
+    syntax Int ::= #asInteger ( Bytes ) [function, total]
+ // -----------------------------------------------------
+    rule #asInteger(WS) => Bytes2Int(WS, BE, Unsigned) [concrete]
+
+    syntax Bytes ::= #asByteStack ( Int ) [function, total]
+ // -------------------------------------------------------
+    rule #asByteStack(W) => Int2Bytes(W, BE, Unsigned) [concrete]
+
+    syntax Bytes ::= #padToWidth      ( Int , Bytes ) [function, total]
+                   | #padRightToWidth ( Int , Bytes ) [function, total]
+ // -------------------------------------------------------------------
+    rule                            #padToWidth(N, BS)      =>               BS        requires notBool (N >=Int 0)
+    rule [padToWidthNonEmpty]:      #padToWidth(N, BS)      =>  padLeftBytes(BS, N, 0) requires          N >=Int 0
+    rule                            #padRightToWidth(N, BS) =>               BS        requires notBool (N >=Int 0)
+    rule [padRightToWidthNonEmpty]: #padRightToWidth(N, BS) => padRightBytes(BS, N, 0) requires          N >=Int 0
 
     syntax Int ::= #addr ( Int ) [function]
  // ---------------------------------------
