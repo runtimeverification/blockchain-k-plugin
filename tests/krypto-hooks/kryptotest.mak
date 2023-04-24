@@ -1,6 +1,6 @@
 MAKEFILE_PATH1 := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-KOMPILE_FLAGS+=-I $(MAKEFILE_PATH1)/../../plugin
+KOMPILE_FLAGS+=-I $(MAKEFILE_PATH1)../../plugin
 KOMPILE_FLAGS+=--hook-namespaces "KRYPTO" --md-selector "k | libcrypto-extra"
 
 PLUGIN_C=$(abspath $(MAKEFILE_PATH1)../../plugin-c)
