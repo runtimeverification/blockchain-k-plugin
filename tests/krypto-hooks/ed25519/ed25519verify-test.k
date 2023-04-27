@@ -8,7 +8,7 @@ module ED25519VERIFY-TEST
     imports KRYPTO
 
     syntax HexString ::= r"0x[0-9a-fA-F]*" [token]
-    
+
     syntax String ::= HexToken2String( HexString ) [function, hook(STRING.token2string)]
                     | Hex2Raw( HexString )         [function]
                     | Hex2RawAux( String )         [function]

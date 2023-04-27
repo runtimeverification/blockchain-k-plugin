@@ -20,16 +20,16 @@ jobs:
       - name: 'Set up Docker'
         uses: ./.github/actions/with-docker
         with:
-          tag: kalgo-ci-${{ github.sha }}
+          tag: blockchain-k-plugin-concrete-${{ github.sha }}
           distro: focal
           llvm-version: 12
       - name: 'Compile Deps'
-        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12 libcryptopp libff'
+        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12 libcryptopp libff'
       - name: 'Compile'
-        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12'
+        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-12'
       - name: 'Test'
-        run: docker exec -t kalgo-ci-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` -C tests'
+        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` -C tests'
       - name: 'Tear down Docker'
         if: always()
         run: |
-          docker stop --time=0 kalgo-ci-${GITHUB_SHA}
+          docker stop --time=0 blockchain-k-plugin-concrete-${GITHUB_SHA}
