@@ -110,7 +110,14 @@
         };
       in {
         defaultPackage = pkgs.blockchain-k-plugin;
-        devShell = pkgs.mkShell { buildInputs = buildInputs pkgs; };
+        devShell = pkgs.mkShell {
+          buildInputs = buildInputs pkgs;
+          shellHook = ''
+            ${pkgs.lib.strings.optionalString
+            (pkgs.stdenv.isAarch64 && pkgs.stdenv.isDarwin)
+            "export APPLE_SILICON=true"}
+          '';
+        };
       }) // {
         inherit overlay;
       };
