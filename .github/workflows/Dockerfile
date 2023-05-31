@@ -20,7 +20,8 @@ RUN    apt-get update             \
             cmake                 \
             curl                  \
             libprocps-dev         \
-            libssl-dev
+            libssl-dev            \
+            libtool
 
 ARG USER=github-user
 ARG GROUP=${USER}
