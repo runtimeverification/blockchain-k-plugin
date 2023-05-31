@@ -19,7 +19,6 @@ RUN    apt-get update             \
             cmake                 \
             curl                  \
             libprocps-dev         \
-            libsecp256k1-dev      \
             libssl-dev
 
 ARG USER=github-user
