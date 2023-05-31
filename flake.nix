@@ -82,11 +82,11 @@
           src = final.blockchain-k-plugin-src;
           buildInputs = buildInputs prev;
           dontUseCmakeConfigure = true;
-          makeFlags =
-            prev.lib.optional (prev.stdenv.isAarch64 && prev.stdenv.isDarwin)
-            "APPLE_SILICON=true";
-          buildPhase = ''
-            make libcryptopp libff libsecp256k1 
+          buildPhase = with prev; ''
+            ${
+              lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
+              "APPLE_SILICON=true"
+            } make libcryptopp libff libsecp256k1 
           '';
           installPhase = ''
             mkdir -p $out/include
