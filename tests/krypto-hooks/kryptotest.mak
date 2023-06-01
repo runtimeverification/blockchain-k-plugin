@@ -4,7 +4,7 @@ KOMPILE_FLAGS+=-I $(MAKEFILE_PATH1)../../plugin
 KOMPILE_FLAGS+=--hook-namespaces "KRYPTO" --md-selector "k | libcrypto-extra"
 
 PLUGIN_C=$(abspath $(MAKEFILE_PATH1)../../plugin-c)
-INCLUDES=-I$(abspath $(MAKEFILE_PATH1)../../build/include)
+INCLUDES=-I$(abspath $(MAKEFILE_PATH1)../../build/libff/include) -I$(abspath $(MAKEFILE_PATH1)../../build/libcryptopp/include) -I$(abspath $(MAKEFILE_PATH1)../../build/libsecp256k1/include)
 LIBRARIES=$(abspath $(MAKEFILE_PATH1)../../build/libff/lib/libff.a) $(abspath $(MAKEFILE_PATH1)../../build/libcryptopp/lib/libcryptopp.a) $(abspath $(MAKEFILE_PATH1)../../build/libsecp256k1/lib/libsecp256k1.a) -lssl -lcrypto -lprocps
 CPP_SOURCES=crypto.cpp plugin_util.cpp blake2.cpp hash_ext.cpp
 
