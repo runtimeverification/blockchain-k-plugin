@@ -14,13 +14,14 @@ ARG LLVM_VERSION
 RUN    apt-get update             \
     && apt-get upgrade --yes      \
     && apt-get install --yes      \
+            autoconf              \
             cargo                 \
             clang-${LLVM_VERSION} \
             cmake                 \
             curl                  \
             libprocps-dev         \
-            libsecp256k1-dev      \
-            libssl-dev
+            libssl-dev            \
+            libtool
 
 ARG USER=github-user
 ARG GROUP=${USER}
