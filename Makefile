@@ -3,6 +3,8 @@ PREFIX ?= $(CURDIR)/build
 
 K_RELEASE ?= $(dir $(shell which kompile))..
 
+LIBFF_CMAKE_FLAGS += -DCMAKE_CXX_FLAGS=-fPIC
+
 # set OS specific defaults
 ifeq ($(shell uname -s),Darwin)
 # 1. OSX doesn't have /proc/ filesystem
