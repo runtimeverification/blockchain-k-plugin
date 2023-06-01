@@ -3,6 +3,8 @@ PREFIX ?= $(CURDIR)/build
 
 K_RELEASE ?= $(dir $(shell which kompile))..
 
+LIBFF_CMAKE_FLAGS += -DCMAKE_CXX_FLAGS=-fPIC
+
 # set OS specific defaults
 ifeq ($(shell uname -s),Darwin)
 # 1. OSX doesn't have /proc/ filesystem
@@ -15,7 +17,7 @@ else
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
-INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
@@ -54,28 +56,27 @@ clean:
 
 # libcryptopp
 
-libcryptopp: $(PREFIX)/lib/libcryptopp.a
-$(PREFIX)/lib/libcryptopp.a:
+libcryptopp: $(PREFIX)/libcryptopp/lib/libcryptopp.a
+$(PREFIX)/libcryptopp/lib/libcryptopp.a:
 	cd deps/cryptopp                      \
 	  && $(MAKE)                          \
-	  && $(MAKE) install PREFIX=$(PREFIX)
+	  && $(MAKE) install PREFIX=$(PREFIX)/libcryptopp
 
 # libff
 
-libff: $(PREFIX)/lib/libff.a
-$(PREFIX)/lib/libff.a:
-	@mkdir -p deps/libff/build
-	cd deps/libff/build                                                 \
-	  && cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) $(LIBFF_CMAKE_FLAGS) \
+libff: $(PREFIX)/libff/lib/libff.a
+$(PREFIX)/libff/lib/libff.a:
+	cd deps/libff                                                 \
+	  && cmake . -DCMAKE_INSTALL_PREFIX=$(PREFIX)/libff $(LIBFF_CMAKE_FLAGS) \
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
 
 # libsecp256k1
 
-libsecp256k1: $(PREFIX)/lib/pkgconfig/libsecp256k1.pc
-$(PREFIX)/lib/pkgconfig/libsecp256k1.pc:
+libsecp256k1: $(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc
+$(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc:
 	cd deps/secp256k1/                                             \
 	    && ./autogen.sh                                            \
-	    && ./configure --enable-module-recovery --prefix=$(PREFIX) \
+	    && ./configure --enable-module-recovery --prefix=$(PREFIX)/libsecp256k1 \
 	    && $(MAKE)                                                 \
 	    && $(MAKE) install

@@ -35,6 +35,19 @@
   outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
     , secp256k1, ate-pairing, xbyak }:
     let
+      buildInputs = pkgs:
+        with pkgs; [
+          autoconf
+          automake
+          cmake
+          clang
+          gmp
+          libtool
+          openssl.dev
+          pkg-config
+          procps
+        ];
+
       overlay = final: prev: {
         blockchain-k-plugin-src = prev.stdenv.mkDerivation {
           name = "blockchain-k-plugin-${self.rev or "dirty"}-src";
@@ -63,6 +76,26 @@
             cp -rv ${secp256k1}/* $out/deps/secp256k1/
           '';
         };
+
+        blockchain-k-plugin = prev.stdenv.mkDerivation {
+          name = "blockchain-k-plugin-${self.rev or "dirty"}";
+          src = final.blockchain-k-plugin-src;
+          buildInputs = buildInputs prev;
+          dontUseCmakeConfigure = true;
+          buildPhase = with prev; ''
+            ${
+              lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
+              "APPLE_SILICON=true"
+            } make libcryptopp libff libsecp256k1 
+          '';
+          installPhase = ''
+            mkdir -p $out/include
+            cp -rv $src/plugin-c $out/include/
+            cp -rv $src/plugin $out/include/
+            mkdir -p $out/lib
+            cp -rv build/* $out/lib/
+          '';
+        };
       };
     in flake-utils.lib.eachSystem [
       "x86_64-linux"
@@ -76,8 +109,15 @@
           overlays = [ overlay ];
         };
       in {
-
-        defaultPackage = pkgs.blockchain-k-plugin-src;
+        defaultPackage = pkgs.blockchain-k-plugin;
+        devShell = pkgs.mkShell {
+          buildInputs = buildInputs pkgs;
+          shellHook = ''
+            ${pkgs.lib.strings.optionalString
+            (pkgs.stdenv.isAarch64 && pkgs.stdenv.isDarwin)
+            "export APPLE_SILICON=true"}
+          '';
+        };
       }) // {
         inherit overlay;
       };
