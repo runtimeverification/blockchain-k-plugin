@@ -15,7 +15,7 @@ else
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
-INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include $(PREFIX)/libff/include $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++14 $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
