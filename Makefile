@@ -18,7 +18,7 @@ export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
 INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
-CPPFLAGS += --std=c++14 $(INCLUDES)
+CPPFLAGS += --std=c++17 -fPIC $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
     LIBFF_CMAKE_FLAGS += -DCURVE=ALT_BN128 -DUSE_ASM=Off
@@ -80,3 +80,41 @@ $(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc:
 	    && ./configure --enable-module-recovery --prefix=$(PREFIX)/libsecp256k1 \
 	    && $(MAKE)                                                 \
 	    && $(MAKE) install
+
+########################################
+###             HACK ZONE            ###
+########################################
+
+CPP_FILES = $(wildcard plugin-c/*.cpp)
+H_FILES = $(wildcard plugin-c/*.h)
+
+LIBS = libff libcryptopp libsecp256k1
+
+STATIC_LIBS = $(pathsubst %, build/%/lib/%.a, LIBS)
+
+define resolve_static_name =
+	$(shell ldconfig -p | grep '$(1).so$$' | cut -d' ' -f4 | head -1 | sed -e 's/\.so$$/.a/')
+endef
+
+STATIC_LIBSSL = $(call resolve_static_name,libssl)
+STATIC_LIBPROCPS = $(call resolve_static_name,procps)
+
+static-library: $(PREFIX)/libcrypto.a
+$(PREFIX)/libcrypto.a: build/ar-script $(pathsubst %.cpp, %.o, $(CPP_FILES)) $(STATIC_LIBS) $(STATIC_LIBSSL) $(STATIC_LIBPROCPS)
+	ar -M < build/ar-script
+
+.PHONY: build/ar-script
+build/ar-script:
+	@echo "; script to assemble a static library" > $@
+	@echo CREATE build/libcrypto.a >> $@
+	@echo ADDLIB build/libff/lib/libff.a >> $@
+	@echo ADDLIB build/libcryptopp/lib/libcryptopp.a >> $@
+	@echo ADDLIB build/libsecp256k1/lib/libsecp256k1.a >> $@
+	@echo ADDLIB $(STATIC_LIBSSL) >> $@
+	@echo ADDLIB $(STATIC_LIBPROCPS) >> $@
+	@echo SAVE >> $@
+	@echo END >> $@
+
+library: $(PREFIX)/libcrypto.so
+$(PREFIX)/libcrypto.so: $(PREFIX)/libcrypto.a
+	$(CXX) -shared -Wl,--whole-archive $< -Wl,--no-whole-archive -o $@
