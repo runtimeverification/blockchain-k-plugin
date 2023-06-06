@@ -77,6 +77,6 @@ libsecp256k1: $(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc
 $(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc:
 	cd deps/secp256k1/                                             \
 	    && ./autogen.sh                                            \
-	    && ./configure --enable-module-recovery --prefix=$(PREFIX)/libsecp256k1 \
+	    && CFLAGS='-fPIC' ./configure --enable-module-recovery --prefix=$(PREFIX)/libsecp256k1 \
 	    && $(MAKE)                                                 \
 	    && $(MAKE) install
