@@ -18,7 +18,7 @@ export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
 INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
-CPPFLAGS += --std=c++14 $(INCLUDES)
+CPPFLAGS += --std=c++17 $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
     LIBFF_CMAKE_FLAGS += -DCURVE=ALT_BN128 -DUSE_ASM=Off
