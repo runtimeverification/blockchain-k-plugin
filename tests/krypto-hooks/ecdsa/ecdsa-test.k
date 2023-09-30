@@ -7,6 +7,12 @@ module ECDSA-TEST
     imports BOOL
     imports KRYPTO
 
+    configuration
+       <k> $PGM:Pgm </k>
+
+    syntax Pgm ::= Bytes | String | Int | Account
+ // ---------------------------------------------
+
     syntax String ::= Hex2Raw ( String ) [function]
  // -----------------------------------------------
     rule Hex2Raw ( S ) => #unparseByteStack( #parseByteStack ( S ) )
@@ -77,10 +83,14 @@ module ECDSA-TEST
  // ------------------------------------------------
     rule pow160 => 1461501637330902918203684832716283019655932542976
 
-    configuration
-       <k> $PGM:Pgm </k>
+    syntax Account ::= Int
+                     | ".Account"
+                     | #sender ( String , Int , String , String ) [function, klabel(#senderAux)   ]
+                     | #sender ( String )                         [function, klabel(#senderAux2)  ]
+ // -----------------------------------------------------------------------------------------------
+    rule #sender(HT, TW, TR, TS) => #sender(ECDSARecover(HT, TW, TR, TS))
 
-    syntax Pgm ::= Bytes | String | Int
- // -----------------------------------
+    rule #sender("")  => .Account
+    rule #sender(STR) => #addr(#parseHexWord(Keccak256(STR))) requires STR =/=String ""
 
 endmodule
