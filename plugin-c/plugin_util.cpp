@@ -3,7 +3,7 @@
 extern "C" {
 string* allocString(size_t len) {
   struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
-  init_with_len(result, len);
+  set_len(result, len);
   return result;
 }
 
