@@ -19,7 +19,7 @@ module ECDSA-TEST
 
     syntax Int ::= #addrFromPrivateKey ( String ) [function, klabel(addrFromPrivateKey)]
  // ------------------------------------------------------------------------------------
-    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256 ( Hex2Raw ( ECDSAPubKey( Hex2Raw ( KEY ) ) ) ) ) )
+    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256( String2Bytes( Hex2Raw( ECDSAPubKey( String2Bytes( Hex2Raw( KEY ) ) ) ) ) ) ) )
 
     syntax Int ::= #parseHexWord ( String ) [function]
  // --------------------------------------------------
@@ -88,9 +88,9 @@ module ECDSA-TEST
                      | #sender ( String , Int , String , String ) [function, klabel(#senderAux)   ]
                      | #sender ( String )                         [function, klabel(#senderAux2)  ]
  // -----------------------------------------------------------------------------------------------
-    rule #sender(HT, TW, TR, TS) => #sender(ECDSARecover(HT, TW, TR, TS))
+    rule #sender(HT, TW, TR, TS) => #sender(Bytes2String(ECDSARecover(String2Bytes(HT), TW, String2Bytes(TR), String2Bytes(TS))))
 
     rule #sender("")  => .Account
-    rule #sender(STR) => #addr(#parseHexWord(Keccak256(STR))) requires STR =/=String ""
+    rule #sender(STR) => #addr(#parseHexWord(Keccak256(String2Bytes(STR)))) requires STR =/=String ""
 
 endmodule
