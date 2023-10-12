@@ -109,26 +109,26 @@ struct string *hook_KRYPTO_ripemd160(struct string *str) {
 // matches evm and bitcoin's value of V, which is in the range 27-28
 struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct string *r, struct string *s) {
   if (len(str) != 32 || len(r) != 32 || len(s) != 32) {
-    return hexEncode(nullptr, 0);
+    return allocString(0);
   }
   unsigned char sigArr[64];
   memcpy(sigArr, r->data, 32);
   memcpy(sigArr+32, s->data, 32);
   secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_SIGN);
   if (!mpz_fits_ulong_p(v)) {
-    return hexEncode(nullptr, 0);
+    return allocString(0);
   }
   unsigned long v_long = mpz_get_ui(v);
   if (v_long < 27 || v_long > 28) {
-    return hexEncode(nullptr, 0);
+    return allocString(0);
   }
   secp256k1_ecdsa_recoverable_signature sig;
   if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigArr, v_long - 27)) {
-    return hexEncode(nullptr, 0);
+    return allocString(0);
   }
   secp256k1_pubkey key;
   if (!secp256k1_ecdsa_recover(ctx, &key, &sig, (unsigned char *)str->data)) {
-    return hexEncode(nullptr, 0);
+    return allocString(0);
   }
   unsigned char serialized[65];
   size_t len = sizeof(serialized);
