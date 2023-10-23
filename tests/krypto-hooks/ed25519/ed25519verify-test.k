@@ -63,7 +63,7 @@ module ED25519VERIFY-TEST
 
     syntax KItem ::= "#runTest"
  // ---------------------------
-    rule <k> #runTest => ED25519VerifyMessage( Hex2Raw( PUBLICKEY ), Hex2Raw( MESSAGE ), Hex2Raw( SIGNATURE ) ) ... </k>
+    rule <k> #runTest => ED25519VerifyMessage( String2Bytes(Hex2Raw( PUBLICKEY )), String2Bytes(Hex2Raw( MESSAGE )), String2Bytes(Hex2Raw( SIGNATURE )) ) ... </k>
          <publicKey> PUBLICKEY </publicKey>
          <message>   MESSAGE   </message>
          <signature> SIGNATURE </signature>
