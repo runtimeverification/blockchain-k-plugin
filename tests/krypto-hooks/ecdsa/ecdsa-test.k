@@ -5,6 +5,7 @@ module ECDSA-TEST
     imports BYTES
     imports STRING
     imports BOOL
+    imports K-EQUAL-SYNTAX
     imports KRYPTO
 
     configuration
@@ -13,13 +14,9 @@ module ECDSA-TEST
     syntax Pgm ::= Bytes | String | Int | Account
  // ---------------------------------------------
 
-    syntax String ::= Hex2Raw ( String ) [function]
- // -----------------------------------------------
-    rule Hex2Raw ( S ) => #unparseByteStack( #parseByteStack ( S ) )
-
     syntax Int ::= #addrFromPrivateKey ( String ) [function, klabel(addrFromPrivateKey)]
  // ------------------------------------------------------------------------------------
-    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256 ( Hex2Raw ( ECDSAPubKey( Hex2Raw ( KEY ) ) ) ) ) )
+    rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256( #parseByteStack( ECDSAPubKey( #parseByteStack( KEY ) ) ) ) ) )
 
     syntax Int ::= #parseHexWord ( String ) [function]
  // --------------------------------------------------
@@ -43,9 +40,6 @@ module ECDSA-TEST
     rule #alignHexString(S) => S             requires         lengthString(S) modInt 2 ==Int 0
     rule #alignHexString(S) => "0" +String S requires notBool lengthString(S) modInt 2 ==Int 0
 
-    syntax String ::= #unparseByteStack ( Bytes ) [function, klabel(unparseByteStack), symbol]
- // ------------------------------------------------------------------------------------------
-    rule #unparseByteStack(WS) => Bytes2String(WS)
 
     syntax String ::= #unparseData      ( Int, Int  ) [function]
                     | #unparseDataBytes ( Bytes )     [function]
@@ -85,12 +79,12 @@ module ECDSA-TEST
 
     syntax Account ::= Int
                      | ".Account"
-                     | #sender ( String , Int , String , String ) [function, klabel(#senderAux)   ]
-                     | #sender ( String )                         [function, klabel(#senderAux2)  ]
+                     | #sender ( Bytes , Int , Bytes , Bytes ) [function, klabel(#senderAux)   ]
+                     | #sender ( Bytes )                       [function, klabel(#senderAux2)  ]
  // -----------------------------------------------------------------------------------------------
     rule #sender(HT, TW, TR, TS) => #sender(ECDSARecover(HT, TW, TR, TS))
 
-    rule #sender("")  => .Account
-    rule #sender(STR) => #addr(#parseHexWord(Keccak256(STR))) requires STR =/=String ""
+    rule #sender(b"")  => .Account
+    rule #sender(BYTES) => #addr(#parseHexWord(Keccak256(BYTES))) requires BYTES =/=K b""
 
 endmodule
