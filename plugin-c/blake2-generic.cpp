@@ -12,12 +12,12 @@
   v[c] = v[c] + v[d];             \
   v[b] = ROTR64(v[b] ^ v[c], 63);
 
-static const uint64_t blake2b_iv[8] = {0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
-                                       0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
-                                       0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
-                                       0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179};
+static constexpr uint64_t blake2b_iv[8] = {
+    0x6A09E667F3BCC908, 0xBB67AE8584CAA73B, 0x3C6EF372FE94F82B,
+    0xA54FF53A5F1D36F1, 0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
+    0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179};
 
-static const uint8_t sigma[10][16] = {
+static constexpr uint8_t sigma[10][16] = {
     {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
     {14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3},
     {11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4},
