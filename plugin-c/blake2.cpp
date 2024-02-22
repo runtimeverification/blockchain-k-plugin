@@ -29,8 +29,8 @@ static const uint8_t sigma[10][16] = {
     {6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5},
     {10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0}};
 
-void blake2b_compress(uint64_t *h, uint64_t *m, uint64_t *t, char f,
-                      uint32_t rounds) {
+void blake2b_compress_generic(uint64_t *h, uint64_t *m, uint64_t *t, char f,
+                              uint32_t rounds) {
   uint32_t i;
   uint64_t v[16];
 
