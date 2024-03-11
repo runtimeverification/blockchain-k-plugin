@@ -2,7 +2,8 @@
 
 extern "C" {
 string *allocString(size_t len) {
-  struct string *result = (struct string *)koreAllocToken(len + sizeof(string));
+  struct string *result =
+      (struct string *)kore_alloc_token(len + sizeof(string));
   init_with_len(result, len);
   return result;
 }

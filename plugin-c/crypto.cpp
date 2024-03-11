@@ -275,20 +275,20 @@ static alt_bn128_G2 getPoint(g2point *pt) {
 static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
   mpz_ptr x, y;
   if (pt.is_zero()) {
-    x = (mpz_ptr)koreAllocInteger(0);
-    y = (mpz_ptr)koreAllocInteger(0);
+    x = (mpz_ptr)kore_alloc_integer(0);
+    y = (mpz_ptr)kore_alloc_integer(0);
     mpz_init_set_ui(x, 0);
     mpz_init_set_ui(y, 0);
   } else {
     pt.to_affine_coordinates();
-    x = (mpz_ptr)koreAllocInteger(0);
-    y = (mpz_ptr)koreAllocInteger(0);
+    x = (mpz_ptr)kore_alloc_integer(0);
+    y = (mpz_ptr)kore_alloc_integer(0);
     mpz_init(x);
     mpz_init(y);
     pt.X.as_bigint().to_mpz(x);
     pt.Y.as_bigint().to_mpz(y);
   }
-  struct g1point *g1pt = (struct g1point *)koreAlloc(sizeof(struct g1point));
+  struct g1point *g1pt = (struct g1point *)kore_alloc(sizeof(struct g1point));
   g1pt->h.hdr = hdr;
   g1pt->x = x;
   g1pt->y = y;
