@@ -2,10 +2,12 @@
 #include <cryptopp/ripemd.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
+#include <openssl/evp.h>
 #include <secp256k1_recovery.h>
+
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
-#include <openssl/evp.h>
+
 #include "blake2.h"
 #include "plugin_util.h"
 
@@ -30,11 +32,12 @@ struct string *hook_KRYPTO_sha512(struct string *str) {
 
 void sha512_256(struct string *input, unsigned char *result) {
   EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-  bool success = ctx != NULL                                 \
-      && EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1 \
-      && EVP_DigestUpdate(ctx, input->data, len(input)) == 1 \
-      && EVP_DigestFinal_ex(ctx, result, NULL) == 1;
-  if (! success) throw std::runtime_error("openssl sha512_256 EVP_Digest runtime error");
+  bool success = ctx != NULL &&
+                 EVP_DigestInit_ex(ctx, EVP_sha512_256(), NULL) == 1 &&
+                 EVP_DigestUpdate(ctx, input->data, len(input)) == 1 &&
+                 EVP_DigestFinal_ex(ctx, result, NULL) == 1;
+  if (!success)
+    throw std::runtime_error("openssl sha512_256 EVP_Digest runtime error");
   EVP_MD_CTX_free(ctx);
 }
 
@@ -54,7 +57,7 @@ struct string *hook_KRYPTO_sha3raw(struct string *str) {
   SHA3_256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, sizeof(digest)); 
+  return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha3(struct string *str) {
@@ -68,7 +71,7 @@ struct string *hook_KRYPTO_keccak256raw(struct string *str) {
   Keccak_256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, sizeof(digest)); 
+  return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_keccak256(struct string *str) {
@@ -82,7 +85,7 @@ struct string *hook_KRYPTO_sha256raw(struct string *str) {
   SHA256 h;
   unsigned char digest[32];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, sizeof(digest)); 
+  return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_sha256(struct string *str) {
@@ -96,7 +99,7 @@ struct string *hook_KRYPTO_ripemd160raw(struct string *str) {
   RIPEMD160 h;
   unsigned char digest[20];
   h.CalculateDigest(digest, (unsigned char *)str->data, len(str));
-  return raw(digest, sizeof(digest)); 
+  return raw(digest, sizeof(digest));
 }
 
 struct string *hook_KRYPTO_ripemd160(struct string *str) {
@@ -107,14 +110,16 @@ struct string *hook_KRYPTO_ripemd160(struct string *str) {
 }
 
 // matches evm and bitcoin's value of V, which is in the range 27-28
-struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct string *r, struct string *s) {
+struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v,
+                                        struct string *r, struct string *s) {
   if (len(str) != 32 || len(r) != 32 || len(s) != 32) {
     return allocString(0);
   }
   unsigned char sigArr[64];
   memcpy(sigArr, r->data, 32);
-  memcpy(sigArr+32, s->data, 32);
-  secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_SIGN);
+  memcpy(sigArr + 32, s->data, 32);
+  secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY |
+                                                    SECP256K1_CONTEXT_SIGN);
   if (!mpz_fits_ulong_p(v)) {
     return allocString(0);
   }
@@ -123,7 +128,8 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
     return allocString(0);
   }
   secp256k1_ecdsa_recoverable_signature sig;
-  if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigArr, v_long - 27)) {
+  if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig, sigArr,
+                                                           v_long - 27)) {
     return allocString(0);
   }
   secp256k1_pubkey key;
@@ -132,24 +138,29 @@ struct string *hook_KRYPTO_ecdsaRecover(struct string *str, mpz_t v, struct stri
   }
   unsigned char serialized[65];
   size_t len = sizeof(serialized);
-  secp256k1_ec_pubkey_serialize(ctx, serialized, &len, &key, SECP256K1_EC_UNCOMPRESSED);
+  secp256k1_ec_pubkey_serialize(ctx, serialized, &len, &key,
+                                SECP256K1_EC_UNCOMPRESSED);
   struct string *result = allocString(64);
-  memcpy(result->data, serialized+1, 64);
+  memcpy(result->data, serialized + 1, 64);
   return result;
 }
 
-struct string *hook_KRYPTO_ecdsaSign(struct string *mhash, struct string *prikey) {
+struct string *hook_KRYPTO_ecdsaSign(struct string *mhash,
+                                     struct string *prikey) {
   if (len(prikey) != 32 || len(mhash) != 32) {
     return hexEncode(nullptr, 0);
   }
   secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
   secp256k1_ecdsa_recoverable_signature sig;
-  if (!secp256k1_ecdsa_sign_recoverable(ctx, &sig, (unsigned char *)mhash->data, (unsigned char *)prikey->data, NULL, NULL)) {
+  if (!secp256k1_ecdsa_sign_recoverable(ctx, &sig, (unsigned char *)mhash->data,
+                                        (unsigned char *)prikey->data, NULL,
+                                        NULL)) {
     return hexEncode(nullptr, 0);
   }
   unsigned char result[65];
   int recid;
-  if (!secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, result, &recid, &sig)) {
+  if (!secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, result,
+                                                               &recid, &sig)) {
     return hexEncode(nullptr, 0);
   }
   result[64] = recid;
@@ -162,31 +173,33 @@ struct string *hook_KRYPTO_ecdsaPubKey(struct string *prikey) {
   }
   secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
   secp256k1_pubkey pubkey;
-  if (!secp256k1_ec_pubkey_create(ctx, &pubkey, (unsigned char *)prikey->data)) {
+  if (!secp256k1_ec_pubkey_create(ctx, &pubkey,
+                                  (unsigned char *)prikey->data)) {
     return hexEncode(nullptr, 0);
   }
   unsigned char keystring[65];
   size_t outputlen = 65;
-  secp256k1_ec_pubkey_serialize(ctx, keystring, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
-  return hexEncode(keystring+1, outputlen-1);
+  secp256k1_ec_pubkey_serialize(ctx, keystring, &outputlen, &pubkey,
+                                SECP256K1_EC_UNCOMPRESSED);
+  return hexEncode(keystring + 1, outputlen - 1);
 }
 
 struct string *hook_KRYPTO_blake2compress(struct string *params) {
-    if (len(params) != 213) {
-        return hexEncode(nullptr, 0);
-    }
-    unsigned char *data = (unsigned char *)params->data;
-    uint32_t  rounds = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-    uint64_t *h      = (uint64_t *)&data[4];
-    uint64_t *m      = (uint64_t *)&data[68];
-    uint64_t *t      = (uint64_t *)&data[196];
-    unsigned char f  = data[212];
+  if (len(params) != 213) {
+    return hexEncode(nullptr, 0);
+  }
+  unsigned char *data = (unsigned char *)params->data;
+  uint32_t rounds = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+  uint64_t *h = (uint64_t *)&data[4];
+  uint64_t *m = (uint64_t *)&data[68];
+  uint64_t *t = (uint64_t *)&data[196];
+  unsigned char f = data[212];
 
-    if (f > 1) return hexEncode(nullptr, 0);
+  if (f > 1) return hexEncode(nullptr, 0);
 
-    blake2b_compress(h, m, t, f, rounds);
+  blake2b_compress(h, m, t, f, rounds);
 
-    return hexEncode((unsigned char *)h, 64);
+  return hexEncode((unsigned char *)h, 64);
 }
 
 struct g1point {
@@ -239,20 +252,22 @@ static alt_bn128_G1 getPoint(g1point *pt) {
 }
 
 static alt_bn128_G2 getPoint(g2point *pt) {
-  if (mpz_cmp_ui(pt->x0, 0) == 0 && mpz_cmp_ui(pt->x1, 0) == 0 
-      && mpz_cmp_ui(pt->y0, 0) == 0 && mpz_cmp_ui(pt->y1, 0) == 0) {
+  if (mpz_cmp_ui(pt->x0, 0) == 0 && mpz_cmp_ui(pt->x1, 0) == 0 &&
+      mpz_cmp_ui(pt->y0, 0) == 0 && mpz_cmp_ui(pt->y1, 0) == 0) {
     return alt_bn128_G2::zero();
   }
   mpz_t mod;
   mpz_init(mod);
   alt_bn128_Fq::mod.to_mpz(mod);
-  if (mpz_cmp(pt->x0, mod) >= 0 || mpz_cmp(pt->x1, mod) >= 0
-      || mpz_cmp(pt->y0, mod) >= 0 || mpz_cmp(pt->y1, mod) >= 0) {
+  if (mpz_cmp(pt->x0, mod) >= 0 || mpz_cmp(pt->x1, mod) >= 0 ||
+      mpz_cmp(pt->y0, mod) >= 0 || mpz_cmp(pt->y1, mod) >= 0) {
     throw std::invalid_argument("not a member of the field");
   }
   mpz_clear(mod);
-  auto x = alt_bn128_Fq2{bigint<alt_bn128_q_limbs>(pt->x0), bigint<alt_bn128_q_limbs>(pt->x1)};
-  auto y = alt_bn128_Fq2{bigint<alt_bn128_q_limbs>(pt->y0), bigint<alt_bn128_q_limbs>(pt->y1)};
+  auto x = alt_bn128_Fq2{bigint<alt_bn128_q_limbs>(pt->x0),
+                         bigint<alt_bn128_q_limbs>(pt->x1)};
+  auto y = alt_bn128_Fq2{bigint<alt_bn128_q_limbs>(pt->y0),
+                         bigint<alt_bn128_q_limbs>(pt->y1)};
   auto z = alt_bn128_Fq2::one();
   return alt_bn128_G2{x, y, z};
 }
@@ -260,14 +275,14 @@ static alt_bn128_G2 getPoint(g2point *pt) {
 static g1point *projectPoint(uint64_t hdr, alt_bn128_G1 pt) {
   mpz_ptr x, y;
   if (pt.is_zero()) {
-    x = (mpz_ptr) koreAllocInteger(0);
-    y = (mpz_ptr) koreAllocInteger(0);
+    x = (mpz_ptr)koreAllocInteger(0);
+    y = (mpz_ptr)koreAllocInteger(0);
     mpz_init_set_ui(x, 0);
     mpz_init_set_ui(y, 0);
   } else {
     pt.to_affine_coordinates();
-    x = (mpz_ptr) koreAllocInteger(0);
-    y = (mpz_ptr) koreAllocInteger(0);
+    x = (mpz_ptr)koreAllocInteger(0);
+    y = (mpz_ptr)koreAllocInteger(0);
     mpz_init(x);
     mpz_init(y);
     pt.X.as_bigint().to_mpz(x);
@@ -285,18 +300,21 @@ bool hook_KRYPTO_bn128valid(g1point *pt) {
   initBN128();
   try {
     return getPoint(pt).is_well_formed();
-  } catch (std::invalid_argument const&) {
+  } catch (std::invalid_argument const &) {
     return false;
   }
 }
 
-// this code mirrors https://github.com/ethereum/aleth/blob/master/libdevcrypto/LibSnark.cpp
+// this code mirrors
+// https://github.com/ethereum/aleth/blob/master/libdevcrypto/LibSnark.cpp
 bool hook_KRYPTO_bn128g2valid(g2point *pt) {
   initBN128();
   try {
     alt_bn128_G2 g2pt = getPoint(pt);
-    return g2pt.is_well_formed() && -alt_bn128_G2::scalar_field::one() * g2pt + g2pt == alt_bn128_G2::zero();
-  } catch (std::invalid_argument const&) {
+    return g2pt.is_well_formed() &&
+           -alt_bn128_G2::scalar_field::one() * g2pt + g2pt ==
+               alt_bn128_G2::zero();
+  } catch (std::invalid_argument const &) {
     return false;
   }
 }
@@ -339,11 +357,9 @@ bool hook_KRYPTO_bn128ate(list *g1, list *g2) {
       continue;
     }
     alt_bn128_Fq12 paired = alt_bn128_miller_loop(
-        alt_bn128_precompute_G1(g1pt),
-        alt_bn128_precompute_G2(g2pt));
-    accum = accum*paired;
+        alt_bn128_precompute_G1(g1pt), alt_bn128_precompute_G2(g2pt));
+    accum = accum * paired;
   }
   return alt_bn128_final_exponentiation(accum) == alt_bn128_GT::one();
 }
-
 }
