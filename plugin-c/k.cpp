@@ -1,19 +1,21 @@
-#include <iostream>
-#include<cstdlib>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-
-#include "runtime/header.h"
-#include "runtime/alloc.h"
-
 #include "k.h"
 
-block* configvar(const char *name) {
-  stringinj* inj = (stringinj*)koreAlloc(sizeof(stringinj));
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include <cstdlib>
+#include <iostream>
+
+#include "runtime/alloc.h"
+#include "runtime/header.h"
+
+block* configvar(const char* name) {
+  stringinj* inj = (stringinj*)kore_alloc(sizeof(stringinj));
   inj->data = makeString(name);
-  static uint32_t tag = getTagForSymbolName("inj{SortKConfigVar{}, SortKItem{}}");
-  inj->h = getBlockHeaderForSymbol(tag);
+  static uint32_t tag =
+      get_tag_for_symbol_name("inj{SortKConfigVar{}, SortKItem{}}");
+  inj->h = get_block_header_for_symbol(tag);
   return (block*)inj;
 }
