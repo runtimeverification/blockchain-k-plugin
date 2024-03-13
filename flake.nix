@@ -17,11 +17,6 @@
       url = "github:scipr-lab/libff/5835b8c59d4029249645cf551f417608c48f2770";
       flake = false;
     };
-    secp256k1 = {
-      url =
-        "github:bitcoin-core/secp256k1/f532bdc9f77f7bbf7e93faabfbe9c483f0a9f75f";
-      flake = false;
-    };
     ate-pairing = {
       url =
         "github:herumi/ate-pairing/e69890125746cdaf25b5b51227d96678f76479fe";
@@ -46,6 +41,7 @@
           openssl.dev
           pkg-config
           procps
+          secp256k1
         ];
 
       overlay = final: prev: {
