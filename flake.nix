@@ -28,7 +28,7 @@
     };
   };
   outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
-    , secp256k1, ate-pairing, xbyak }:
+    , ate-pairing, xbyak }:
     let
       buildInputs = pkgs:
         with pkgs; [
@@ -62,14 +62,12 @@
             mkdir -p $out/deps/cpp-httplib
             mkdir -p $out/deps/cryptopp
             mkdir -p $out/deps/libff
-            mkdir -p $out/deps/secp256k1
             cp -rv ${cpp-httplib}/* $out/deps/cpp-httplib/
             cp -rv ${cryptopp}/* $out/deps/cryptopp/
             cp -rv ${libff}/* $out/deps/libff/
             chmod -R u+w $out
             cp -rv ${ate-pairing}/* $out/deps/libff/depends/ate-pairing/
             cp -rv ${xbyak}/* $out/deps/libff/depends/xbyak/
-            cp -rv ${secp256k1}/* $out/deps/secp256k1/
           '';
         };
 
@@ -82,7 +80,7 @@
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
               "APPLE_SILICON=true"
-            } make libcryptopp libff libsecp256k1 
+            } make libcryptopp libff
           '';
           installPhase = ''
             mkdir -p $out/include
