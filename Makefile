@@ -17,7 +17,7 @@ else
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
-INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I $(PREFIX)/libsecp256k1/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++17 $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
@@ -31,7 +31,7 @@ ifneq ($(APPLE_SILICON),)
     INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include
 endif
 
-.PHONY: build libcryptopp libff libsecp256k1
+.PHONY: build libcryptopp libff
 build: plugin-c/json.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
 
 .PHONY: install clean
@@ -70,13 +70,3 @@ $(PREFIX)/libff/lib/libff.a:
 	  && cmake . -DCMAKE_INSTALL_PREFIX=$(PREFIX)/libff $(LIBFF_CMAKE_FLAGS) \
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
-
-# libsecp256k1
-
-libsecp256k1: $(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc
-$(PREFIX)/libsecp256k1/lib/pkgconfig/libsecp256k1.pc:
-	cd deps/secp256k1/                                             \
-	    && ./autogen.sh                                            \
-	    && CFLAGS='-fPIC' ./configure --enable-module-recovery --prefix=$(PREFIX)/libsecp256k1 \
-	    && $(MAKE)                                                 \
-	    && $(MAKE) install
