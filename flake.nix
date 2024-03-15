@@ -17,11 +17,6 @@
       url = "github:scipr-lab/libff/5835b8c59d4029249645cf551f417608c48f2770";
       flake = false;
     };
-    secp256k1 = {
-      url =
-        "github:bitcoin-core/secp256k1/f532bdc9f77f7bbf7e93faabfbe9c483f0a9f75f";
-      flake = false;
-    };
     ate-pairing = {
       url =
         "github:herumi/ate-pairing/e69890125746cdaf25b5b51227d96678f76479fe";
@@ -33,7 +28,7 @@
     };
   };
   outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
-    , secp256k1, ate-pairing, xbyak }:
+    , ate-pairing, xbyak }:
     let
       buildInputs = pkgs:
         with pkgs; [
@@ -46,6 +41,7 @@
           openssl.dev
           pkg-config
           procps
+          secp256k1
         ];
 
       overlay = final: prev: {
@@ -66,14 +62,12 @@
             mkdir -p $out/deps/cpp-httplib
             mkdir -p $out/deps/cryptopp
             mkdir -p $out/deps/libff
-            mkdir -p $out/deps/secp256k1
             cp -rv ${cpp-httplib}/* $out/deps/cpp-httplib/
             cp -rv ${cryptopp}/* $out/deps/cryptopp/
             cp -rv ${libff}/* $out/deps/libff/
             chmod -R u+w $out
             cp -rv ${ate-pairing}/* $out/deps/libff/depends/ate-pairing/
             cp -rv ${xbyak}/* $out/deps/libff/depends/xbyak/
-            cp -rv ${secp256k1}/* $out/deps/secp256k1/
           '';
         };
 
@@ -86,7 +80,7 @@
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
               "APPLE_SILICON=true"
-            } make libcryptopp libff libsecp256k1 
+            } make libcryptopp libff
           '';
           installPhase = ''
             mkdir -p $out/include

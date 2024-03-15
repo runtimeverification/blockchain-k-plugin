@@ -24,7 +24,7 @@ jobs:
           distro: jammy
           llvm-version: 14
       - name: 'Compile Deps'
-        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-14 libff libcryptopp libsecp256k1'
+        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-14 libff libcryptopp'
       - name: 'Compile'
         run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-14'
       - name: 'Test'
