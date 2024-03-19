@@ -71,6 +71,8 @@ $(PREFIX)/libff/lib/libff.a:
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
 
+ifeq ($(shell uname -p),x86_64)
 plugin-c/blake2.a: CPPFLAGS=-mavx2
+endif
 plugin-c/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
 	ar qs plugin-c/blake2.a $^
