@@ -32,7 +32,7 @@ ifneq ($(APPLE_SILICON),)
 endif
 
 .PHONY: build libcryptopp libff
-build: plugin-c/json.o plugin-c/blake2.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
+build: plugin-c/json.o plugin-c/blake2.a plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
 
 .PHONY: install clean
 
@@ -70,3 +70,9 @@ $(PREFIX)/libff/lib/libff.a:
 	  && cmake . -DCMAKE_INSTALL_PREFIX=$(PREFIX)/libff $(LIBFF_CMAKE_FLAGS) \
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
+
+ifeq ($(shell uname -p),x86_64)
+plugin-c/blake2.a: CPPFLAGS=-mavx2
+endif
+plugin-c/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
+	ar qs plugin-c/blake2.a $^
