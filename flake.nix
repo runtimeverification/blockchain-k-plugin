@@ -80,7 +80,7 @@
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
               "APPLE_SILICON=true"
-            } make build libcryptopp libff
+            } make
           '';
           installPhase = ''
             mkdir -p $out/include

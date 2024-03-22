@@ -32,7 +32,7 @@ ifneq ($(APPLE_SILICON),)
 endif
 
 .PHONY: build libcryptopp libff
-build: blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
+build: libcryptopp libff blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
 
 .PHONY: install clean
 
@@ -72,12 +72,12 @@ $(PREFIX)/libff/lib/libff.a:
 
 # blake2
 
+blake2: $(PREFIX)/blake2/lib/blake2.a
+
 CXXFLAGS=-O3
 ifeq ($(shell uname -p),x86_64)
-plugin-c/blake2.a: CXXFLAGS+=-mavx2
+$(PREFIX)/blake2/lib/blake2.a: CXXFLAGS+=-mavx2
 endif
-
-blake2: $(PREFIX)/blake2/lib/blake2.a
 $(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
 	mkdir -p $(dir $@)
 	ar qs $@ $^
