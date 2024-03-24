@@ -17,7 +17,7 @@ else
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))
 endif
 
-INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(K_RELEASE)/include -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 CPPFLAGS += --std=c++17 $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
@@ -32,7 +32,7 @@ ifneq ($(APPLE_SILICON),)
 endif
 
 .PHONY: build libcryptopp libff
-build: plugin-c/json.o plugin-c/blake2.a plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
+build: libcryptopp libff blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
 
 .PHONY: install clean
 
@@ -52,7 +52,6 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
-	cd deps/secp256k1 && test ! -f Makefile || $(MAKE) clean
 
 # libcryptopp
 
@@ -71,9 +70,14 @@ $(PREFIX)/libff/lib/libff.a:
 	  && $(MAKE)                                                        \
 	  && $(MAKE) install
 
+# blake2
+
+blake2: $(PREFIX)/blake2/lib/blake2.a
+
 CXXFLAGS=-O3
 ifeq ($(shell uname -p),x86_64)
-plugin-c/blake2.a: CXXFLAGS+=-mavx2
+$(PREFIX)/blake2/lib/blake2.a: CXXFLAGS+=-mavx2
 endif
-plugin-c/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
-	ar qs plugin-c/blake2.a $^
+$(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
+	mkdir -p $(dir $@)
+	ar qs $@ $^
