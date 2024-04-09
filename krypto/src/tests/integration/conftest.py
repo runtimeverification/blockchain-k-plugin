@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .utils import BUILD_DIR, PROJECT_DIR, SOURCE_DIR
+from .utils import BUILD_DIR, PROJECT_DIR
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -30,11 +30,7 @@ def krypto_kompile(kompile: Kompiler) -> Callable[..., Path]:
                 str(BUILD_DIR / 'libff/lib/libff.a'),
                 str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
                 str(BUILD_DIR / 'blake2/lib/blake2.a'),
-                str(SOURCE_DIR / 'crypto.cpp'),
-                str(SOURCE_DIR / 'hash_ext.cpp'),
-                str(SOURCE_DIR / 'plugin_util.cpp'),
-                f"-I{BUILD_DIR / 'libff/include'}",
-                f"-I{BUILD_DIR / 'libcryptopp/include'}",
+                str(BUILD_DIR / 'plugin/lib/plugin.a'),
             ],
         }
         args = {**default_args, **kwargs}
