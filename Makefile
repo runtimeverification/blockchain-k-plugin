@@ -3,11 +3,6 @@ PREFIX ?= $(CURDIR)/build
 
 K_RELEASE ?= $(dir $(shell which kompile))..
 
-.PHONY: build libcryptopp libff
-build: libcryptopp libff blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
-
-.PHONY: install clean
-
 DESTDIR         ?=
 INSTALL_PREFIX  ?= /usr/local
 INSTALL_DIR     := $(DESTDIR)$(INSTALL_PREFIX)
@@ -16,12 +11,18 @@ INSTALL_INCLUDE := $(INSTALL_DIR)/include/kframework
 PLUGIN_NAMESPACE := blockchain-k-plugin
 K_SOURCES := krypto.md
 
+.PHONY: build
+build: libcryptopp libff blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
+
+
+.PHONY: install
 install: $(patsubst %, $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%, $(K_SOURCES))
 
 $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 	@mkdir -p $(dir $@)
 	cp $< $@
 
+.PHONY: clean
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
 
@@ -34,6 +35,7 @@ test: build
 # libcryptopp
 # -----------
 
+.PHONY: libcryptopp
 libcryptopp: $(PREFIX)/libcryptopp/lib/libcryptopp.a
 $(PREFIX)/libcryptopp/lib/libcryptopp.a:
 	cd deps/cryptopp                      \
@@ -63,6 +65,7 @@ ifneq ($(APPLE_SILICON),)
     LIBFF_CMAKE_FLAGS += -DCURVE=ALT_BN128 -DUSE_ASM=Off
 endif
 
+.PHONY: libff
 libff: $(PREFIX)/libff/lib/libff.a
 $(PREFIX)/libff/lib/libff.a:
 	cd deps/libff                                                 \
@@ -75,6 +78,7 @@ $(PREFIX)/libff/lib/libff.a:
 # blake2
 # ------
 
+.PHONY: blake2
 blake2: $(PREFIX)/blake2/lib/blake2.a
 
 CXXFLAGS=-O3
