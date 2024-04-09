@@ -12,7 +12,7 @@ PLUGIN_NAMESPACE := blockchain-k-plugin
 K_SOURCES := krypto.md
 
 .PHONY: build
-build: libcryptopp libff blake2 plugin-c/json.o plugin-c/crypto.o plugin-c/plugin_util.o plugin-c/k.o
+build: libcryptopp libff blake2 plugin
 
 
 .PHONY: install
@@ -95,7 +95,6 @@ $(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c
 # --------
 
 INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(K_RELEASE)/include -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
-CPPFLAGS += --std=c++17 -fPIC $(INCLUDES)
 
 ifneq ($(APPLE_SILICON),)
     GMP_PREFIX ?= $(shell brew --prefix gmp)
@@ -104,3 +103,15 @@ ifneq ($(APPLE_SILICON),)
     CRYPTOPP_PREFIX ?= $(shell brew --prefix cryptopp@8.6.0)
     INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include
 endif
+
+CPPFLAGS += --std=c++17 -fPIC -O3 $(INCLUDES)
+
+plugin-c/%.o: plugin-c/%.cpp $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/libff/lib/libff.a
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
+
+$(PREFIX)/plugin/lib/plugin.a: plugin-c/crypto.o plugin-c/hash_ext.o plugin-c/json.o plugin-c/k.o plugin-c/plugin_util.o
+	mkdir -p $(dir $@)
+	ar r $@ $^
+
+.PHONY: plugin
+plugin: $(PREFIX)/plugin/lib/plugin.a
