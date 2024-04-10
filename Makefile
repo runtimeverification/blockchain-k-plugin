@@ -12,8 +12,7 @@ PLUGIN_NAMESPACE := blockchain-k-plugin
 K_SOURCES := krypto.md
 
 .PHONY: build
-build: libcryptopp libff blake2 plugin
-
+build: krypto
 
 .PHONY: install
 install: $(patsubst %, $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%, $(K_SOURCES))
@@ -115,3 +114,20 @@ $(PREFIX)/plugin/lib/plugin.a: plugin-c/crypto.o plugin-c/hash_ext.o plugin-c/js
 
 .PHONY: plugin
 plugin: $(PREFIX)/plugin/lib/plugin.a
+
+
+# ------
+# krypto
+# ------
+
+$(PREFIX)/krypto/lib/krypto.a: $(PREFIX)/libff/lib/libff.a $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/blake2/lib/blake2.a $(PREFIX)/plugin/lib/plugin.a
+	$(eval TMP := $(shell mktemp -d))
+	for lib in $^; do                \
+	    ar --output $(TMP) x $$lib ; \
+	done
+	mkdir -p $(dir $@)
+	ar r $@ $(TMP)/*.o
+	rm -rf $(TMP)
+
+.PHONY: krypto
+krypto: $(PREFIX)/krypto/lib/krypto.a
