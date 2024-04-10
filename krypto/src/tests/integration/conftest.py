@@ -27,10 +27,7 @@ def krypto_kompile(kompile: Kompiler) -> Callable[..., Path]:
                 '-lcrypto',
                 '-lsecp256k1',
                 '-lprocps',
-                str(BUILD_DIR / 'libff/lib/libff.a'),
-                str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
-                str(BUILD_DIR / 'blake2/lib/blake2.a'),
-                str(BUILD_DIR / 'plugin/lib/plugin.a'),
+                str(BUILD_DIR / 'krypto/lib/krypto.a'),
             ],
         }
         args = {**default_args, **kwargs}
