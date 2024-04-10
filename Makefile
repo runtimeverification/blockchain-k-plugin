@@ -85,7 +85,7 @@ CXXFLAGS=-O3
 ifeq ($(shell uname -p),x86_64)
 $(PREFIX)/blake2/lib/blake2.a: CXXFLAGS+=-mavx2
 endif
-$(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
+$(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2-compress.o plugin-c/blake2-avx2.o plugin-c/blake2-generic.o
 	mkdir -p $(dir $@)
 	ar qs $@ $^
 
