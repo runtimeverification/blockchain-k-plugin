@@ -5,8 +5,10 @@ Here we implement the various cryptographic primitives needed for various blockc
 
 ```k
 module KRYPTO
-    imports STRING-SYNTAX
+    imports BOOL-SYNTAX
+    imports BYTES-SYNTAX
     imports INT-SYNTAX
+    imports STRING-SYNTAX
     imports LIST
 ```
 
