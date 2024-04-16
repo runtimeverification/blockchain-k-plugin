@@ -53,6 +53,11 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
 
+.PHONY: test
+test: build
+	pytest tests/test.py --verbose --durations=0
+
+
 # libcryptopp
 
 libcryptopp: $(PREFIX)/libcryptopp/lib/libcryptopp.a

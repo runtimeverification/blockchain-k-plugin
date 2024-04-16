@@ -31,3 +31,7 @@ ARG GROUP_ID=${USER_ID}
 RUN groupadd -g ${GROUP_ID} ${GROUP} && useradd -m -u ${USER_ID} -s /bin/sh -g ${GROUP} ${USER}
 
 USER ${USER}:${GROUP}
+
+ENV PATH=/home/${USER}/.local/bin:${PATH}
+RUN    pip install pytest \
+    && pytest --version
