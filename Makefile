@@ -55,7 +55,7 @@ clean:
 
 .PHONY: test
 test: build
-	pytest tests/test.py --verbose --durations=0
+	pytest tests/test.py --verbose --durations=0 --maxfail=1
 
 
 # libcryptopp

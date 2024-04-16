@@ -30,7 +30,7 @@ jobs:
       - name: 'Test'
         run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` -C tests'
       - name: 'Run pytest'
-        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} make test CXX=clang++-14
+        run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} make test
       - name: 'Tear down Docker'
         if: always()
         run: |
