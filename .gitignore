@@ -5,3 +5,4 @@
 **/*-kompiled
 **/.depend*
 build
+__pycache__/
