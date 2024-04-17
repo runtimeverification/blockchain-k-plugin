@@ -12,6 +12,53 @@ def hex2bytes(s: str) -> str:
     return f'b"{byte_str}"'
 
 
+def kompile(
+    definition: str,
+    *,
+    output_dir: Path,
+    main_module: str,
+    syntax_module: str,
+) -> None:
+    main_file = output_dir / 'definition.k'
+    main_file.write_text(definition)
+
+    ccopts = [
+        '-std=c++17',
+        '-lssl',
+        '-lcrypto',
+        '-lsecp256k1',
+        '-lprocps',
+        str(BUILD_DIR / 'libff/lib/libff.a'),
+        str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
+        str(BUILD_DIR / 'blake2/lib/blake2.a'),
+        str(SOURCE_DIR / 'crypto.cpp'),
+        str(SOURCE_DIR / 'hash_ext.cpp'),
+        str(SOURCE_DIR / 'plugin_util.cpp'),
+        f"-I{BUILD_DIR / 'libff/include'}",
+        f"-I{BUILD_DIR / 'libcryptopp/include'}",
+    ]
+
+    args = [
+        'kompile',
+        str(main_file),
+        '--output-definition',
+        str(output_dir),
+        '--main-module',
+        main_module,
+        '--syntax-module',
+        syntax_module,
+        '-I',
+        str(PROJECT_DIR),
+        '--md-selector',
+        'k | libcrypto-extra',
+        '--hook-namespaces',
+        'KRYPTO',
+        '--warnings-to-errors',
+    ] + [arg for ccopt in ccopts for arg in ['-ccopt', ccopt]]
+
+    subprocess.run(args, check=True, text=True)
+
+
 def run(definition_dir: Path, pgm: str) -> str:
     args = ['krun', '--definition', str(definition_dir), f'-cPGM={pgm}']
     proc_res = subprocess.run(args, stdout=subprocess.PIPE, check=True, text=True)

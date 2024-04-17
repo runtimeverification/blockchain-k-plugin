@@ -1,4 +1,3 @@
-import subprocess
 from itertools import count
 from pathlib import Path
 from typing import Final
@@ -6,7 +5,7 @@ from typing import Final
 import pytest
 from pytest import TempPathFactory
 
-from .utils import BUILD_DIR, SOURCE_DIR, PROJECT_DIR, hex2bytes, run
+from .utils import hex2bytes, kompile, run
 
 
 x01_32B: Final = hex2bytes(31 * '00' + '01')
@@ -23,45 +22,8 @@ def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
             configuration <k> $PGM:Pgm </k>
         endmodule
     """
-
     output_dir = tmp_path_factory.mktemp('kompiled')
-    main_file = output_dir / 'test.k'
-    main_file.write_text(definition)
-
-    ccopts = [
-        '-std=c++17',
-        '-lssl',
-        '-lcrypto',
-        '-lsecp256k1',
-        '-lprocps',
-        str(BUILD_DIR / 'libff/lib/libff.a'),
-        str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
-        str(BUILD_DIR / 'blake2/lib/blake2.a'),
-        str(SOURCE_DIR / 'crypto.cpp'),
-        str(SOURCE_DIR / 'hash_ext.cpp'),
-        str(SOURCE_DIR / 'plugin_util.cpp'),
-        f"-I{BUILD_DIR / 'libff/include'}",
-        f"-I{BUILD_DIR / 'libcryptopp/include'}",
-    ]
-
-    args = [
-        'kompile',
-        str(main_file),
-        '--output-definition',
-        str(output_dir),
-        '--syntax-module',
-        'TEST',
-        '-I',
-        str(PROJECT_DIR),
-        '--md-selector',
-        'k | libcrypto-extra',
-        '--hook-namespaces',
-        'KRYPTO',
-        '--warnings-to-errors',
-    ] + [arg for ccopt in ccopts for arg in ['-ccopt', ccopt]]
-
-    subprocess.run(args, check=True, text=True)
-
+    kompile(definition, output_dir=output_dir, main_module='TEST', syntax_module='TEST')
     return output_dir
 
 
