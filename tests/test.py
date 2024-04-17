@@ -19,7 +19,66 @@ def hex2bytes(s: str) -> str:
 x01_32B: Final = hex2bytes(31 * '00' + '01')
 
 
-TEST_DATA: Final = (
+@pytest.fixture(scope='session')
+def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
+    definition = """
+        requires "plugin/krypto.md"
+
+        module TEST
+            imports KRYPTO
+            syntax Pgm ::= Bool | Bytes | String | G1Point
+            configuration <k> $PGM:Pgm </k>
+        endmodule
+    """
+
+    output_dir = tmp_path_factory.mktemp('kompiled')
+    main_file = output_dir / 'test.k'
+    main_file.write_text(definition)
+
+    ccopts = [
+        '-std=c++17',
+        '-lssl',
+        '-lcrypto',
+        '-lsecp256k1',
+        '-lprocps',
+        str(BUILD_DIR / 'libff/lib/libff.a'),
+        str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
+        str(BUILD_DIR / 'blake2/lib/blake2.a'),
+        str(SOURCE_DIR / 'crypto.cpp'),
+        str(SOURCE_DIR / 'hash_ext.cpp'),
+        str(SOURCE_DIR / 'plugin_util.cpp'),
+        f"-I{BUILD_DIR / 'libff/include'}",
+        f"-I{BUILD_DIR / 'libcryptopp/include'}",
+    ]
+
+    args = [
+        'kompile',
+        str(main_file),
+        '--output-definition',
+        str(output_dir),
+        '--syntax-module',
+        'TEST',
+        '-I',
+        str(PROJECT_DIR),
+        '--md-selector',
+        'k | libcrypto-extra',
+        '--hook-namespaces',
+        'KRYPTO',
+        '--warnings-to-errors',
+    ] + [arg for ccopt in ccopts for arg in ['-ccopt', ccopt]]
+
+    subprocess.run(args, check=True, text=True)
+
+    return output_dir
+
+
+def run(definition_dir: Path, pgm: str) -> str:
+    args = ['krun', '--definition', str(definition_dir), f'-cPGM={pgm}']
+    proc_res = subprocess.run(args, stdout=subprocess.PIPE, check=True, text=True)
+    return proc_res.stdout.rstrip()
+
+
+HOOK_TEST_DATA: Final = (
     (
         'Keccak256',
         'Keccak256(b"foo")',
@@ -159,60 +218,12 @@ TEST_DATA: Final = (
     ),
 )
 
-@pytest.fixture(scope='session')
-def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
-    definition = """
-        requires "plugin/krypto.md"
 
-        module TEST
-            imports KRYPTO
-            syntax Pgm ::= Bool | Bytes | String | G1Point
-            configuration <k> $PGM:Pgm </k>
-        endmodule
-    """
-
-    output_dir = tmp_path_factory.mktemp('kompiled')
-    main_file = output_dir / 'test.k'
-    main_file.write_text(definition)
-
-    ccopts = [
-        '-std=c++17',
-        '-lssl',
-        '-lcrypto',
-        '-lsecp256k1',
-        '-lprocps',
-        str(BUILD_DIR / 'libff/lib/libff.a'),
-        str(BUILD_DIR / 'libcryptopp/lib/libcryptopp.a'),
-        str(BUILD_DIR / 'blake2/lib/blake2.a'),
-        str(SOURCE_DIR / 'crypto.cpp'),
-        str(SOURCE_DIR / 'hash_ext.cpp'),
-        str(SOURCE_DIR / 'plugin_util.cpp'),
-        f"-I{BUILD_DIR / 'libff/include'}",
-        f"-I{BUILD_DIR / 'libcryptopp/include'}",
-    ]
-
-    args = [
-        'kompile',
-        str(main_file),
-        '--output-definition',
-        str(output_dir),
-        '--syntax-module',
-        'TEST',
-        '-I',
-        str(PROJECT_DIR),
-        '--md-selector',
-        'k | libcrypto-extra',
-        '--hook-namespaces',
-        'KRYPTO',
-        '--warnings-to-errors',
-    ] + [arg for ccopt in ccopts for arg in ['-ccopt', ccopt]]
-
-    subprocess.run(args, check=True, text=True)
-
-    return output_dir
-
-
-@pytest.mark.parametrize('test_id,pgm,output', TEST_DATA, ids=[test_id for test_id, *_ in TEST_DATA])
+@pytest.mark.parametrize(
+    'test_id,pgm,output',
+    HOOK_TEST_DATA,
+    ids=[test_id for test_id, *_ in HOOK_TEST_DATA],
+)
 def test_hook(definition_dir: Path, test_id: str, pgm: str, output: str) -> None:
     # Given
     expected = f'<k>\n  {output} ~> .K\n</k>'
@@ -222,9 +233,3 @@ def test_hook(definition_dir: Path, test_id: str, pgm: str, output: str) -> None
 
     # Then
     assert expected == actual
-
-
-def run(definition_dir: Path, pgm: str) -> str:
-    args = ['krun', '--definition', str(definition_dir), f'-cPGM={pgm}']
-    proc_res = subprocess.run(args, stdout=subprocess.PIPE, check=True, text=True)
-    return proc_res.stdout.rstrip()
