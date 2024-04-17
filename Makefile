@@ -53,9 +53,11 @@ $(INSTALL_INCLUDE)/$(PLUGIN_NAMESPACE)/%.md: plugin/%.md
 clean:
 	rm -rf */*.o */*/*.o build deps/libff/build
 
+TEST_ARGS := --verbose --durations=0 --maxfail=1
+
 .PHONY: test
 test: build
-	pytest tests/test.py --verbose --durations=0
+	pytest $(TEST_ARGS)
 
 
 # libcryptopp
