@@ -2,7 +2,10 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-PROJECT_DIR: Final = Path(__file__).parents[1]
+
+TEST_DIR: Final = Path(__file__).parent
+TEST_DATA_DIR: Final = TEST_DIR / 'test-data'
+PROJECT_DIR: Final = TEST_DIR.parent
 SOURCE_DIR : Final = PROJECT_DIR / 'plugin-c'
 BUILD_DIR: Final = PROJECT_DIR / 'build'
 

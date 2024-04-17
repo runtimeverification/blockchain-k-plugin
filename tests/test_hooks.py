@@ -22,7 +22,7 @@ def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
             configuration <k> $PGM:Pgm </k>
         endmodule
     """
-    output_dir = tmp_path_factory.mktemp('kompiled')
+    output_dir = tmp_path_factory.mktemp('test-kompiled')
     kompile(definition, output_dir=output_dir, main_module='TEST', syntax_module='TEST')
     return output_dir
 

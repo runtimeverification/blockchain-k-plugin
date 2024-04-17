@@ -1,12 +1,12 @@
-requires "krypto.md"
+requires "plugin/krypto.md"
 
 module ECDSA-TEST
-    imports INT
-    imports BYTES
-    imports STRING
-    imports BOOL
-    imports K-EQUAL-SYNTAX
     imports KRYPTO
+    imports BOOL
+    imports BYTES
+    imports INT
+    imports STRING
+    imports K-EQUAL-SYNTAX
 
     configuration
        <k> $PGM:Pgm </k>
