@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 from itertools import count
-from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest import TempPathFactory
 
 from .utils import hex2bytes, kompile, run
 
+if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import Final
 
-x01_32B: Final = hex2bytes(31 * '00' + '01')
+    from pytest import TempPathFactory
+
+
+x01_32B: Final = hex2bytes(31 * '00' + '01')  # noqa: N816
 
 
 @pytest.fixture(scope='session')
@@ -132,12 +138,12 @@ HOOK_TEST_DATA: Final = (
     ),
     (
         'ECDSASign',
-        f"ECDSASign({x01_32B}, {x01_32B})",
+        f'ECDSASign({x01_32B}, {x01_32B})',
         '"6673ffad2147741f04772b6f921f0ba6af0c1e77fc439e65c36dedf4092e88984c1a971652e0ada880120ef8025e709fff2080c4a39aae068d12eed009b68c8901"',
     ),
     (
         'ECDSAPubKey',
-        f"ECDSAPubKey({x01_32B})",
+        f'ECDSAPubKey({x01_32B})',
         '"79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"',
     ),
     (
@@ -352,7 +358,7 @@ ED25519_TEST_DATA: Final = (
 def test_ed25519_verify(definition_dir: Path, pk: str, msg: str, sig: str) -> None:
     # Given
     pgm = f'ED25519VerifyMessage({hex2bytes(pk)}, {hex2bytes(msg)}, {hex2bytes(sig)})'
-    expected = f'<k>\n  true ~> .K\n</k>'
+    expected = '<k>\n  true ~> .K\n</k>'
 
     # When
     actual = run(definition_dir, pgm)

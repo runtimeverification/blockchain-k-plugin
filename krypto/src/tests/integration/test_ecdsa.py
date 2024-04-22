@@ -1,11 +1,16 @@
-from itertools import count
-from pathlib import Path
-from typing import Final
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest import TempPathFactory
 
 from .utils import TEST_DATA_DIR, kompile, run
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import Final
+
+    from pytest import TempPathFactory
 
 
 @pytest.fixture(scope='session')
@@ -43,7 +48,7 @@ TEST_DATA: Final = (
                 b"L\xc9\x88\xdb\x9c\xecW\xed\xa4V\xbb$\"\x01\xbbA\xc7#\xf2B\x7f\xf7P\x12?\x11\xafku\x95G\xe2"
             )
         """,
-        '966588469268559010541288244128342317224451555083'
+        '966588469268559010541288244128342317224451555083',
     ),
 )
 

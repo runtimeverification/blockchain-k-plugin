@@ -2,17 +2,16 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-
 TEST_DIR: Final = Path(__file__).parent
 TEST_DATA_DIR: Final = TEST_DIR / 'test-data'
 PROJECT_DIR: Final = TEST_DIR.parents[3]
-SOURCE_DIR : Final = PROJECT_DIR / 'plugin-c'
+SOURCE_DIR: Final = PROJECT_DIR / 'plugin-c'
 BUILD_DIR: Final = PROJECT_DIR / 'build'
 
 
 def hex2bytes(s: str) -> str:
     byte_str = ''.join(fr'\x{byte:02x}' for byte in bytes.fromhex(s))
-    return f'b"{byte_str}"'
+    return f'b"{byte_str}"'  # noqa: B907
 
 
 def kompile(
