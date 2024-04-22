@@ -2,6 +2,9 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
+from pyk.ktool.krun import _krun
+
+
 TEST_DIR: Final = Path(__file__).parent
 TEST_DATA_DIR: Final = TEST_DIR / 'test-data'
 PROJECT_DIR: Final = TEST_DIR.parents[3]
@@ -62,6 +65,5 @@ def kompile(
 
 
 def run(definition_dir: Path, pgm: str) -> str:
-    args = ['krun', '--definition', str(definition_dir), f'-cPGM={pgm}']
-    proc_res = subprocess.run(args, stdout=subprocess.PIPE, check=True, text=True)
+    proc_res = _krun(definition_dir=definition_dir, cmap={'PGM': pgm})
     return proc_res.stdout.rstrip()
