@@ -15,4 +15,4 @@ These instructions are for Ubuntu, assuming that Clang12 is installed.
 Testing
 -------
 
-- Run tests: `make -C tests`
+- Run tests: `make test`

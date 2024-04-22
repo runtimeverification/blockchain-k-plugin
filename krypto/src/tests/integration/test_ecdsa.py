@@ -1,20 +1,21 @@
-from itertools import count
-from pathlib import Path
-from typing import Final
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest import TempPathFactory
 
-from .utils import TEST_DATA_DIR, kompile, run
+from .utils import TEST_DATA_DIR, run
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+    from typing import Final
 
 
 @pytest.fixture(scope='session')
-def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
+def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
     main_file = TEST_DATA_DIR / 'ecdsa-test.k'
-    definition = main_file.read_text()
-    output_dir = tmp_path_factory.mktemp('ecdsa-kompiled')
-    kompile(definition, output_dir=output_dir, main_module='ECDSA-TEST', syntax_module='ECDSA-TEST')
-    return output_dir
+    return krypto_kompile(main_file=main_file, main_module='ECDSA-TEST', syntax_module='ECDSA-TEST')
 
 
 TEST_DATA: Final = (
@@ -43,7 +44,7 @@ TEST_DATA: Final = (
                 b"L\xc9\x88\xdb\x9c\xecW\xed\xa4V\xbb$\"\x01\xbbA\xc7#\xf2B\x7f\xf7P\x12?\x11\xafku\x95G\xe2"
             )
         """,
-        '966588469268559010541288244128342317224451555083'
+        '966588469268559010541288244128342317224451555083',
     ),
 )
 

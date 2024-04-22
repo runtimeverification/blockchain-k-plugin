@@ -9,6 +9,19 @@ concurrency:
 
 jobs:
 
+  code-quality-checks:
+    name: 'Code Quality Checks'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+      - name: 'Install Poetry'
+        uses: Gr1N/setup-poetry@v9
+      - name: 'Run code quality checks'
+        run: make -C krypto check
+      - name: 'Run pyupgrade'
+        run: make -C krypto pyupgrade
+
   test-pr:
     name: 'Build and test Blockchain Plugin'
     runs-on: ubuntu-latest
