@@ -5,20 +5,19 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .utils import hex2bytes, kompile, run
+from .utils import hex2bytes, run
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
     from typing import Final
-
-    from pytest import TempPathFactory
 
 
 x01_32B: Final = hex2bytes(31 * '00' + '01')  # noqa: N816
 
 
 @pytest.fixture(scope='session')
-def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
+def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
     definition = """
         requires "plugin/krypto.md"
 
@@ -28,9 +27,7 @@ def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
             configuration <k> $PGM:Pgm </k>
         endmodule
     """
-    output_dir = tmp_path_factory.mktemp('test-kompiled')
-    kompile(definition, output_dir=output_dir, main_module='TEST', syntax_module='TEST')
-    return output_dir
+    return krypto_kompile(definition=definition, main_module='TEST', syntax_module='TEST')
 
 
 HOOK_TEST_DATA: Final = (

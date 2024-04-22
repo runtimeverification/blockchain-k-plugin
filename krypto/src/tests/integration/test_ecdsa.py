@@ -4,22 +4,18 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .utils import TEST_DATA_DIR, kompile, run
+from .utils import TEST_DATA_DIR, run
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
     from typing import Final
 
-    from pytest import TempPathFactory
-
 
 @pytest.fixture(scope='session')
-def definition_dir(tmp_path_factory: TempPathFactory) -> Path:
+def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
     main_file = TEST_DATA_DIR / 'ecdsa-test.k'
-    definition = main_file.read_text()
-    output_dir = tmp_path_factory.mktemp('ecdsa-kompiled')
-    kompile(definition, output_dir=output_dir, main_module='ECDSA-TEST', syntax_module='ECDSA-TEST')
-    return output_dir
+    return krypto_kompile(main_file=main_file, main_module='ECDSA-TEST', syntax_module='ECDSA-TEST')
 
 
 TEST_DATA: Final = (
