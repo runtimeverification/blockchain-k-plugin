@@ -5,7 +5,7 @@ from typing import Final
 
 TEST_DIR: Final = Path(__file__).parent
 TEST_DATA_DIR: Final = TEST_DIR / 'test-data'
-PROJECT_DIR: Final = TEST_DIR.parent
+PROJECT_DIR: Final = TEST_DIR.parents[3]
 SOURCE_DIR : Final = PROJECT_DIR / 'plugin-c'
 BUILD_DIR: Final = PROJECT_DIR / 'build'
 
