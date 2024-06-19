@@ -29,7 +29,7 @@ pytest-cov = "*"
 pytest-mock = "*"
 pytest-xdist = "*"
 pyupgrade = "*"
-kframework = { git = "https://github.com/runtimeverification/k.git", tag="v7.1.7", subdirectory = "pyk" }
+kframework = { git = "https://github.com/runtimeverification/k.git", tag="v7.1.8", subdirectory = "pyk" }
 
 [tool.isort]
 profile = "black"
