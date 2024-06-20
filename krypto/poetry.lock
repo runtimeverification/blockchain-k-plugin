@@ -419,7 +419,7 @@ colors = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "kframework"
-version = "7.1.10"
+version = "7.1.12"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -441,8 +441,8 @@ xdg-base-dirs = "^6.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/k.git"
-reference = "v7.1.10"
-resolved_reference = "830a307106dcc970f6addc1fd508bf2834aeb7bf"
+reference = "v7.1.12"
+resolved_reference = "005fc5cb4c4c895623ab5bf8dc4edb90f9bc6eb4"
 subdirectory = "pyk"
 
 [[package]]
@@ -985,4 +985,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "b9e7925b5b561802abc4dfe2d7d305d789f07e839e02f6cbc5ea960eab67dd78"
+content-hash = "f8b3bcf9b212fd334a0799becf36f2260d317e521652b4514b9d166d76855fc6"
