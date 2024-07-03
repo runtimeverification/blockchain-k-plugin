@@ -14,7 +14,7 @@ module ECDSA-TEST
     syntax Pgm ::= Bytes | String | Int | Account
  // ---------------------------------------------
 
-    syntax Int ::= #addrFromPrivateKey ( String ) [function, klabel(addrFromPrivateKey)]
+    syntax Int ::= #addrFromPrivateKey ( String ) [function, symbol(addrFromPrivateKey)]
  // ------------------------------------------------------------------------------------
     rule [addrFromPrivateKey]: #addrFromPrivateKey ( KEY ) => #addr( #parseHexWord( Keccak256( #parseByteStack( ECDSAPubKey( #parseByteStack( KEY ) ) ) ) ) )
 
@@ -79,8 +79,8 @@ module ECDSA-TEST
 
     syntax Account ::= Int
                      | ".Account"
-                     | #sender ( Bytes , Int , Bytes , Bytes ) [function, klabel(#senderAux)   ]
-                     | #sender ( Bytes )                       [function, klabel(#senderAux2)  ]
+                     | #sender ( Bytes , Int , Bytes , Bytes ) [function, symbol(#senderAux)   ]
+                     | #sender ( Bytes )                       [function, symbol(#senderAux2)  ]
  // -----------------------------------------------------------------------------------------------
     rule #sender(HT, TW, TR, TS) => #sender(ECDSARecover(HT, TW, TR, TS))
 
