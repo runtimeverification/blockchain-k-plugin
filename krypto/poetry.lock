@@ -452,13 +452,13 @@ colors = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "kframework"
-version = "7.1.45"
+version = "7.1.50"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "kframework-7.1.45-py3-none-any.whl", hash = "sha256:a8dff4bda25a1510b9673d2b1be5bd70bb359b556c1384d8261ad2d8cfdbeff9"},
-    {file = "kframework-7.1.45.tar.gz", hash = "sha256:350b4f7ec2bb67d75eba02e5499e7bd290c58ce4c03852aaa4077dd9be0e1761"},
+    {file = "kframework-7.1.50-py3-none-any.whl", hash = "sha256:5aab263fec629e6d4ba4a286baaa1bdadc8b1c8c9ccf211fd9a0587b2e80723d"},
+    {file = "kframework-7.1.50.tar.gz", hash = "sha256:2bb2cb42d0b231425f3fbb640b66e28bfc15d1f68eaa5dc300d38800abfdd5d9"},
 ]
 
 [package.dependencies]
@@ -894,13 +894,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "setuptools"
-version = "70.2.0"
+version = "70.3.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-70.2.0-py3-none-any.whl", hash = "sha256:b8b8060bb426838fbe942479c90296ce976249451118ef566a5a0b7d8b78fb05"},
-    {file = "setuptools-70.2.0.tar.gz", hash = "sha256:bd63e505105011b25c3c11f753f7e3b8465ea739efddaccef8f0efac2137bac1"},
+    {file = "setuptools-70.3.0-py3-none-any.whl", hash = "sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc"},
+    {file = "setuptools-70.3.0.tar.gz", hash = "sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5"},
 ]
 
 [package.extras]
@@ -1025,4 +1025,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5b462c33534f9b1164614d9452d436dbde718934de529cd2a2f976647d071017"
+content-hash = "956022910ec0d54a8c7d3615591fa36e363628931e4813310e9adab8e5b9c3e0"
