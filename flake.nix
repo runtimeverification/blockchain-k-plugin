@@ -96,6 +96,9 @@
           installPhase = ''
             mkdir -p $out/lib
             cp build/krypto/lib/krypto.a $out/lib
+
+            mkdir -p $out/share/krypto/src
+            cp plugin/krypto.md $out/share/krypto/src
           '';
         };
       };
