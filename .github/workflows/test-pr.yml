@@ -46,3 +46,23 @@ jobs:
         if: always()
         run: |
           docker stop --time=0 blockchain-k-plugin-concrete-${GITHUB_SHA}
+
+  nix:
+    name: 'Nix'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: normal
+          - runner: ARM64
+    needs: code-quality-checks
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+
+      - name: 'Build plugin'
+        run: GC_DONT_GC=1 nix build .#blockchain-k-plugin --extra-experimental-features 'nix-command flakes' --print-build-logs
+
+      - name: 'Test plugin'
+        run: GC_DONT_GC=1 nix build .#py-krypto-tests --extra-experimental-features 'nix-command flakes' --print-build-logs
