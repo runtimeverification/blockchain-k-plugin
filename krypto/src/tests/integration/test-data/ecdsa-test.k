@@ -1,4 +1,4 @@
-requires "plugin/krypto.md"
+requires "krypto.md"
 
 module ECDSA-TEST
     imports KRYPTO

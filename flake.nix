@@ -6,6 +6,7 @@
     nixpkgs.follows = "k-framework/nixpkgs";
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.follows = "k-framework/rv-utils";
+    poetry2nix.follows = "k-framework/poetry2nix";
 
     cpp-httplib = {
       url =
@@ -30,7 +31,7 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, k-framework, flake-utils, rv-utils, cpp-httplib, cryptopp, libff
+  outputs = { self, nixpkgs, k-framework, poetry2nix, flake-utils, rv-utils, cpp-httplib, cryptopp, libff
     , ate-pairing, xbyak }:
     let
       buildInputs = pkgs:
@@ -94,11 +95,57 @@
                 BOOST_PREFIX=${boost.dev}
           '';
           installPhase = ''
-            mkdir -p $out/lib
-            cp build/krypto/lib/krypto.a $out/lib
+            mkdir -p $out/krypto/lib
+            cp build/krypto/lib/krypto.a $out/krypto/lib
 
-            mkdir -p $out/share/krypto/src
-            cp plugin/krypto.md $out/share/krypto/src
+            mkdir -p $out/krypto/src
+            cp plugin/krypto.md $out/krypto/src
+          '';
+        };
+
+        py-krypto-env = prev.poetry2nix.mkPoetryApplication {
+          python = prev.python310;
+          projectDir = ./krypto;
+
+          buildInputs = [ prev.k.openssl.procps.secp256k1 final.blockchain-k-plugin ];
+
+          overrides = prev.poetry2nix.overrides.withDefaults
+            (finalPython: prevPython: {
+              kframework = prev.pyk-python310.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "hypothesis" x.name)
+                      && !(prev.lib.strings.hasInfix "pytest" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.hypothesis finalPython.pytest ];
+                });
+
+              pytest = prevPython.pytest.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "exceptiongroup" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.exceptiongroup ];
+                });
+
+              hypothesis = prevPython.hypothesis.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "exceptiongroup" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.exceptiongroup ];
+                });
+
+              flake8-type-checking = prevPython.flake8-type-checking.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
+                    ++ [ finalPython.poetry ];
+                });
+            });
+
+          checkPhase = ''
+            runHook preCheck
+            export PATH="${prev.k.openssl.procps.secp256k1}/bin:$PATH"
+            export K_PLUGIN_ROOT="${final.blockchain-k-plugin}"
+            pytest -vvv
+            runHook postCheck
           '';
         };
       };
@@ -112,14 +159,19 @@
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
+            poetry2nix.overlays.default
             k-framework.overlay
             overlay
           ];
         };
       in {
         defaultPackage = pkgs.blockchain-k-plugin;
+        packages = {
+          inherit (pkgs) py-krypto-env blockchain-k-plugin;
+        };
         devShell = pkgs.mkShell {
           buildInputs = buildInputs pkgs;
+          packages = [ pkgs.py-krypto-env ];
           shellHook = ''
             ${pkgs.lib.strings.optionalString
             (pkgs.stdenv.isAarch64 && pkgs.stdenv.isDarwin)

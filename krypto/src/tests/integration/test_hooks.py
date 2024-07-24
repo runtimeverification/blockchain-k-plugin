@@ -19,7 +19,7 @@ x01_32B: Final = hex2bytes(31 * '00' + '01')  # noqa: N816
 @pytest.fixture(scope='session')
 def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
     definition = """
-        requires "plugin/krypto.md"
+        requires "krypto.md"
 
         module TEST
             imports KRYPTO
