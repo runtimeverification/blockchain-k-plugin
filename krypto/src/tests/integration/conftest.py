@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -39,8 +40,10 @@ def krypto_kompile(kompile: Kompiler) -> Callable[..., Path]:
                 '-std=c++17',
                 '-lssl',
                 '-lsecp256k1',
+                '-lcrypto',
                 str(_library_path()),
-            ],
+            ]
+            + (['-lprocps'] if sys.platform == 'linux' else []),
         }
         args = {**default_args, **kwargs}
         return kompile(**args)
