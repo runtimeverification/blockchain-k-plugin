@@ -100,7 +100,9 @@ ifneq ($(APPLE_SILICON),)
     MPFR_PREFIX ?= $(shell brew --prefix mpfr)
     OPENSSL_PREFIX ?= $(shell brew --prefix openssl)
     CRYPTOPP_PREFIX ?= $(shell brew --prefix cryptopp@8.6.0)
-    INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include
+    SECP256K1_PREFIX ?= $(shell brew --prefix secp256k1)
+    BOOST_PREFIX ?= $(shell brew --prefix boost)
+    INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include -I $(SECP256K1_PREFIX)/include -I $(BOOST_PREFIX)/include
 endif
 
 CPPFLAGS += --std=c++17 -fPIC -O3 $(INCLUDES)
@@ -123,7 +125,7 @@ plugin: $(PREFIX)/plugin/lib/plugin.a
 $(PREFIX)/krypto/lib/krypto.a: $(PREFIX)/libff/lib/libff.a $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/blake2/lib/blake2.a $(PREFIX)/plugin/lib/plugin.a
 	$(eval TMP := $(shell mktemp -d))
 	for lib in $^; do                \
-	    ar --output $(TMP) x $$lib ; \
+	    (cd $(TMP); ar x $$lib;) \
 	done
 	mkdir -p $(dir $@)
 	ar r $@ $(TMP)/*.o
