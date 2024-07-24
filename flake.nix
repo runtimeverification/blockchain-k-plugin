@@ -103,7 +103,7 @@
           '';
         };
 
-        py-krypto-env = prev.poetry2nix.mkPoetryApplication {
+        py-krypto-tests = prev.poetry2nix.mkPoetryApplication {
           python = prev.python310;
           projectDir = ./krypto;
 
@@ -142,9 +142,17 @@
 
           checkPhase = ''
             runHook preCheck
+
             export PATH="${prev.k.openssl.procps.secp256k1}/bin:$PATH"
             export K_PLUGIN_ROOT="${final.blockchain-k-plugin}"
-            pytest -vvv
+
+            pytest src/tests                  \
+              --maxfail=1                     \
+              --verbose                       \
+              --durations=0                   \
+              --numprocesses=$NIX_BUILD_CORES \
+              --dist=worksteal
+
             runHook postCheck
           '';
         };
@@ -167,11 +175,10 @@
       in {
         defaultPackage = pkgs.blockchain-k-plugin;
         packages = {
-          inherit (pkgs) py-krypto-env blockchain-k-plugin;
+          inherit (pkgs) py-krypto-tests blockchain-k-plugin;
         };
         devShell = pkgs.mkShell {
           buildInputs = buildInputs pkgs;
-          packages = [ pkgs.py-krypto-env ];
           shellHook = ''
             ${pkgs.lib.strings.optionalString
             (pkgs.stdenv.isAarch64 && pkgs.stdenv.isDarwin)
