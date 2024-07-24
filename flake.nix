@@ -2,8 +2,11 @@
   description = "Blockchain K plugin";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-21.11";
-    flake-utils.url = "github:numtide/flake-utils";
+    k-framework.url = "github:runtimeverification/k/v7.1.78";
+    nixpkgs.follows = "k-framework/nixpkgs";
+    flake-utils.follows = "k-framework/flake-utils";
+    rv-utils.follows = "k-framework/rv-utils";
+
     cpp-httplib = {
       url =
         "github:yhirose/cpp-httplib/72ce293fed9f9335e92c95ab7d085feed18c0ee8";
@@ -27,7 +30,7 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
+  outputs = { self, nixpkgs, k-framework, flake-utils, rv-utils, cpp-httplib, cryptopp, libff
     , ate-pairing, xbyak }:
     let
       buildInputs = pkgs:
@@ -42,6 +45,7 @@
           pkg-config
           procps
           secp256k1
+          k
         ];
 
       overlay = final: prev: {
@@ -100,7 +104,10 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ overlay ];
+          overlays = [
+            k-framework.overlay
+            overlay
+          ];
         };
       in {
         defaultPackage = pkgs.blockchain-k-plugin;
