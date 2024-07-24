@@ -37,9 +37,13 @@
         with pkgs; [
           autoconf
           automake
+          boost.dev
           cmake
           clang
           gmp
+          gmp.dev
+          mpfr
+          mpfr.dev
           libtool
           openssl.dev
           pkg-config
@@ -84,14 +88,14 @@
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
               "APPLE_SILICON=true"
-            } make libcryptopp libff blake2
+            } make -j$NIX_BUILD_CORES \
+                GMP_PREFIX=${gmp.dev} \
+                MPFR_PREFIX=${mpfr.dev} \
+                BOOST_PREFIX=${boost.dev}
           '';
           installPhase = ''
-            mkdir -p $out/include
-            cp -rv $src/plugin-c $out/include/
-            cp -rv $src/plugin $out/include/
             mkdir -p $out/lib
-            cp -rv build/* $out/lib/
+            cp build/krypto/lib/krypto.a $out/lib
           '';
         };
       };

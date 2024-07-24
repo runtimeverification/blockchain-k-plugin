@@ -1,7 +1,7 @@
 # set default install prefix if not set
 PREFIX ?= $(CURDIR)/build
 
-K_RELEASE ?= $(dir $(shell which kompile))..
+K_INCLUDE ?= $(shell llvm-kompile --include-dir)
 
 DESTDIR         ?=
 INSTALL_PREFIX  ?= /usr/local
@@ -93,7 +93,7 @@ $(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2-compress.o plugin-c/blake2-avx2.o
 # plugin-c
 # --------
 
-INCLUDES := -I $(K_RELEASE)/include/kllvm -I $(K_RELEASE)/include -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_INCLUDE)/kllvm -I $(K_INCLUDE) -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
 
 ifneq ($(APPLE_SILICON),)
     GMP_PREFIX ?= $(shell brew --prefix gmp)
