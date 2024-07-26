@@ -22,7 +22,7 @@ def _source_dir() -> Path:
     if K_PLUGIN_ROOT in os.environ:
         return Path(os.environ[K_PLUGIN_ROOT]) / 'krypto/src'
 
-    return Path(PROJECT_DIR) / 'plugin'
+    return Path(PROJECT_DIR)
 
 
 def _library_path() -> Path:
