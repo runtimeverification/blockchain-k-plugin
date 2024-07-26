@@ -6,3 +6,4 @@
 **/.depend*
 build
 __pycache__/
+result

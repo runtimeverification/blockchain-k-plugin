@@ -35,7 +35,7 @@ jobs:
         with:
           tag: blockchain-k-plugin-concrete-${{ github.sha }}
           distro: jammy
-          llvm-version: 14
+          llvm-version: 15
       - name: 'Compile Deps'
         run: docker exec -t blockchain-k-plugin-concrete-${GITHUB_SHA} /bin/bash -c 'make -j`nproc` CXX=clang++-14 libff libcryptopp'
       - name: 'Compile'
@@ -46,3 +46,23 @@ jobs:
         if: always()
         run: |
           docker stop --time=0 blockchain-k-plugin-concrete-${GITHUB_SHA}
+
+  nix:
+    name: 'Nix'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: normal
+          - runner: ARM64
+    needs: code-quality-checks
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+
+      - name: 'Build plugin'
+        run: GC_DONT_GC=1 nix build .#blockchain-k-plugin --extra-experimental-features 'nix-command flakes' --print-build-logs
+
+      - name: 'Test plugin'
+        run: GC_DONT_GC=1 nix build .#py-krypto-tests --extra-experimental-features 'nix-command flakes' --print-build-logs
