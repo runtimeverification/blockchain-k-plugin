@@ -102,8 +102,8 @@
             mkdir -p $out/krypto/lib
             cp build/krypto/lib/krypto.a $out/krypto/lib
 
-            mkdir -p $out/krypto/src
-            cp plugin/krypto.md $out/krypto/src
+            mkdir -p $out/krypto/src/plugin
+            cp plugin/krypto.md $out/krypto/src/plugin
           '';
         };
 
