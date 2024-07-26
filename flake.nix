@@ -2,8 +2,12 @@
   description = "Blockchain K plugin";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-21.11";
-    flake-utils.url = "github:numtide/flake-utils";
+    k-framework.url = "github:runtimeverification/k/v7.1.78";
+    nixpkgs.follows = "k-framework/nixpkgs";
+    flake-utils.follows = "k-framework/flake-utils";
+    rv-utils.follows = "k-framework/rv-utils";
+    poetry2nix.follows = "k-framework/poetry2nix";
+
     cpp-httplib = {
       url =
         "github:yhirose/cpp-httplib/72ce293fed9f9335e92c95ab7d085feed18c0ee8";
@@ -27,21 +31,26 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, flake-utils, cpp-httplib, cryptopp, libff
+  outputs = { self, nixpkgs, k-framework, poetry2nix, flake-utils, rv-utils, cpp-httplib, cryptopp, libff
     , ate-pairing, xbyak }:
     let
       buildInputs = pkgs:
         with pkgs; [
           autoconf
           automake
+          boost.dev
           cmake
           clang
           gmp
+          gmp.dev
+          mpfr
+          mpfr.dev
           libtool
           openssl.dev
           pkg-config
           procps
           secp256k1
+          k
         ];
 
       overlay = final: prev: {
@@ -76,18 +85,79 @@
           src = final.blockchain-k-plugin-src;
           buildInputs = buildInputs prev;
           dontUseCmakeConfigure = true;
+          patchPhase = ''
+            substituteInPlace Makefile \
+              --replace-fail '-DNDEBUG -g2 -O3' '-DNDEBUG -g2 -O2'
+          '';
           buildPhase = with prev; ''
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
               "APPLE_SILICON=true"
-            } make libcryptopp libff blake2
+            } make -j$NIX_BUILD_CORES \
+                GMP_PREFIX=${gmp.dev} \
+                MPFR_PREFIX=${mpfr.dev} \
+                BOOST_PREFIX=${boost.dev}
           '';
           installPhase = ''
-            mkdir -p $out/include
-            cp -rv $src/plugin-c $out/include/
-            cp -rv $src/plugin $out/include/
-            mkdir -p $out/lib
-            cp -rv build/* $out/lib/
+            mkdir -p $out/krypto/lib
+            cp build/krypto/lib/krypto.a $out/krypto/lib
+
+            mkdir -p $out/krypto/src/plugin
+            cp plugin/krypto.md $out/krypto/src/plugin
+          '';
+        };
+
+        py-krypto-tests = prev.poetry2nix.mkPoetryApplication {
+          python = prev.python310;
+          projectDir = ./krypto;
+
+          buildInputs = [ prev.k.openssl.procps.secp256k1 final.blockchain-k-plugin ];
+
+          overrides = prev.poetry2nix.overrides.withDefaults
+            (finalPython: prevPython: {
+              kframework = prev.pyk-python310.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "hypothesis" x.name)
+                      && !(prev.lib.strings.hasInfix "pytest" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.hypothesis finalPython.pytest ];
+                });
+
+              pytest = prevPython.pytest.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "exceptiongroup" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.exceptiongroup ];
+                });
+
+              hypothesis = prevPython.hypothesis.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "exceptiongroup" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.exceptiongroup ];
+                });
+
+              flake8-type-checking = prevPython.flake8-type-checking.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
+                    ++ [ finalPython.poetry ];
+                });
+            });
+
+          checkPhase = ''
+            runHook preCheck
+
+            export PATH="${prev.k.openssl.procps.secp256k1}/bin:$PATH"
+            export K_PLUGIN_ROOT="${final.blockchain-k-plugin}"
+
+            pytest src/tests                  \
+              --maxfail=1                     \
+              --verbose                       \
+              --durations=0                   \
+              --numprocesses=$NIX_BUILD_CORES \
+              --dist=worksteal
+
+            runHook postCheck
           '';
         };
       };
@@ -100,10 +170,17 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ overlay ];
+          overlays = [
+            poetry2nix.overlays.default
+            k-framework.overlay
+            overlay
+          ];
         };
       in {
         defaultPackage = pkgs.blockchain-k-plugin;
+        packages = {
+          inherit (pkgs) py-krypto-tests blockchain-k-plugin;
+        };
         devShell = pkgs.mkShell {
           buildInputs = buildInputs pkgs;
           shellHook = ''
