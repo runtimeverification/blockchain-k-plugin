@@ -85,6 +85,10 @@
           src = final.blockchain-k-plugin-src;
           buildInputs = buildInputs prev;
           dontUseCmakeConfigure = true;
+          patchPhase = ''
+            substituteInPlace Makefile \
+              --replace-fail '-DNDEBUG -g2 -O3' '-DNDEBUG -g2 -O2'
+          '';
           buildPhase = with prev; ''
             ${
               lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)

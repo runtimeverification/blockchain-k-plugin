@@ -37,8 +37,8 @@ test: build
 .PHONY: libcryptopp
 libcryptopp: $(PREFIX)/libcryptopp/lib/libcryptopp.a
 $(PREFIX)/libcryptopp/lib/libcryptopp.a:
-	cd deps/cryptopp                      \
-	  && $(MAKE)                          \
+	cd deps/cryptopp                      		\
+	  && $(MAKE) CXXFLAGS="-DNDEBUG -g2 -O3" 	\
 	  && $(MAKE) install PREFIX=$(PREFIX)/libcryptopp
 
 
