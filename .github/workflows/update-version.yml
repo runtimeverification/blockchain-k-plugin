@@ -32,5 +32,12 @@ jobs:
           sed -i 's!kframework = "[0-9\.]*"!kframework = "'${K_VERSION}'"!' krypto/pyproject.toml
           poetry -C krypto update
           git add krypto/ && git commit -m "krypto/: sync poetry files pyk version ${K_VERSION}" || true
+      - name: 'Update Nix flake inputs'
+        run: |
+          K_VERSION=v"$(cat deps/k_release)"
+          sed -i 's!    k-framework.url = "github:runtimeverification/k/v[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+"!    k-framework.url = "github:runtimeverification/k/'"${K_VERSION}"'"!' flake.nix
+          nix flake update
+          git add flake.nix flake.lock && git commit -m 'flake.{nix,lock}: update Nix derivations' || true
+
       - name: 'Push updates'
         run: git push
