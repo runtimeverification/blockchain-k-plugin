@@ -42,8 +42,7 @@ def krypto_kompile(kompile: Kompiler) -> Callable[..., Path]:
                 '-lsecp256k1',
                 '-lcrypto',
                 str(_library_path()),
-            ]
-            + (['-lprocps'] if sys.platform == 'linux' else []),
+            ],
         }
         args = {**default_args, **kwargs}
         return kompile(**args)
