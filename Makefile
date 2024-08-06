@@ -46,15 +46,14 @@ $(PREFIX)/libcryptopp/lib/libcryptopp.a:
 # libff
 # -----
 
-LIBFF_CMAKE_FLAGS += -DCMAKE_CXX_FLAGS=-fPIC
+LIBFF_CMAKE_FLAGS += -DCMAKE_CXX_FLAGS=-fPIC -DWITH_PROCPS=OFF
 
 # set OS specific defaults
 ifeq ($(shell uname -s),Darwin)
 # 1. OSX doesn't have /proc/ filesystem
 # 2. fix cmake openssl detection for brew
 SSL_ROOT ?= $(shell brew --prefix openssl)
-LIBFF_CMAKE_FLAGS += -DWITH_PROCPS=OFF \
-                 -DOPENSSL_ROOT_DIR=$(SSL_ROOT)
+LIBFF_CMAKE_FLAGS += -DOPENSSL_ROOT_DIR=$(SSL_ROOT)
 else
 # llvm-backend code doesn't play nice with g++
 export CXX := $(if $(findstring default, $(origin CXX)), clang++, $(CXX))

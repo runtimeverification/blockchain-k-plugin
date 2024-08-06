@@ -19,7 +19,6 @@ RUN    apt-get update             \
             clang-${LLVM_VERSION} \
             cmake                 \
             curl                  \
-            libprocps-dev         \
             libsecp256k1-dev      \
             libssl-dev            \
             libtool

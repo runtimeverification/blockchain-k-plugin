@@ -48,7 +48,6 @@
           libtool
           openssl.dev
           pkg-config
-          procps
           secp256k1
           k
         ];
