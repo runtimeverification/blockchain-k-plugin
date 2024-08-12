@@ -118,8 +118,16 @@
                 (old: {
                   propagatedBuildInputs = prev.lib.filter
                     (x: !(prev.lib.strings.hasInfix "hypothesis" x.name)
-                      && !(prev.lib.strings.hasInfix "pytest" x.name))
-                    old.propagatedBuildInputs ++ [ finalPython.hypothesis finalPython.pytest ];
+                      && !(prev.lib.strings.hasInfix "pytest" x.name)
+                      && !(prev.lib.strings.hasInfix "cmd2" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.hypothesis finalPython.pytest finalPython.cmd2 ];
+                });
+
+              cmd2 = prevPython.cmd2.overridePythonAttrs
+                (old: {
+                  propagatedBuildInputs = prev.lib.filter
+                    (x: !(prev.lib.strings.hasInfix "attrs" x.name))
+                    old.propagatedBuildInputs ++ [ finalPython.attrs ];
                 });
 
               pytest = prevPython.pytest.overridePythonAttrs
