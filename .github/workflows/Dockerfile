@@ -34,3 +34,5 @@ USER ${USER}:${GROUP}
 ENV PATH=/home/${USER}/.local/bin:${PATH}
 RUN    pip install pytest \
     && pytest --version
+RUN    curl -sSL https://install.python-poetry.org | python3 - \
+    && poetry --version
