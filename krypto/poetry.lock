@@ -107,25 +107,25 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "cmd2"
-version = "2.4.3"
+version = "2.5.0"
 description = "cmd2 - quickly build feature-rich and user-friendly interactive command line applications in Python"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "cmd2-2.4.3-py3-none-any.whl", hash = "sha256:f1988ff2fff0ed812a2d25218a081b0fa0108d45b48ba2a9272bb98091b654e6"},
-    {file = "cmd2-2.4.3.tar.gz", hash = "sha256:71873c11f72bd19e2b1db578214716f0d4f7c8fa250093c601265a9a717dee52"},
+    {file = "cmd2-2.5.0-py3-none-any.whl", hash = "sha256:77aa9873259080a86f765bf466e0d9c9e145faacd129b56325940997cc36ca0c"},
+    {file = "cmd2-2.5.0.tar.gz", hash = "sha256:36292d144e5fd62549b50e94e5f36514557fb92e615155ac28763ea4bc13b954"},
 ]
 
 [package.dependencies]
-attrs = ">=16.3.0"
-pyperclip = ">=1.6"
+pyperclip = "*"
 pyreadline3 = {version = "*", markers = "sys_platform == \"win32\""}
-wcwidth = ">=0.1.7"
+wcwidth = "*"
 
 [package.extras]
-dev = ["codecov", "doc8", "flake8", "invoke", "mypy", "nox", "pytest (>=4.6)", "pytest-cov", "pytest-mock", "sphinx", "sphinx-autobuild", "sphinx-rtd-theme", "twine (>=1.11)"]
-test = ["codecov", "coverage", "gnureadline", "pytest (>=4.6)", "pytest-cov", "pytest-mock"]
-validate = ["flake8", "mypy", "types-pkg-resources"]
+dev = ["codecov", "doc8", "invoke", "mypy", "nox", "pytest (>=4.6)", "pytest-cov", "pytest-mock", "ruff", "sphinx", "sphinx-autobuild", "sphinx-rtd-theme", "twine"]
+docs = ["setuptools", "setuptools-scm", "sphinx", "sphinx-autobuild", "sphinx-rtd-theme"]
+test = ["codecov", "coverage", "gnureadline", "pytest", "pytest-cov", "pytest-mock"]
+validate = ["mypy", "ruff", "types-setuptools"]
 
 [[package]]
 name = "colorama"
@@ -312,13 +312,13 @@ dev = ["coverage", "hypothesis", "hypothesmith (>=0.2)", "pre-commit", "pytest",
 
 [[package]]
 name = "flake8-comprehensions"
-version = "3.15.0"
+version = "3.16.0"
 description = "A flake8 plugin to help you write better list/set/dict comprehensions."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "flake8_comprehensions-3.15.0-py3-none-any.whl", hash = "sha256:b7e027bbb52be2ceb779ee12484cdeef52b0ad3c1fcb8846292bdb86d3034681"},
-    {file = "flake8_comprehensions-3.15.0.tar.gz", hash = "sha256:923c22603e0310376a6b55b03efebdc09753c69f2d977755cba8bb73458a5d4d"},
+    {file = "flake8_comprehensions-3.16.0-py3-none-any.whl", hash = "sha256:7c1eadc9d22e765f39857798febe7766b4d9c519793c6c149e3e13bf99693f70"},
+    {file = "flake8_comprehensions-3.16.0.tar.gz", hash = "sha256:9cbf789905a8f03f9d350fb82b17b264d9a16c7ce3542b2a7b871ef568cafabe"},
 ]
 
 [package.dependencies]
@@ -385,13 +385,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.115.3"
+version = "6.115.5"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "hypothesis-6.115.3-py3-none-any.whl", hash = "sha256:d2770b0db08ad666fe6ff36027910039ab681084d13bcf9c057449c2e27099c4"},
-    {file = "hypothesis-6.115.3.tar.gz", hash = "sha256:d4efc8c7371bd4ec906d2777f1f18fee5539e47b3d7c7cdc93d1026ad35d9b33"},
+    {file = "hypothesis-6.115.5-py3-none-any.whl", hash = "sha256:b7733459ae9a93020fac3b91b41473c9b85e975139a152a70d88f3a5caa3fa3f"},
+    {file = "hypothesis-6.115.5.tar.gz", hash = "sha256:4768c5fb426b305462ed31032d6e216a31daaefb1dc3134fdf2795b7961d7cb3"},
 ]
 
 [package.dependencies]
@@ -466,13 +466,13 @@ colors = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "kframework"
-version = "7.1.165"
+version = "7.1.166"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "kframework-7.1.165-py3-none-any.whl", hash = "sha256:a22e3cd3a3abc29d379f2022cba2cdecc553986bb582777317aa9f41ce164c11"},
-    {file = "kframework-7.1.165.tar.gz", hash = "sha256:145dd780ecb1bc38492ed6190a9a4caa13741e0a6d81e4ea6fcf4b8bfdbbbeb7"},
+    {file = "kframework-7.1.166-py3-none-any.whl", hash = "sha256:a040ac35a29c06fe7abec2d305dbc4b632a037a6a4047992605326a5078c8565"},
+    {file = "kframework-7.1.166.tar.gz", hash = "sha256:cf57661f081e1a4309dd639e6bbf71ad38df080111b6e5f793f65e8c5848e69f"},
 ]
 
 [package.dependencies]
@@ -1060,4 +1060,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "b30e5201faa9cf9f4d4d608a00ceaaf91ca9bbcf1cfb98957c8f8c9f141f8442"
+content-hash = "67ae8cb8d70568eaf2cff9785948daa58578ed19a7942a3a329c323d148a1885"
