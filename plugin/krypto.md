@@ -39,7 +39,7 @@ For hooked hash functions, we provide both hex-encoded and raw versions of each 
                     | "Sha3_256" "(" Bytes ")"                    [function, hook(KRYPTO.sha3)]
                     | RipEmd160 ( Bytes )                         [function, hook(KRYPTO.ripemd160)]
                     | Blake2Compress ( Bytes )                    [function, hook(KRYPTO.blake2compress)]
- // ---------------------------------------------------------------------------------------------------------
+ // -----------------------------------------------------------------------------------------------------
 ```
 
 ### Hooked Hash Functions with Raw Outputs
@@ -53,7 +53,7 @@ These functions compute the same hash function as those named above except that 
                     | "Sha512_256raw" "(" Bytes ")"               [function, hook(KRYPTO.sha512_256raw)]
                     | "Sha3_256raw" "(" Bytes ")"                 [function, hook(KRYPTO.sha3raw)]
                     | RipEmd160raw ( Bytes )                      [function, hook(KRYPTO.ripemd160raw)]
- // -------------------------------------------------------------------------------------------------------
+ // ---------------------------------------------------------------------------------------------------
 ```
 
 ### Other Hooked Hash Functions
@@ -69,7 +69,7 @@ As such, we we hide them behind a separate tangle tag to avoid breaking projects
     syntax String ::= Blake2b256 ( Bytes )                        [function, hook(KRYPTO.blake2b256)]
     syntax Bytes  ::= Blake2b256raw ( Bytes )                     [function, hook(KRYPTO.blake2b256raw)]
     syntax Bool   ::= ED25519VerifyMessage( Bytes, Bytes, Bytes ) [function, hook(KRYPTO.ed25519verify)]
- // --------------------------------------------------------------------------------------------------------
+ // ----------------------------------------------------------------------------------------------------
 ```
 
 ECDSA Functions
@@ -86,7 +86,7 @@ For hooked ECDSA functions,
     syntax Bytes  ::= ECDSARecover ( Bytes , Int , Bytes , Bytes ) [function, hook(KRYPTO.ecdsaRecover)]
     syntax String ::= ECDSASign ( Bytes, Bytes )                   [function, hook(KRYPTO.ecdsaSign)]
                     | ECDSAPubKey ( Bytes )                        [function, hook(KRYPTO.ecdsaPubKey)]
- // ---------------------------------------------------------------------------------------------------------
+ // ---------------------------------------------------------------------------------------------------
 ```
 
 BN128 Curve Functions
@@ -112,5 +112,16 @@ The BN128 elliptic curve is defined over 2-dimensional points over the fields of
     syntax Bool ::= isValidPoint(G1Point) [function, hook(KRYPTO.bn128valid)]
                   | isValidPoint(G2Point) [function, symbol(isValidG2Point), hook(KRYPTO.bn128g2valid)]
  // ---------------------------------------------------------------------------------------------------
+```
+
+C-KZG Functions
+---------------
+
+```k
+    syntax Bytes ::= pointEvaluation(Bytes) [function, hook(KRYPTO.pointEvaluation)]
+ // --------------------------------------------------------------------------------
+```
+
+```k
 endmodule
 ```
