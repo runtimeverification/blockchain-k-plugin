@@ -72,6 +72,27 @@ $(PREFIX)/libff/lib/libff.a:
 	  && $(MAKE) install
 
 
+# ----------
+# c-kzg-4844
+# ----------
+
+C_KZG_4844 := deps/c-kzg-4844
+C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
+
+$(C_KZG_4844)/lib/libblst.a:
+	CC=clang $(MAKE) -C $(C_KZG_4844)/src build_blst
+
+$(C_KZG_4844)/lib/libckzg.o: $(C_KZG_4844)/src/ckzg.c
+	clang $(C_KZG_4844_CFLAGS) $< -c -o $@
+
+$(PREFIX)/c-kzg-4844/lib/libckzg.a: $(C_KZG_4844)/lib/libckzg.o $(C_KZG_4844)/lib/libblst.a
+	mkdir -p $(dir $@)
+	ar r $@ $^
+
+.PHONY: c-kzg-4844
+c-kzg-4844: $(PREFIX)/c-kzg-4844/lib/libckzg.a
+
+
 # ------
 # blake2
 # ------
@@ -92,7 +113,7 @@ $(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2-compress.o plugin-c/blake2-avx2.o
 # plugin-c
 # --------
 
-INCLUDES := -I $(K_INCLUDE)/kllvm -I $(K_INCLUDE) -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib
+INCLUDES := -I $(K_INCLUDE)/kllvm -I $(K_INCLUDE) -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib -I$(C_KZG_4844)/inc -I$(C_KZG_4844)/src
 
 ifneq ($(APPLE_SILICON),)
     GMP_PREFIX ?= $(shell brew --prefix gmp)
@@ -106,7 +127,7 @@ endif
 
 CPPFLAGS += --std=c++17 -fPIC -O3 $(INCLUDES)
 
-plugin-c/%.o: plugin-c/%.cpp $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/libff/lib/libff.a
+plugin-c/%.o: plugin-c/%.cpp $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/libff/lib/libff.a $(PREFIX)/c-kzg-4844/lib/libckzg.a
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
 
 $(PREFIX)/plugin/lib/plugin.a: plugin-c/crypto.o plugin-c/hash_ext.o plugin-c/json.o plugin-c/k.o plugin-c/plugin_util.o
@@ -121,7 +142,7 @@ plugin: $(PREFIX)/plugin/lib/plugin.a
 # krypto
 # ------
 
-$(PREFIX)/krypto/lib/krypto.a: $(PREFIX)/libff/lib/libff.a $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/blake2/lib/blake2.a $(PREFIX)/plugin/lib/plugin.a
+$(PREFIX)/krypto/lib/krypto.a: $(PREFIX)/libff/lib/libff.a $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/blake2/lib/blake2.a $(PREFIX)/plugin/lib/plugin.a $(PREFIX)/c-kzg-4844/lib/libckzg.a
 	$(eval TMP := $(shell mktemp -d))
 	for lib in $^; do                \
 	    (cd $(TMP); ar x $$lib;) \
