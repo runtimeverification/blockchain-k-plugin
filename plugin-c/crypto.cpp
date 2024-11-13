@@ -362,4 +362,18 @@ bool hook_KRYPTO_bn128ate(list *g1, list *g2) {
   }
   return alt_bn128_final_exponentiation(accum) == alt_bn128_GT::one();
 }
+
+uint8_t const VERSIONED_HASH_VERSION_KZG = 0x01;
+
+struct string *kzg_to_versioned_hash(struct string *commitment) {
+  if(len(commitment) != 48) {
+        throw std::runtime_error("kzg commitment: invalid length");
+  }
+  struct string* commitment_sha256 = hook_KRYPTO_sha256raw(struct string *str);
+  struct string *result = allocString(64);
+  memcpy(result->data, VERSIONED_HASH_VERSION_KZG,1);
+  memcpy(result->data + 2, commitment_sha256 -> data + 2, 31);
+  return result;
+}
+
 }
