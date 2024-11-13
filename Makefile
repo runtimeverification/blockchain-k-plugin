@@ -80,10 +80,10 @@ C_KZG_4844 := $(CURDIR)/deps/c-kzg-4844
 C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
 
 $(C_KZG_4844)/lib/libblst.a:
-	CC=clang $(MAKE) -C $(C_KZG_4844)/src build_blst
+	$(MAKE) -C $(C_KZG_4844)/src build_blst
 
 $(C_KZG_4844)/lib/libckzg.o: $(C_KZG_4844)/src/ckzg.c $(C_KZG_4844)/lib/libblst.a
-	clang $(C_KZG_4844_CFLAGS) $< -c -o $@
+	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
 
 $(PREFIX)/c-kzg-4844/lib/libckzg.a: $(C_KZG_4844)/lib/libckzg.o $(C_KZG_4844)/lib/libblst.a
 	mkdir -p $(dir $@)
