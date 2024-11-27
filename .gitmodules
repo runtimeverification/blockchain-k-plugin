@@ -10,3 +10,6 @@
 	path = deps/cryptopp
 	url = https://github.com/weidai11/cryptopp
 	ignore = untracked
+[submodule "deps/c-kzg-4844"]
+	path = deps/c-kzg-4844
+	url = https://github.com/ethereum/c-kzg-4844.git
