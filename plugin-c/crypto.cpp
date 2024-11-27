@@ -11,6 +11,8 @@
 #include "blake2.h"
 #include "plugin_util.h"
 
+#include "c-kzg-4844/src/eip4844/eip4844.h"
+
 using namespace CryptoPP;
 using namespace libff;
 
@@ -369,11 +371,86 @@ struct string *kzg_to_versioned_hash(struct string *commitment) {
   if(len(commitment) != 48) {
         throw std::runtime_error("kzg commitment: invalid length");
   }
-  struct string* commitment_sha256 = hook_KRYPTO_sha256raw(commitment);
-  struct string *result = allocString(64);
+  struct string *commitment_sha256 = hook_KRYPTO_sha256raw(commitment),
+                *result = allocString(64);
   memcpy(result->data, &VERSIONED_HASH_VERSION_KZG,1);
   memcpy(result->data + 2, commitment_sha256 -> data + 2, 31);
-  delete commitment_sha256;
+  free commitment_sha256 -> data;
+  free commitment_sha256;
+  commitment_sha256 = NULL;
+  return result;
+}
+
+static void setup(KGZSettings *s) {
+    FILE *fp;
+    C_KZG_RET ret;
+
+    /* Open the mainnet trusted setup file */
+    fp = fopen("deps/k-czg-4844/trusted_setup.txt", "r");
+    if(fp == NULL){
+      throw std::runtime_error("unable to open setup file");
+    }
+
+    /* Load the trusted setup file */
+    ret = load_trusted_setup_file(s, fp, 0);
+    if(ret != C_KZG_OK) {
+      throw std::runtime_error("unable to load trusted setup file");
+    }
+
+    fclose(fp);
+}
+
+//int const FIELD_ELEMENTS_PER_BLOB = 4096;
+//BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513;
+static const uint8_t FIELD_ELEMENTS_PER_BLOB[32] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00
+};
+
+static const uint8_t BLS_MODULUS[32] = {
+    0x73, 0xED, 0xDC, 0xFF, 0x41, 0xB3, 0xA6, 0xD2, 
+    0xC3, 0x6B, 0xA9, 0xE0, 0xD3, 0xEB, 0x3F, 0xF1,
+    0x87, 0x7D, 0x5F, 0xA2, 0x02, 0x7F, 0x32, 0x64,
+    0xDC, 0xB8, 0x18, 0x03, 0xA8, 0x39, 0xF6, 0x03
+};
+
+struct string *point_evaluation_precompile(struct string *input) {
+  //# The data is encoded as follows: versioned_hash | z | y | commitment | proof | with z and y being padded 32 byte big endian values
+  if (len(input) != 192) {
+    throw std::runtime_error("input: invalid length");
+  }
+  struct string *versioned_hash = allocString(64),
+                *y = allocString(64),
+                *z = allocString(64),
+                *commitment = allocString(96),
+                *proof = allocString(96);
+  memcpy(versioned_hash->data, input->data, 32);
+  memcpy(z->data, input->data + 32, 32);
+  memcpy(y->data, input->data + 64, 32);
+  memcpy(commitment->data, input->data + 96, 48);
+  memcpy(proof->data, input->data + 144, 48);
+
+  struct string *computed_versioned_hash = kzg_to_versioned_hash(&commitment);
+  if (memcmp(versioned_hash.data, computed_versioned_hash->data, 32) != 0) {
+    throw std::runtime_error("input: versioned hash mismatch");
+  }
+
+  bool ok;
+  KCZGSettings *settings = malloc(sizeof(KZGSettings));
+  setup(settings);
+  verify_kzg_proof(&ok, commitment, z, y, proof, settings);
+  if(!ok){
+    throw std::runtime_error("error verifying kzg proof");
+  }
+
+  struct string *result = allocString(64);
+
+  // Copy FIELD_ELEMENTS_PER_BLOB and BLS_MODULUS directly
+  memcpy(result->data, FIELD_ELEMENTS_PER_BLOB, 32);
+  memcpy(result->data + 32, BLS_MODULUS, 32);
+
   return result;
 }
 
