@@ -9,12 +9,59 @@
 #include <libff/common/profiling.hpp>
 
 #include "blake2.h"
+#include "blst.h"
+#include "ckzg.h"
 #include "plugin_util.h"
 
 using namespace CryptoPP;
 using namespace libff;
 
 extern "C" {
+
+struct string *hook_KRYPTO_pointEvaluation(struct string *str) {
+  // Verify p(z) = y given commitment that corresponds to the polynomial p(x) and a KZG proof.
+  // Also verify that the provided commitment matches the provided versioned_hash.
+  int64_t str_len = len(str);
+  // assert str_len == 192
+
+  // The data is encoded as follows: versioned_hash | z | y | commitment | proof | with z and y being padded 32 byte big endian values
+  Bytes32 versioned_hash, z, y;
+  Bytes48 commitment, proof;
+  memcpy(versioned_hash.bytes, &str->data[0], 32);
+  memcpy(z.bytes, &str->data[32], 32);
+  memcpy(y.bytes, &str->data[64], 32);
+  memcpy(commitment.bytes, &str->data[96], 48);
+  memcpy(proof.bytes, &str->data[144], 48);
+
+  // Verify commitment matches versioned_hash
+  SHA256 h;
+  unsigned char digest[32];
+  h.CalculateDigest(digest, commitment.bytes, sizeof(commitment.bytes));
+  Bytes32 calculated_versioned_hash = { 1 };
+  memcpy(&calculated_versioned_hash.bytes[1], &digest[1], 31);
+  int different_hash = bcmp(&versioned_hash, &calculated_versioned_hash, 32);
+  if(different_hash) {
+      //fail
+  }
+
+  // Verify KZG proof with z and y in big endian format
+  // assert verify_kzg_proof(commitment, z, y, proof)
+  bool ok;
+  C_KZG_RET verified = verify_kzg_proof(&ok, &commitment, &z, &y, &proof, nullptr);
+  if (verified != C_KZG_OK) {
+      //fail
+  }
+
+  // Return FIELD_ELEMENTS_PER_BLOB and BLS_MODULUS as padded 32 byte big endian values
+  // return Bytes(U256(FIELD_ELEMENTS_PER_BLOB).to_be_bytes32() + U256(BLS_MODULUS).to_be_bytes32())
+  const uint64_t bls_modulus[8] = {
+     0, 0, 0, FIELD_ELEMENTS_PER_BLOB,
+     0x73eda753299d7d48, 0x3339d80809a1d805,
+     0x53bda402fffe5bfe, 0xffffffff00000001 
+  };
+
+  return nullptr;
+}
 
 struct string *hook_KRYPTO_sha512raw(struct string *str) {
   SHA512 h;
