@@ -112,5 +112,13 @@ The BN128 elliptic curve is defined over 2-dimensional points over the fields of
     syntax Bool ::= isValidPoint(G1Point) [function, hook(KRYPTO.bn128valid)]
                   | isValidPoint(G2Point) [function, symbol(isValidG2Point), hook(KRYPTO.bn128g2valid)]
  // ---------------------------------------------------------------------------------------------------
+```
+
+EIP4844 Hook Functions
+----------------------
+
+```k
+    syntax Bytes ::= verifyKZGProof ( Bytes, Bytes, Bytes, Bytes ) [function, hook(KRYPTO.verifyKZGProof)]
+ // ---------------------------------------------------------------------------------------------------
 endmodule
 ```
