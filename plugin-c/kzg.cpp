@@ -9,7 +9,7 @@ static void setup(KZGSettings *s) {
     C_KZG_RET ret;
 
     /* Open the mainnet trusted setup file */
-    fp = fopen("deps/k-czg-4844/trusted_setup.txt", "r");
+    fp = fopen("deps/c-kzg-4844/src/trusted_setup.txt", "r");
     if(fp == NULL){
       throw std::runtime_error("unable to open setup file");
     }
