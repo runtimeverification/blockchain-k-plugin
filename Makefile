@@ -80,7 +80,8 @@ C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
 
 $(PREFIX)/c-kzg-4844/lib/libblst.a:
 	$(MAKE) -C $(C_KZG_4844)/src build_blst
-	mv $(C_KZG_4844)/lib/libblst.a $(PREFIX)/c-kzg-4844/lib/
+	mkdir -p $(PREFIX)/c-kzg-4844/lib/
+	cp $(C_KZG_4844)/blst/libblst.a $(PREFIX)/c-kzg-4844/lib/
 
 $(C_KZG_4844)/lib/libckzg.o: $(C_KZG_4844)/src/ckzg.c $(PREFIX)/c-kzg-4844/lib/libblst.a
 	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
