@@ -527,14 +527,14 @@ colors = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "kframework"
-version = "7.1.202"
+version = "7.1.203"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "kframework-7.1.202-py3-none-any.whl", hash = "sha256:1b682f985c78b4ac1b5a04da650c0b71a46bc46d08a42f49866536d23b72b568"},
-    {file = "kframework-7.1.202.tar.gz", hash = "sha256:4612fb861ae522a6c5c5a85162548af4e9df10c00101419834173f4d4666a352"},
+    {file = "kframework-7.1.203-py3-none-any.whl", hash = "sha256:a77708ee242d7924965184c35b1ecb4e7151f99238f5d73cf6f65b75f3cd5d7c"},
+    {file = "kframework-7.1.203.tar.gz", hash = "sha256:e567eb936898acd0ac61a1a1d599925ebe0ee2fdb2832c4f04dac25aefdae7f1"},
 ]
 
 [package.dependencies]
@@ -1194,4 +1194,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "84892026e63837548b3e082b0e121c7f10d52538d1c03cf139dfc1eb0814bbab"
+content-hash = "fbae507805bb9c579cedf03fae398b84fbe0c1f734fba4a08ea848bd995f1efa"
