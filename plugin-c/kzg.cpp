@@ -32,16 +32,16 @@ bool hook_KRYPTO_verifyKZGProof(struct string *commitment, struct string *z,
     once = false;
   }
   if (len(commitment) != 48) {
-    std::invalid_argument("Length of commitment is not 48 bytes");
+    throw std::invalid_argument("Length of commitment is not 48 bytes");
   }
   if (len(z) != 32) {
-    std::invalid_argument("Length of z field is not 32 bytes");
+    throw std::invalid_argument("Length of z field is not 32 bytes");
   }
   if (len(y) != 32) {
-    std::invalid_argument("Length of y field is not 32 bytes");
+    throw std::invalid_argument("Length of y field is not 32 bytes");
   }
   if (len(proof) != 48) {
-    std::invalid_argument("Length of proof is not 48 bytes");
+    throw std::invalid_argument("Length of proof is not 48 bytes");
   }
   bool res;
   verify_kzg_proof(&res, (Bytes48 *)&commitment->data[0],

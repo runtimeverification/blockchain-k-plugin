@@ -118,7 +118,7 @@ EIP4844 Hook Functions
 ----------------------
 
 ```k
-    syntax Bytes ::= verifyKZGProof ( Bytes, Bytes, Bytes, Bytes ) [function, hook(KRYPTO.verifyKZGProof)]
+    syntax Bool ::= verifyKZGProof ( Bytes, Bytes, Bytes, Bytes ) [function, hook(KRYPTO.verifyKZGProof)]
  // ---------------------------------------------------------------------------------------------------
 endmodule
 ```
