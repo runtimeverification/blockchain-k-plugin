@@ -2,17 +2,20 @@
 #include "plugin_util.h"
 #include "setup/setup.h"
 
+extern const char *trusted_setup_str;
+
 extern "C" {
 
 static void setup(KZGSettings *s) {
   FILE *fp;
   C_KZG_RET ret;
 
-  /* Open the mainnet trusted setup file */
-  fp = fopen("deps/c-kzg-4844/src/trusted_setup.txt", "r");
-  if (fp == NULL) {
-    throw std::runtime_error("unable to open setup file");
-  }
+  /* Create temporary file to write the contents of mainnet trusted setup string */
+  fp = tmpfile();
+  fputs(trusted_setup_str, fp);
+
+  /* Rewind the mainnet trusted setup file */
+  rewind(fp);
 
   /* Load the trusted setup file */
   ret = load_trusted_setup_file(s, fp, 0);

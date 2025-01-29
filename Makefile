@@ -78,6 +78,10 @@ $(PREFIX)/libff/lib/libff.a:
 C_KZG_4844 := $(CURDIR)/deps/c-kzg-4844
 C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
 
+$(PREFIX)/c-kzg-4844/trusted_setup.cpp: $(C_KZG_4844)/src/trusted_setup.txt
+	mkdir -p $(dir $@)
+	sh create_trusted_setup_str.sh $< $@
+
 $(PREFIX)/c-kzg-4844/lib/libblst.a:
 	$(MAKE) -C $(C_KZG_4844)/src build_blst
 	mkdir -p $(dir $@)
@@ -86,7 +90,10 @@ $(PREFIX)/c-kzg-4844/lib/libblst.a:
 $(C_KZG_4844)/lib/libckzg.o: $(C_KZG_4844)/src/ckzg.c $(PREFIX)/c-kzg-4844/lib/libblst.a
 	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
 
-$(PREFIX)/c-kzg-4844/lib/libckzg.a: $(C_KZG_4844)/lib/libckzg.o $(PREFIX)/c-kzg-4844/lib/libblst.a
+$(C_KZG_4844)/lib/trusted_setup.o: $(PREFIX)/c-kzg-4844/trusted_setup.cpp
+	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
+
+$(PREFIX)/c-kzg-4844/lib/libckzg.a: $(C_KZG_4844)/lib/libckzg.o $(C_KZG_4844)/lib/trusted_setup.o $(PREFIX)/c-kzg-4844/lib/libblst.a
 	mkdir -p $(dir $@)
 	ar r $@ $^
 
