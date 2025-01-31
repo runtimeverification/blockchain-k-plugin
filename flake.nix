@@ -106,7 +106,7 @@
               ${
                 lib.strings.optionalString (stdenv.isAarch64 && stdenv.isDarwin)
                 "APPLE_SILICON=true"
-              } make -j1 \
+              } make -j$NIX_BUILD_CORES \
                   GMP_PREFIX=${gmp.dev} \
                   MPFR_PREFIX=${mpfr.dev} \
                   BOOST_PREFIX=${boost.dev}
