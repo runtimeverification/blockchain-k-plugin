@@ -10,7 +10,8 @@ static void setup(KZGSettings *s) {
   FILE *fp;
   C_KZG_RET ret;
 
-  /* Create temporary file to write the contents of mainnet trusted setup string */
+  /* Create temporary file to write the contents of mainnet trusted setup string
+   */
   fp = tmpfile();
   fputs(trusted_setup_str, fp);
 
