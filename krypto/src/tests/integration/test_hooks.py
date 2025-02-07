@@ -22,6 +22,7 @@ def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
         requires "plugin/krypto.md"
 
         module TEST
+            imports BOOL
             imports KRYPTO
             syntax Pgm ::= Bool | Bytes | String | G1Point
             configuration <k> $PGM:Pgm </k>
@@ -436,6 +437,29 @@ def test_verify_kzg_proof(definition_dir: Path, com: str, z: str, y: str, pr: st
     # Given
     pgm = f'verifyKZGProof({hex2bytes(com)}, {hex2bytes(z)}, {hex2bytes(y)}, {hex2bytes(pr)})'
     expected = f'<k>\n  {output} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+VERIFYKZGPROOF_REGRESSION_TEST_DATA: Final = (
+    (
+        '93efc82d2017e9c57834a1246463e64774e56183bb247c8fc9dd98c56817e878d97b05f5c8d900acf1fbbbca6f146556',
+        '73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000',
+        '0000000000000000000000000000000000000000000000000000000000000000',
+        '92c51ff81dd71dab71cefecd79e8274b4b7ba36a0f40e2dc086bc4061c7f63249877db23297212991fd63e07b7ebc348',
+    ),
+)
+
+
+@pytest.mark.parametrize('com,z,y,pr', VERIFYKZGPROOF_REGRESSION_TEST_DATA, ids=count())
+def test_verify_kzg_proof_regression(definition_dir: Path, com: str, z: str, y: str, pr: str) -> None:
+    # Given
+    pgm = f'verifyKZGProof({hex2bytes(com)}, {hex2bytes(z)}, {hex2bytes(y)}, {hex2bytes(pr)}) andBool verifyKZGProof({hex2bytes(com)}, {hex2bytes(z)}, {hex2bytes(y)}, {hex2bytes(pr)})'
+    expected = '<k>\n  true ~> .K\n</k>'
 
     # When
     actual = run(definition_dir, pgm)
