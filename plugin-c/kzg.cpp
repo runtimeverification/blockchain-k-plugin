@@ -29,7 +29,7 @@ static void setup(KZGSettings *s) {
 
 bool hook_KRYPTO_verifyKZGProof(struct string *commitment, struct string *z,
                                 struct string *y, struct string *proof) {
-  KZGSettings settings;
+  static thread_local KZGSettings settings;
   static thread_local bool once = true;
   if (once) {
     setup(&settings);
