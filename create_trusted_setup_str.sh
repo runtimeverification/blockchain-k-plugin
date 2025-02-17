@@ -8,11 +8,11 @@ printf '%s' 'const char *trusted_setup_str = R"(' > "$OUT"
 first_line=1
 while IFS='' read -r line; do
   if [ "$first_line" = "0" ]; then
-    echo >> "$OUT"
+    printf "\n" >> "$OUT"
   else
     first_line=0
   fi
-  echo -n "$line" >> "$OUT"
+  printf "%s" "$line" >> "$OUT"
 done < "$IN"
 
-echo -n ")\";" >> "$OUT"
+printf "%s" ')";' >> "$OUT"
