@@ -30,9 +30,18 @@
       url = "github:herumi/xbyak/f0a8f7faa27121f28186c2a7f4222a9fc66c283d";
       flake = false;
     };
+    ckzg4844 = {
+      url = "github:ethereum/c-kzg-4844/d1168fc791b910286c7308f7dd99fa566567e942";
+      flake = false;
+    };
+    blst = {
+      url = "github:supranational/blst/e99f7db0db413e2efefcfd077a4e335766f39c27";
+      flake = false;
+    };
   };
   outputs = { self, nixpkgs, k-framework, poetry2nix, flake-utils, rv-utils
-    , cpp-httplib, cryptopp, libff, ate-pairing, xbyak, ... }@inputs:
+    , cpp-httplib, cryptopp, libff, ate-pairing, xbyak
+    , ckzg4844, blst, ... }@inputs:
     let
       buildInputs = pkgs:
         with pkgs; [
@@ -72,12 +81,15 @@
               mkdir -p $out/deps/cpp-httplib
               mkdir -p $out/deps/cryptopp
               mkdir -p $out/deps/libff
+              mkdir -p $out/deps/c-kzg-4844
               cp -rv ${cpp-httplib}/* $out/deps/cpp-httplib/
               cp -rv ${cryptopp}/* $out/deps/cryptopp/
               cp -rv ${libff}/* $out/deps/libff/
+              cp -rv ${ckzg4844}/* $out/deps/c-kzg-4844/
               chmod -R u+w $out
               cp -rv ${ate-pairing}/* $out/deps/libff/depends/ate-pairing/
               cp -rv ${xbyak}/* $out/deps/libff/depends/xbyak/
+              cp -rv ${blst}/* $out/deps/c-kzg-4844/blst/
             '';
           };
 

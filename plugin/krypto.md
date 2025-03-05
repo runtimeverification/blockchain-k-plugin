@@ -112,5 +112,14 @@ The BN128 elliptic curve is defined over 2-dimensional points over the fields of
     syntax Bool ::= isValidPoint(G1Point) [function, hook(KRYPTO.bn128valid)]
                   | isValidPoint(G2Point) [function, symbol(isValidG2Point), hook(KRYPTO.bn128g2valid)]
  // ---------------------------------------------------------------------------------------------------
+```
+
+EIP4844 Hook Functions
+----------------------
+
+verifyKZGProof accepts a commitment, fields z and y, and a proof. It requires that the length of the commitment, z, y, and proof is 48, 32, 32 and 48 bytes respectively. Additionally, the provided field elements must be strictly less than BLS\_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513.
+```k
+    syntax Bool ::= verifyKZGProof ( Bytes, Bytes, Bytes, Bytes ) [function, hook(KRYPTO.verifyKZGProof)]
+ // -----------------------------------------------------------------------------------------------------
 endmodule
 ```
