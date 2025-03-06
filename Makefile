@@ -77,6 +77,7 @@ $(PREFIX)/libff/lib/libff.a:
 
 C_KZG_4844 := $(CURDIR)/deps/c-kzg-4844
 C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
+C_KZG_4844_CXXFLAGS := $(C_KZG_4844_CFLAGS) -std=c++17
 
 $(PREFIX)/c-kzg-4844/trusted_setup.cpp: $(C_KZG_4844)/src/trusted_setup.txt
 	mkdir -p $(dir $@)
@@ -91,7 +92,7 @@ $(C_KZG_4844)/lib/libckzg.o: $(C_KZG_4844)/src/ckzg.c $(PREFIX)/c-kzg-4844/lib/l
 	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
 
 $(C_KZG_4844)/lib/trusted_setup.o: $(PREFIX)/c-kzg-4844/trusted_setup.cpp
-	$(CC) $(C_KZG_4844_CFLAGS) $< -c -o $@
+	$(CXX) $(C_KZG_4844_CXXFLAGS) $< -c -o $@
 
 $(PREFIX)/c-kzg-4844/lib/libckzg.a: $(C_KZG_4844)/lib/libckzg.o $(C_KZG_4844)/lib/trusted_setup.o $(PREFIX)/c-kzg-4844/lib/libblst.a
 	mkdir -p $(dir $@)
