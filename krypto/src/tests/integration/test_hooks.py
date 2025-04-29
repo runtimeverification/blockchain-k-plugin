@@ -716,7 +716,6 @@ VERIFYBLS12G2MUL_TEST_DATA: Final = (
     (BLS12_G2_INFTY, 2**256 - 1, BLS12_G2_INFTY, 'max_scalar_times_inf'),
     (BLS12_G2, 0, BLS12_G2_INFTY, 'zero_times_generator'),
     (BLS12_G2, 1, BLS12_G2, 'one_times_generator'),
-    # (BLS12_G2, BLS12_Q, BLS12_G2_INFTY, 'q_times_generator'),
     (BLS12_P2, 0, BLS12_G2_INFTY, 'zero_times_point'),
     (BLS12_P2, 1, BLS12_P2, 'one_times_point'),
     (
