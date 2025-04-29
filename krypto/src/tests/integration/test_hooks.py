@@ -853,7 +853,9 @@ def test_verify_bls12fptog1(definition_dir: Path, id: str, first: int, result: t
 # https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_map_fp2_to_g2.py
 VERIFYBLS12FP2TOG2_TEST_DATA: Final = (
     ('fp_0', (0, 0), BLS12_G2_POINT_ZERO_FP),
-    ('fp_p_minus_1', (BLS12_P - 1, BLS12_P - 1),
+    (
+        'fp_p_minus_1',
+        (BLS12_P - 1, BLS12_P - 1),
         (
             (
                 0x9BF1B857D8C15F317F649ACCFA7023EF21CFC03059936B83B487DB476FF9D2FE64C6147140A5F0A436B875F51FFDF07,
@@ -863,7 +865,7 @@ VERIFYBLS12FP2TOG2_TEST_DATA: Final = (
                 0xDD416A927AB1C15490AB753C973FD377387B12EFCBE6BED2BF768B9DC95A0CA04D1A8F0F30DBC078A2350A1F823CFD3,
                 0x171565CE4FCD047B35EA6BCEE4EF6FDBFEC8CC73B7ACDB3A1EC97A776E13ACDFEFFC21ED6648E3F0EEC53DDB6C20FB61,
             ),
-        )
+        ),
     ),
 )
 
