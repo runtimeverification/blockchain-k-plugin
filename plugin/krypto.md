@@ -155,7 +155,7 @@ functions evaluate to `#False`.
     syntax Bool    ::= BLS12G1OnCurve    ( G1Point )           [function, hook(KRYPTO.bls12G1OnCurve)]
     syntax Bool    ::= BLS12G2OnCurve    ( G2Point )           [function, hook(KRYPTO.bls12G2OnCurve)]
 
-    syntax Int ::= "BLS12_FIELD_MODULUS"  [macro]
+    syntax Int ::= "BLS12_FIELD_MODULUS"  [alias]
     rule BLS12_FIELD_MODULUS => 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
  // -----------------------------------------------------------------------------------------------------
 endmodule
