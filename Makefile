@@ -79,6 +79,8 @@ C_KZG_4844 := $(CURDIR)/deps/c-kzg-4844
 C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
 C_KZG_4844_CXXFLAGS := $(C_KZG_4844_CFLAGS) -std=c++17
 
+BLST := $(C_KZG_4844)/blst
+
 $(PREFIX)/c-kzg-4844/trusted_setup.cpp: $(C_KZG_4844)/src/trusted_setup.txt
 	mkdir -p $(dir $@)
 	sh create_trusted_setup_str.sh $< $@
@@ -122,7 +124,7 @@ $(PREFIX)/blake2/lib/blake2.a: plugin-c/blake2-compress.o plugin-c/blake2-avx2.o
 # plugin-c
 # --------
 
-INCLUDES := -I $(K_INCLUDE)/kllvm -I $(K_INCLUDE) -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib -I$(C_KZG_4844)/inc -I$(C_KZG_4844)/src
+INCLUDES := -I $(K_INCLUDE)/kllvm -I $(K_INCLUDE) -I $(PREFIX)/libcryptopp/include -I $(PREFIX)/libff/include -I dummy-version -I plugin -I plugin-c -I deps/cpp-httplib -I$(C_KZG_4844)/inc -I$(C_KZG_4844)/src -I$(BLST)/bindings
 
 ifneq ($(APPLE_SILICON),)
     GMP_PREFIX ?= $(shell brew --prefix gmp)

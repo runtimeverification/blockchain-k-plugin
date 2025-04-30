@@ -24,7 +24,7 @@ def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
         module TEST
             imports BOOL
             imports KRYPTO
-            syntax Pgm ::= Bool | Bytes | String | G1Point
+            syntax Pgm ::= Bool | Bytes | String | G1Point | G2Point
             configuration <k> $PGM:Pgm </k>
         endmodule
     """
@@ -460,6 +460,524 @@ def test_verify_kzg_proof_regression(definition_dir: Path, com: str, z: str, y: 
     # Given
     pgm = f'verifyKZGProof({hex2bytes(com)}, {hex2bytes(z)}, {hex2bytes(y)}, {hex2bytes(pr)}) andBool verifyKZGProof({hex2bytes(com)}, {hex2bytes(z)}, {hex2bytes(y)}, {hex2bytes(pr)})'
     expected = '<k>\n  true ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+BLS12_X: Final = -0xD201000000010000
+BLS12_Q: Final = BLS12_X**4 - BLS12_X**2 + 1
+BLS12_P: Final = (BLS12_X - 1) ** 2 * BLS12_Q // 3 + BLS12_X
+
+BLS12_G1_INFTY: Final = (0, 0)
+BLS12_G1: Final = (
+    0x17F1D3A73197D7942695638C4FA9AC0FC3688C4F9774B905A14E3A3F171BAC586C55E83FF97A1AEFFB3AF00ADB22C6BB,
+    0x8B3F481E3AAA0F1A09E30ED741D8AE4FCF5E095D5D00AF600DB18CB2C04B3EDD03CC744A2888AE40CAA232946C5E7E1,
+)
+BLS12_2G1: Final = (
+    0x572CBEA904D67468808C8EB50A9450C9721DB309128012543902D0AC358A62AE28F75BB8F1C7C42C39A8C5529BF0F4E,
+    0x166A9D8CABC673A322FDA673779D8E3822BA3ECB8670E461F73BB9021D5FD76A4C56D9D4CD16BD1BBA86881979749D28,
+)
+BLS12_P1: Final = (  # random point in G1
+    0x112B98340EEE2777CC3C14163DEA3EC97977AC3DC5C70DA32E6E87578F44912E902CCEF9EFE28D4A78B8999DFBCA9426,
+    0x186B28D92356C4DFEC4B5201AD099DBDEDE3781F8998DDF929B4CD7756192185CA7B8F4EF7088F813270AC3D48868A21,
+)
+BLS12_2P1: Final = (
+    0x15222CDDBABDD764C4BEE0B3720322A65FF4712C86FC4B1588D0C209210A0884FA9468E855D261C483091B2BF7DE6A63,
+    0x9F9EDB99BC3B75D7489735C98B16AB78B9386C5F7A1F76C7E96AC6EB5BBDE30DBCA31A74EC6E0F0B12229EECEA33C39,
+)
+BLS12_P1_PLUS_G1: Final = (
+    0xA40300CE2DEC9888B60690E9A41D3004FDA4886854573974FAB73B046D3147BA5B7A5BDE85279FFEDE1B45B3918D82D,
+    0x6D3D887E9F53B9EC4EB6CEDF5607226754B07C01ACE7834F57F3E7315FAEFB739E59018E22C492006190FBA4A870025,
+)
+
+BLS12_P1_NOT_IN_SUBGROUP: Final = (0, 2)
+BLS12_2P1_NOT_IN_SUBGROUP: Final = (0, BLS12_P - 2)
+
+BLS12_G1_POINT_ZERO_FP = (
+    0x11A9A0372B8F332D5C30DE9AD14E50372A73FA4C45D5F2FA5097F2D6FB93BCAC592F2E1711AC43DB0519870C7D0EA415,
+    0x92C0F994164A0719F51C24BA3788DE240FF926B55F58C445116E8BC6A47CD63392FD4E8E22BDF9FEAA96EE773222133,
+)
+
+
+BLS12_G2_INFTY: Final = ((0, 0), (0, 0))
+BLS12_P2: Final = (
+    (
+        0x103121A2CEAAE586D240843A398967325F8EB5A93E8FEA99B62B9F88D8556C80DD726A4B30E84A36EEABAF3592937F27,
+        0x86B990F3DA2AEAC0A36143B7D7C824428215140DB1BB859338764CB58458F081D92664F9053B50B3FBD2E4723121B68,
+    ),
+    (
+        0xF9E7BA9A86A8F7624AA2B42DCC8772E1AF4AE115685E60ABC2C9B90242167ACEF3D0BE4050BF935EED7C3B6FC7BA77E,
+        0xD22C3652D0DC6F0FC9316E14268477C2049EF772E852108D269D9C38DBA1D4802E8DAE479818184C08F9A569D878451,
+    ),
+)
+BLS12_G2: Final = (
+    (
+        0x24AA2B2F08F0A91260805272DC51051C6E47AD4FA403B02B4510B647AE3D1770BAC0326A805BBEFD48056C8C121BDB8,
+        0x13E02B6052719F607DACD3A088274F65596BD0D09920B61AB5DA61BBDC7F5049334CF11213945D57E5AC7D055D042B7E,
+    ),
+    (
+        0xCE5D527727D6E118CC9CDC6DA2E351AADFD9BAA8CBDD3A76D429A695160D12C923AC9CC3BACA289E193548608B82801,
+        0x606C4A02EA734CC32ACD2B02BC28B99CB3E287E85A763AF267492AB572E99AB3F370D275CEC1DA1AAA9075FF05F79BE,
+    ),
+)
+BLS12_P2_PLUS_G2: Final = (
+    (
+        0xB54A8A7B08BD6827ED9A797DE216B8C9057B3A9CA93E2F88E7F04F19ACCC42DA90D883632B9CA4DC38D013F71EDE4DB,
+        0x77EBA4EECF0BD764DCE8ED5F45040DD8F3B3427CB35230509482C14651713282946306247866DFE39A8E33016FCBE52,
+    ),
+    (
+        0x14E60A76A29EF85CBD69F251B9F29147B67CFE3ED2823D3F9776B3A0EFD2731941D47436DC6D2B58D9E65F8438BAD073,
+        0x1586C3C910D95754FEF7A732DF78E279C3D37431C6A2B77E67A00C7C130A8FCD4D19F159CBEB997A178108FFFFFCBD20,
+    ),
+)
+BLS12_2G2: Final = (
+    (
+        0x1638533957D540A9D2370F17CC7ED5863BC0B995B8825E0EE1EA1E1E4D00DBAE81F14B0BF3611B78C952AACAB827A053,
+        0x0A4EDEF9C1ED7F729F520E47730A124FD70662A904BA1074728114D1031E1572C6C886F6B57EC72A6178288C47C33577,
+    ),
+    (
+        0x0468FB440D82B0630AEB8DCA2B5256789A66DA69BF91009CBFE6BD221E47AA8AE88DECE9764BF3BD999D95D71E4C9899,
+        0x0F6D4552FA65DD2638B361543F887136A43253D9C66C411697003F7A13C308F5422E1AA0A59C8967ACDEFD8B6E36CCF3,
+    ),
+)
+BLS12_2P2: Final = (
+    (
+        0x0B76FCBB604082A4F2D19858A7BEFD6053FA181C5119A612DFEC83832537F644E02454F2B70D40985EBB08042D1620D4,
+        0x19A4A02C0AE51365D964C73BE7BABB719DB1C69E0DDBF9A8A335B5BED3B0A4B070D2D5DF01D2DA4A3F1E56AAE2EC106D,
+    ),
+    (
+        0x0D18322F821AC72D3CA92F92B000483CF5B7D9E5D06873A44071C4E7E81EFD904F210208FE0B9B4824F01C65BC7E6208,
+        0x04E563D53609A2D1E216AAAEE5FBC14EF460160DB8D1FDC5E1BD4E8B54CD2F39ABF6F925969FA405EFB9E700B01C7085,
+    ),
+)
+BLS12_P2_NOT_IN_SUBGROUP: Final = (
+    (1, 1),
+    (
+        0x17FAA6201231304F270B858DAD9462089F2A5B83388E4B10773ABC1EEF6D193B9FCE4E8EA2D9D28E3C3A315AA7DE14CA,
+        0xCC12449BE6AC4E7F367E7242250427C4FB4C39325D3164AD397C1837A90F0EA1A534757DF374DD6569345EB41ED76E,
+    ),
+)
+BLS12_2P2_NOT_IN_SUBGROUP: Final = (
+    (
+        0x919F97860ECC3E933E3477FCAC0E2E4FCC35A6E886E935C97511685232456263DEF6665F143CCCCB44C733333331553,
+        0x18B4376B50398178FA8D78ED2654B0FFD2A487BE4DBE6B69086E61B283F4E9D58389CCCB8EDC99995718A66666661555,
+    ),
+    (
+        0x26898F699C4B07A405AB4183A10B47F923D1C0FDA1018682DD2CCC88968C1B90D44534D6B9270CF57F8DC6D4891678A,
+        0x3270414330EAD5EC92219A03A24DFA059DBCBE610868BE1851CC13DAC447F60B40D41113FD007D3307B19ADD4B0F061,
+    ),
+)
+
+BLS12_G2_POINT_ZERO_FP = (
+    (
+        0x18320896EC9EEF9D5E619848DC29CE266F413D02DD31D9B9D44EC0C79CD61F18B075DDBA6D7BD20B7FF27A4B324BFCE,
+        0xA67D12118B5A35BB02D2E86B3EBFA7E23410DB93DE39FB06D7025FA95E96FFA428A7A27C3AE4DD4B40BD251AC658892,
+    ),
+    (
+        0x260E03644D1A2C321256B3246BAD2B895CAD13890CBE6F85DF55106A0D334604FB143C7A042D878006271865BC35941,
+        0x4C69777A43F0BDA07679D5805E63F18CF4E0E7C6112AC7F70266D199B4F76AE27C6269A3CEEBDAE30806E9A76AADF5C,
+    ),
+)
+
+
+def bls12_neg_g1(p: tuple[int, int]) -> tuple[int, int]:
+    return (p[0], BLS12_P - p[1])
+
+
+def bls12_neg_g2(p: tuple[tuple[int, int], tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+    return (p[0], (BLS12_P - p[1][0], BLS12_P - p[1][1]))
+
+
+# See https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g1add.py
+VERIFYBLS12G1ADD_TEST_DATA: Final = (
+    (BLS12_G1, BLS12_G1_INFTY, BLS12_G1, 'generator_plus_inf'),
+    (BLS12_G1_INFTY, BLS12_G1, BLS12_G1, 'inf_plus_generator'),
+    (BLS12_G1_INFTY, BLS12_G1_INFTY, BLS12_G1_INFTY, 'inf_plus_inf'),
+    (BLS12_P1, BLS12_G1_INFTY, BLS12_P1, 'point_plus_inf'),
+    (BLS12_G1_INFTY, BLS12_P1, BLS12_P1, 'inf_plus_point'),
+    (BLS12_P1, bls12_neg_g1(BLS12_P1), BLS12_G1_INFTY, 'point_plus_neg_point'),
+    (BLS12_G1, bls12_neg_g1(BLS12_G1), BLS12_G1_INFTY, 'generator_plus_neg_point'),
+    (BLS12_P1, BLS12_G1, BLS12_P1_PLUS_G1, 'commutative_check_a'),
+    (BLS12_G1, BLS12_P1, BLS12_P1_PLUS_G1, 'commutative_check_b'),
+    (BLS12_P1, BLS12_P1, BLS12_2P1, 'point_doubling'),
+    (bls12_neg_g1(BLS12_P1), bls12_neg_g1(BLS12_G1), bls12_neg_g1(BLS12_P1_PLUS_G1), 'negation_of_sum'),
+    (BLS12_P1_NOT_IN_SUBGROUP, BLS12_P1_NOT_IN_SUBGROUP, BLS12_2P1_NOT_IN_SUBGROUP, 'non_sub_plus_non_sub'),
+    (BLS12_P1_NOT_IN_SUBGROUP, BLS12_2P1_NOT_IN_SUBGROUP, BLS12_G1_INFTY, 'non_sub_order_3_to_inf'),
+    (BLS12_P1_NOT_IN_SUBGROUP, BLS12_G1_INFTY, BLS12_P1_NOT_IN_SUBGROUP, 'non_sub_PLUS_inf'),
+)
+
+
+@pytest.mark.parametrize('first,second,result,explanation', VERIFYBLS12G1ADD_TEST_DATA, ids=count())
+def test_verify_bls12g1_add(
+    definition_dir: Path, first: tuple[int, int], second: tuple[int, int], result: tuple[int, int], explanation: str
+) -> None:
+    # Given
+    pgm = f'BLS12G1Add({first}, {second})'
+    expected = f'<k>\n  ( {result[0]} , {result[1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g1mul.py
+VERIFYBLS12G1MUL_TEST_DATA: Final = (
+    (BLS12_G1_INFTY, 0, BLS12_G1_INFTY, 'zero_times_inf'),
+    (BLS12_G1_INFTY, 1, BLS12_G1_INFTY, 'one_times_inf'),
+    (BLS12_G1_INFTY, 2, BLS12_G1_INFTY, 'two_times_inf'),
+    (BLS12_G1_INFTY, BLS12_Q, BLS12_G1_INFTY, 'q_times_inf'),
+    (BLS12_G1_INFTY, 2**256 - 1, BLS12_G1_INFTY, 'max_scalar_times_inf'),
+    (BLS12_G1, 0, BLS12_G1_INFTY, 'zero_times_generator'),
+    (BLS12_G1, 1, BLS12_G1, 'one_times_generator'),
+    (BLS12_G1, BLS12_Q, BLS12_G1_INFTY, 'q_times_generator'),
+    (BLS12_P1, 0, BLS12_G1_INFTY, 'zero_times_point'),
+    (BLS12_P1, 1, BLS12_P1, 'one_times_point'),
+    (BLS12_P1, BLS12_Q - 1, bls12_neg_g1(BLS12_P1), 'q_minus_1_times_point'),
+    (BLS12_P1, BLS12_Q, BLS12_G1_INFTY, 'q_times_point'),
+    (BLS12_P1, BLS12_Q + 1, BLS12_P1, 'q_plus_1_times_point'),
+    (BLS12_P1, 2 * BLS12_Q, BLS12_G1_INFTY, '2q_times_point'),
+    (BLS12_P1, 2**256 // BLS12_Q * BLS12_Q, BLS12_G1_INFTY, 'large_multiple_of_q_times_point'),
+    (
+        BLS12_P1,
+        2**256 - 1,
+        (
+            0x3DA1F13DDEF2B8B5A46CD543CE56C0A90B8B3B0D6D43DEC95836A5FD2BACD6AA8F692601F870CF22E05DDA5E83F460B,
+            0x18D64F3C0E9785365CBDB375795454A8A4FA26F30B9C4F6E33CA078EB5C29B7AEA478B076C619BC1ED22B14C95569B2D,
+        ),
+        'max_scalar_times_point',
+    ),
+)
+
+
+@pytest.mark.parametrize('first,second,result,explanation', VERIFYBLS12G1MUL_TEST_DATA, ids=count())
+def test_verify_bls12g1_mul(
+    definition_dir: Path, first: tuple[int, int], second: int, result: tuple[int, int], explanation: str
+) -> None:
+    # Given
+    pgm = f'BLS12G1Mul({first}, {second})'
+    expected = f'<k>\n  ( {result[0]} , {result[1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g2add.py
+VERIFYBLS12G2ADD_TEST_DATA: Final = (
+    (BLS12_G2, BLS12_G2_INFTY, BLS12_G2, 'generator_plus_inf'),
+    (BLS12_G2_INFTY, BLS12_G2, BLS12_G2, 'inf_plus_generator'),
+    (BLS12_G2_INFTY, BLS12_G2_INFTY, BLS12_G2_INFTY, 'inf_plus_inf'),
+    (BLS12_P2, BLS12_G2_INFTY, BLS12_P2, 'inf_plus_point'),
+    (BLS12_P2, bls12_neg_g2(BLS12_P2), BLS12_G2_INFTY, 'point_plus_neg_point'),
+    (BLS12_G2, bls12_neg_g2(BLS12_G2), BLS12_G2_INFTY, 'generator_plus_neg_point'),
+    (BLS12_P2, BLS12_G2, BLS12_P2_PLUS_G2, 'commutative_check_a'),
+    (BLS12_G2, BLS12_P2, BLS12_P2_PLUS_G2, 'commutative_check_b'),
+    (BLS12_P2, BLS12_P2, BLS12_2P2, 'point_doubling'),
+    (bls12_neg_g2(BLS12_P2), bls12_neg_g2(BLS12_G2), bls12_neg_g2(BLS12_P2_PLUS_G2), 'negation_of_sum'),
+    (BLS12_P2_NOT_IN_SUBGROUP, BLS12_P2_NOT_IN_SUBGROUP, BLS12_2P2_NOT_IN_SUBGROUP, 'non_sub_plus_non_sub'),
+    (BLS12_P2_NOT_IN_SUBGROUP, BLS12_G2_INFTY, BLS12_P2_NOT_IN_SUBGROUP, 'non_sub_plus_inf'),
+    (BLS12_P2_NOT_IN_SUBGROUP, bls12_neg_g2(BLS12_P2_NOT_IN_SUBGROUP), BLS12_G2_INFTY, 'non_sub_plus_neg_non_sub'),
+)
+
+
+@pytest.mark.parametrize('first,second,result,explanation', VERIFYBLS12G2ADD_TEST_DATA, ids=count())
+def test_verify_bls12g2_add(
+    definition_dir: Path,
+    first: tuple[tuple[int, int], tuple[int, int]],
+    second: tuple[tuple[int, int], tuple[int, int]],
+    result: tuple[tuple[int, int], tuple[int, int]],
+    explanation: str,
+) -> None:
+    # Given
+    pgm = f'BLS12G2Add( ( {first[0][0]} x {first[0][1]} , {first[1][0]} x {first[1][1]} ), ( {second[0][0]} x {second[0][1]} , {second[1][0]} x {second[1][1]} ) )'
+    expected = f'<k>\n  ( {result[0][0]} x {result[0][1]} , {result[1][0]} x {result[1][1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g2mul.py
+VERIFYBLS12G2MUL_TEST_DATA: Final = (
+    (BLS12_G2_INFTY, 0, BLS12_G2_INFTY, 'zero_times_inf'),
+    (BLS12_G2_INFTY, 1, BLS12_G2_INFTY, 'one_times_inf'),
+    (BLS12_G2_INFTY, 2, BLS12_G2_INFTY, 'two_times_inf'),
+    (BLS12_G2_INFTY, BLS12_Q, BLS12_G2_INFTY, 'q_times_inf'),
+    (BLS12_G2_INFTY, 2**256 - 1, BLS12_G2_INFTY, 'max_scalar_times_inf'),
+    (BLS12_G2, 0, BLS12_G2_INFTY, 'zero_times_generator'),
+    (BLS12_G2, 1, BLS12_G2, 'one_times_generator'),
+    (BLS12_P2, 0, BLS12_G2_INFTY, 'zero_times_point'),
+    (BLS12_P2, 1, BLS12_P2, 'one_times_point'),
+    (
+        BLS12_P2,
+        2**256 - 1,
+        (
+            (
+                0x2663E1C3431E174CA80E5A84489569462E13B52DA27E7720AF5567941603475F1F9BC0102E13B92A0A21D96B94E9B22,
+                0x6A80D056486365020A6B53E2680B2D72D8A93561FC2F72B960936BB16F509C1A39C4E4174A7C9219E3D7EF130317C05,
+            ),
+            (
+                0xC49EAD39E9EB7E36E8BC25824299661D5B6D0E200BBC527ECCB946134726BF5DBD861E8E6EC946260B82ED26AFE15FB,
+                0x5397DAD1357CF8333189821B737172B18099ECF7EE8BDB4B3F05EBCCDF40E1782A6C71436D5ACE0843D7F361CBC6DB2,
+            ),
+        ),
+        'max_scalar_times_point',
+    ),
+    (BLS12_P2, BLS12_Q - 1, bls12_neg_g2(BLS12_P2), 'q_minus_1_times_point'),
+    (BLS12_P2, BLS12_Q, BLS12_G2_INFTY, 'q_times_point'),
+    (BLS12_P2, BLS12_Q + 1, BLS12_P2, 'q_plus_1_times_point'),
+    (BLS12_P2, 2 * BLS12_Q, BLS12_G2_INFTY, '2q_times_point'),
+    (BLS12_P2, 2**256 // BLS12_Q * BLS12_Q, BLS12_G2_INFTY, 'large_multiple_of_q_times_point'),
+)
+
+
+@pytest.mark.parametrize('first,second,result,explanation', VERIFYBLS12G2MUL_TEST_DATA, ids=count())
+def test_verify_bls12g2_mul(
+    definition_dir: Path,
+    first: tuple[tuple[int, int], tuple[int, int]],
+    second: int,
+    result: tuple[tuple[int, int], tuple[int, int]],
+    explanation: str,
+) -> None:
+    # Given
+    pgm = f'BLS12G2Mul(( {first[0][0]} x {first[0][1]} , {first[1][0]} x {first[1][1]} ), {second})'
+    expected = f'<k>\n  ( {result[0][0]} x {result[0][1]} , {result[1][0]} x {result[1][1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_pairing.py
+VERIFYBLS12PAIRING_TEST_DATA: Final = (
+    ('generator_with_inf_g2', [BLS12_P1], [BLS12_G2_INFTY], True),
+    ('inf_g1_with_generator', [BLS12_G1_INFTY], [BLS12_P2], True),
+    ('inf_pair', [BLS12_G1_INFTY], [BLS12_G2_INFTY], True),
+    ('multi_inf_pair', [BLS12_G1_INFTY] * 10, [BLS12_G2_INFTY] * 10, True),
+    ('g1_g2_and_inverse', [BLS12_G1, BLS12_G1], [BLS12_G2, bls12_neg_g2(BLS12_G2)], True),
+    (
+        'full_sign_cancellation',
+        [BLS12_G1, BLS12_G1, bls12_neg_g1(BLS12_G1), bls12_neg_g1(BLS12_G1)],
+        [BLS12_G2, bls12_neg_g2(BLS12_G2), BLS12_G2, bls12_neg_g2(BLS12_G2)],
+        True,
+    ),
+    (
+        'large_input_with_cancellation',
+        [BLS12_G1_INFTY] * 10 + [BLS12_G1, BLS12_G1],
+        [BLS12_G2_INFTY] * 10 + [BLS12_G2, bls12_neg_g2(BLS12_G2)],
+        True,
+    ),
+    ('negated_both_pairs', [BLS12_G1, bls12_neg_g1(BLS12_G1)], [BLS12_G2, bls12_neg_g2(BLS12_G2)], False),
+    ('multi_inf_g1_neg_g2', [BLS12_G1_INFTY, BLS12_G1], [BLS12_G2_INFTY, bls12_neg_g2(BLS12_G2)], False),
+    ('g1_neg_g2_multi_inf', [BLS12_G1, BLS12_G1_INFTY], [bls12_neg_g2(BLS12_G2), BLS12_G2_INFTY], False),
+    ('single_generator_pair', [BLS12_G1], [BLS12_G2], False),
+    ('inf_plus_generator_pair', [BLS12_G1_INFTY, BLS12_G1], [BLS12_G2_INFTY, BLS12_G2], False),
+    (
+        'partial_sign_cancellation',
+        [BLS12_G1, BLS12_G1, bls12_neg_g1(BLS12_G1)],
+        [BLS12_G2, bls12_neg_g2(BLS12_G2), BLS12_G2],
+        False,
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    'id, first,second,result', VERIFYBLS12PAIRING_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12PAIRING_TEST_DATA]
+)
+def test_verify_bls12pairing(
+    definition_dir: Path,
+    id: str,
+    first: list[tuple[int, int]],
+    second: list[tuple[tuple[int, int], tuple[int, int]]],
+    result: bool,
+) -> None:
+    # Given
+    first_list = [f'ListItem(({x[0]} , {x[1]}))' for x in first]
+    second_list = [f'ListItem(({x[0][0]} x {x[0][1]} , {x[1][0]} x {x[1][1]}))' for x in second]
+    first_str = ' '.join(first_list)
+    second_str = ' '.join(second_list)
+    pgm = f'BLS12PairingCheck( {first_str} , {second_str} )'
+
+    result_str = 'true' if result else 'false'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_map_fp_to_g1.py
+VERIFYBLS12FPTOG1_TEST_DATA: Final = (
+    ('fp_0', 0, BLS12_G1_POINT_ZERO_FP),
+    (
+        'fp_p_minus_1',
+        BLS12_P - 1,
+        (
+            0x1073311196F8EF19477219CCEE3A48035FF432295AA9419EED45D186027D88B90832E14C4F0E2AA4D15F54D1C3ED0F93,
+            0x16B3A3B2E3DDDF6A11459DDAF657FDE21C4F10282A56029D9B55AB3CE1F41E1CF39AD27E0EA35823C7D3250E81FF3D66,
+        ),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12FPTOG1_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12FPTOG1_TEST_DATA]
+)
+def test_verify_bls12fptog1(definition_dir: Path, id: str, first: int, result: tuple[int, int]) -> None:
+    # Given
+    pgm = f'BLS12MapFpToG1({first})'
+    expected = f'<k>\n  ( {result[0]} , {result[1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_map_fp2_to_g2.py
+VERIFYBLS12FP2TOG2_TEST_DATA: Final = (
+    ('fp_0', (0, 0), BLS12_G2_POINT_ZERO_FP),
+    (
+        'fp_p_minus_1',
+        (BLS12_P - 1, BLS12_P - 1),
+        (
+            (
+                0x9BF1B857D8C15F317F649ACCFA7023EF21CFC03059936B83B487DB476FF9D2FE64C6147140A5F0A436B875F51FFDF07,
+                0xBB10E09BDF236CB2951BD7BCC044E1B9A6BB5FD4B2019DCC20FFDE851D52D4F0D1A32382AF9D7DA2C5BA27E0F1C69E6,
+            ),
+            (
+                0xDD416A927AB1C15490AB753C973FD377387B12EFCBE6BED2BF768B9DC95A0CA04D1A8F0F30DBC078A2350A1F823CFD3,
+                0x171565CE4FCD047B35EA6BCEE4EF6FDBFEC8CC73B7ACDB3A1EC97A776E13ACDFEFFC21ED6648E3F0EEC53DDB6C20FB61,
+            ),
+        ),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12FP2TOG2_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12FP2TOG2_TEST_DATA]
+)
+def test_verify_bls12fp2tog2(
+    definition_dir: Path, id: str, first: tuple[int, int], result: tuple[tuple[int, int], tuple[int, int]]
+) -> None:
+    # Given
+    pgm = f'BLS12MapFp2ToG2({first[0]}, {first[1]})'
+    expected = f'<k>\n  ( {result[0][0]} x {result[0][1]} , {result[1][0]} x {result[1][1]} ) ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+VERIFYBLS12G1INSUBGROUP_TEST_DATA: Final = (
+    ('inf', BLS12_G1_INFTY, True),
+    ('generator', BLS12_G1, True),
+    ('point', BLS12_P1, True),
+    ('point_not_in_subgroup', BLS12_P1_NOT_IN_SUBGROUP, False),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12G1INSUBGROUP_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G1INSUBGROUP_TEST_DATA]
+)
+def test_verify_bls12g1insubgroup(definition_dir: Path, id: str, first: tuple[int, int], result: bool) -> None:
+    # Given
+    pgm = f'BLS12G1InSubgroup(({first[0]}, {first[1]}))'
+    result_str = 'true' if result else 'false'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+VERIFYBLS12G1ONCURVE_TEST_DATA: Final = (
+    ('inf', BLS12_G1_INFTY, True),
+    ('generator', BLS12_G1, True),
+    ('point', BLS12_P1, True),
+    ('point_not_in_subgroup', BLS12_P1_NOT_IN_SUBGROUP, True),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12G1ONCURVE_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G1ONCURVE_TEST_DATA]
+)
+def test_verify_bls12g1oncurve(definition_dir: Path, id: str, first: tuple[int, int], result: bool) -> None:
+    # Given
+    pgm = f'BLS12G1OnCurve(({first[0]}, {first[1]}))'
+    result_str = 'true' if result else 'false'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+VERIFYBLS12G2INSUBGROUP_TEST_DATA: Final = (
+    ('inf', BLS12_G2_INFTY, True),
+    ('generator', BLS12_G2, True),
+    ('point', BLS12_P2, True),
+    ('point_not_in_subgroup', BLS12_P2_NOT_IN_SUBGROUP, False),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12G2INSUBGROUP_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G2INSUBGROUP_TEST_DATA]
+)
+def test_verify_bls12g2insubgroup(
+    definition_dir: Path, id: str, first: tuple[tuple[int, int], tuple[int, int]], result: bool
+) -> None:
+    # Given
+    pgm = f'BLS12G2InSubgroup(({first[0][0]} x {first[0][1]} , {first[1][0]} x {first[1][1]}))'
+    result_str = 'true' if result else 'false'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
+
+
+VERIFYBLS12G2ONCURVE_TEST_DATA: Final = (
+    ('inf', BLS12_G2_INFTY, True),
+    ('generator', BLS12_G2, True),
+    ('point', BLS12_P2, True),
+    ('point_not_in_subgroup', BLS12_P2_NOT_IN_SUBGROUP, True),
+)
+
+
+@pytest.mark.parametrize(
+    'id,first,result', VERIFYBLS12G2ONCURVE_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G2ONCURVE_TEST_DATA]
+)
+def test_verify_bls12g2oncurve(
+    definition_dir: Path, id: str, first: tuple[tuple[int, int], tuple[int, int]], result: bool
+) -> None:
+    # Given
+    pgm = f'BLS12G2OnCurve(({first[0][0]} x {first[0][1]} , {first[1][0]} x {first[1][1]}))'
+    result_str = 'true' if result else 'false'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
 
     # When
     actual = run(definition_dir, pgm)
