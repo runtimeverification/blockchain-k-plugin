@@ -9,6 +9,7 @@
 #include <libff/common/profiling.hpp>
 
 #include "blake2.h"
+#include "blst.h"
 #include "plugin_util.h"
 
 using namespace CryptoPP;
@@ -362,4 +363,335 @@ bool hook_KRYPTO_bn128ate(list *g1, list *g2) {
   }
   return alt_bn128_final_exponentiation(accum) == alt_bn128_GT::one();
 }
+
+mpz_ptr zero_mpz_ptr() {
+  mpz_ptr m = (mpz_ptr)kore_alloc_integer(0);
+  mpz_init_set_ui(m, 0);
+  return m;
+}
+
+mpz_ptr blst_fp_to_mpz_ptr(const blst_fp *fp) {
+  byte le[48];
+  blst_lendian_from_fp(le, fp);
+
+  mpz_ptr m = (mpz_ptr)kore_alloc_integer(48);
+  mpz_init(m);
+  mpz_import(m, 48, -1, 1, 0, 0, le);
+  return m;
+}
+
+bool mpz_ptr_to_blst_fp(blst_fp *fp, const mpz_ptr m) {
+  if (mpz_sizeinbase(m, 2) > 384) {
+    return false;
+  }
+  byte le[48] = {};
+  mpz_export(le, nullptr, -1, 1, 0, 0, m);
+  blst_fp_from_lendian(fp, le);
+  return true;
+}
+
+bool mpz_ptr_to_blst_scalar(blst_scalar *out, const mpz_ptr m) {
+  if (mpz_sizeinbase(m, 2) > 256) {
+    return false;
+  }
+  byte le[32] = {};
+  mpz_export(le, nullptr, -1, 1, 0, 0, m);
+  blst_scalar_from_le_bytes(out, le, (mpz_sizeinbase(m, 2) + 7) / 8);
+  return true;
+}
+
+void blst_p1_affine_set_infinity(blst_p1_affine *blstp) {
+  memset(blstp, 0, sizeof(*blstp));
+}
+
+void blst_p2_affine_set_infinity(blst_p2_affine *blstp) {
+  memset(blstp, 0, sizeof(*blstp));
+}
+
+g1point* blst_p1_to_g1point(const blst_p1 *p) {
+  struct g1point *result = (struct g1point *)kore_alloc(sizeof(struct g1point));
+
+  blockheader g1pointhdr =
+      get_block_header_for_symbol((uint64_t)get_tag_for_symbol_name("Lblg1Point{}"));
+  result->h = g1pointhdr;
+
+  if (blst_p1_is_inf(p)) {
+    result->x = zero_mpz_ptr();
+    result->y = zero_mpz_ptr();
+    return result;
+  }
+
+  blst_p1_affine result_affine;
+  blst_p1_to_affine(&result_affine, p);
+
+  result->x = blst_fp_to_mpz_ptr(&result_affine.x);
+  result->y = blst_fp_to_mpz_ptr(&result_affine.y);
+
+  return result;
+}
+
+g2point* blst_p2_to_g2point(const blst_p2 *p) {
+  struct g2point *result = (struct g2point *)kore_alloc(sizeof(struct g2point));
+
+  blockheader g1pointhdr =
+      get_block_header_for_symbol((uint64_t)get_tag_for_symbol_name("Lblg2Point{}"));
+  result->h = g1pointhdr;
+
+  if (blst_p2_is_inf(p)) {
+    result->x0 = zero_mpz_ptr();
+    result->y0 = zero_mpz_ptr();
+    result->x1 = zero_mpz_ptr();
+    result->y1 = zero_mpz_ptr();
+    return result;
+  }
+
+  blst_p2_affine result_affine;
+  blst_p2_to_affine(&result_affine, p);
+
+  result->x0 = blst_fp_to_mpz_ptr(&result_affine.x.fp[0]);
+  result->x1 = blst_fp_to_mpz_ptr(&result_affine.x.fp[1]);
+  result->y0 = blst_fp_to_mpz_ptr(&result_affine.y.fp[0]);
+  result->y1 = blst_fp_to_mpz_ptr(&result_affine.y.fp[1]);
+
+  return result;
+}
+
+bool g1point_to_blst_p1_affine(blst_p1_affine *blstp, const g1point *g1p) {
+  if (mpz_cmp_ui(g1p->x, 0) == 0 && mpz_cmp_ui(g1p->y, 0) == 0) {
+    blst_p1_affine_set_infinity(blstp);
+    return true;
+  }
+
+  if (!mpz_ptr_to_blst_fp(&blstp->x, g1p->x) ||
+      !mpz_ptr_to_blst_fp(&blstp->y, g1p->y)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool g1point_to_blst_p1(blst_p1 *blstp, const g1point *g1p) {
+  blst_p1_affine p_affine;
+
+  if (!g1point_to_blst_p1_affine(&p_affine, g1p)) {
+    return false;
+  }
+
+  blst_p1_from_affine(blstp, &p_affine);
+  return true;
+}
+
+bool g2point_to_blst_p2_affine(blst_p2_affine *blstp, const g2point *g2p) {
+  if (mpz_cmp_ui(g2p->x0, 0) == 0 && mpz_cmp_ui(g2p->y0, 0) == 0
+      && mpz_cmp_ui(g2p->x1, 0) == 0 && mpz_cmp_ui(g2p->y1, 0) == 0) {
+    blst_p2_affine_set_infinity(blstp);
+    return true;
+  }
+
+  if (!mpz_ptr_to_blst_fp(&blstp->x.fp[0], g2p->x0) ||
+      !mpz_ptr_to_blst_fp(&blstp->x.fp[1], g2p->x1) ||
+      !mpz_ptr_to_blst_fp(&blstp->y.fp[0], g2p->y0) ||
+      !mpz_ptr_to_blst_fp(&blstp->y.fp[1], g2p->y1)) {
+    return false;
+  }
+  return true;
+}
+
+
+bool g2point_to_blst_p2(blst_p2 *blstp, const g2point *g2p) {
+  blst_p2_affine p_affine;
+  if (!g2point_to_blst_p2_affine(&p_affine, g2p)) {
+    return false;
+  }
+  blst_p2_from_affine(blstp, &p_affine);
+  return true;
+}
+
+struct g1point *hook_KRYPTO_bls12G1Add(g1point *first, g1point *second) {
+  blst_p1 first_blst;
+  blst_p1 second_blst;
+  blst_p1 result_blst;
+
+  if (!g1point_to_blst_p1(&first_blst, first)) {
+    throw std::invalid_argument("Invalid point (first)");
+  }
+  if (!g1point_to_blst_p1(&second_blst, second)) {
+    throw std::invalid_argument("Invalid point (second)");
+  }
+
+  blst_p1_add_or_double(&result_blst, &first_blst, &second_blst);
+  return blst_p1_to_g1point(&result_blst);
+}
+
+struct g2point *hook_KRYPTO_bls12G2Add(g2point *first, g2point *second) {
+  blst_p2 first_blst;
+  blst_p2 second_blst;
+  blst_p2 result_blst;
+
+  if (!g2point_to_blst_p2(&first_blst, first)) {
+    throw std::invalid_argument("Invalid point (first)");
+  }
+  if (!g2point_to_blst_p2(&second_blst, second)) {
+    throw std::invalid_argument("Invalid point (second)");
+  }
+
+  blst_p2_add_or_double(&result_blst, &first_blst, &second_blst);
+  return blst_p2_to_g2point(&result_blst);
+}
+
+struct g1point *hook_KRYPTO_bls12G1Mul(g1point *point, mpz_t scalar) {
+  blst_scalar blstscalar;
+  blst_p1 blstp;
+  blst_p1 result;
+
+  if (!mpz_ptr_to_blst_scalar(&blstscalar, scalar)) {
+    throw std::invalid_argument("Invalid scalar");
+  }
+  if (!g1point_to_blst_p1(&blstp, point)) {
+    throw std::invalid_argument("Invalid point");
+  }
+
+  size_t nbits = mpz_cmp_ui(scalar, 0) == 0 ? 0 : mpz_sizeinbase(scalar, 2);
+  blst_p1_mult(&result, &blstp, blstscalar.b, nbits);
+  return blst_p1_to_g1point(&result);
+}
+
+struct g2point *hook_KRYPTO_bls12G2Mul(g2point *point, mpz_t scalar) {
+  blst_scalar blstscalar;
+  blst_p2 blstp;
+  blst_p2 result;
+
+  if (!mpz_ptr_to_blst_scalar(&blstscalar, scalar)) {
+    throw std::invalid_argument("Invalid scalar");
+  }
+  if (!g2point_to_blst_p2(&blstp, point)) {
+    throw std::invalid_argument("Invalid point");
+  }
+
+  blst_p2_mult(&result, &blstp, blstscalar.b, mpz_sizeinbase(scalar, 2));
+  return blst_p2_to_g2point(&result);
+}
+
+bool hook_KRYPTO_bls12G1InSubgroup(g1point *point) {
+  blst_p1 blstp;
+
+  if (!g1point_to_blst_p1(&blstp, point)) {
+    return false;
+  }
+
+  if (blst_p1_is_inf(&blstp)) {
+    return true;
+  }
+
+  return blst_p1_in_g1(&blstp);
+}
+
+bool hook_KRYPTO_bls12G2InSubgroup(g2point *point) {
+  blst_p2 blstp;
+
+  if (!g2point_to_blst_p2(&blstp, point)) {
+    return false;
+  }
+
+  if (blst_p2_is_inf(&blstp)) {
+    return true;
+  }
+
+  return blst_p2_in_g2(&blstp);
+}
+
+
+bool hook_KRYPTO_bls12G1OnCurve(g1point *point) {
+  blst_p1 blstp;
+
+  if (!g1point_to_blst_p1(&blstp, point)) {
+    return false;
+  }
+
+  if (blst_p1_is_inf(&blstp)) {
+    return true;
+  }
+
+  return blst_p1_on_curve(&blstp);
+}
+
+bool hook_KRYPTO_bls12G2OnCurve(g2point *point) {
+  blst_p2 blstp;
+
+  if (!g2point_to_blst_p2(&blstp, point)) {
+    return false;
+  }
+
+  if (blst_p2_is_inf(&blstp)) {
+    return true;
+  }
+
+  return blst_p2_on_curve(&blstp);
+}
+
+bool hook_KRYPTO_bls12PairingCheck(list* g1, list* g2) {
+  // TODO: Most likely, this check can be improved with something that uses
+  // blst_miller_loop_n, or blst_pairing_finalverify.
+  mpz_ptr g1size = hook_LIST_size(g1);
+  mpz_ptr g2size = hook_LIST_size(g2);
+  unsigned long g1size_long = mpz_get_ui(g1size);
+  unsigned long g2size_long = mpz_get_ui(g2size);
+  mpz_clear(g1size);
+  mpz_clear(g2size);
+  if (g1size_long != g2size_long) {
+    throw std::invalid_argument("mismatched list sizes");
+  }
+
+  blst_fp12 accum = *blst_fp12_one();
+  for (unsigned long i = 0; i < g1size_long; i++) {
+    inj *injg1 = (inj *)hook_LIST_get_long(g1, i);
+    inj *injg2 = (inj *)hook_LIST_get_long(g2, i);
+    g1point* g1pt = (g1point *)injg1->data;
+    g2point* g2pt = (g2point *)injg2->data;
+
+    blst_p1_affine p1_affine;
+    blst_p2_affine p2_affine;
+    blst_fp12 miller_result;
+
+    if (!g1point_to_blst_p1_affine(&p1_affine, g1pt)) {
+      throw std::invalid_argument("Invalid point (first)");
+    }
+    if (!g2point_to_blst_p2_affine(&p2_affine, g2pt)) {
+      throw std::invalid_argument("Invalid point (second)");
+    }
+
+    blst_miller_loop(&miller_result, &p2_affine, &p1_affine);
+    blst_fp12_mul(&accum, &accum, &miller_result);
+  }
+
+  blst_final_exp(&accum, &accum);
+
+  return blst_fp12_is_one(&accum);
+}
+
+struct g1point *hook_KRYPTO_bls12MapFpToG1(mpz_t element) {
+  blst_fp e;
+  if (!mpz_ptr_to_blst_fp(&e, element)) {
+    throw std::invalid_argument("Invalid field element");
+  }
+
+  blst_p1 result;
+  blst_map_to_g1(&result, &e);
+  return blst_p1_to_g1point(&result);
+}
+
+struct g2point *hook_KRYPTO_bls12MapFp2ToG2(mpz_t element0, mpz_t element1) {
+  blst_fp2 e;
+  if (!mpz_ptr_to_blst_fp(&e.fp[0], element0)) {
+    throw std::invalid_argument("Invalid field element (first)");
+  }
+  if (!mpz_ptr_to_blst_fp(&e.fp[1], element1)) {
+    throw std::invalid_argument("Invalid field element (second)");
+  }
+
+  blst_p2 result;
+  blst_map_to_g2(&result, &e);
+  return blst_p2_to_g2point(&result);
+}
+
 }
