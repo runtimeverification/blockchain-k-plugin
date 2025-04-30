@@ -29,7 +29,7 @@ pytest-cov = "*"
 pytest-mock = "*"
 pytest-xdist = "*"
 pyupgrade = "*"
-kframework = "7.1.243"
+kframework = "7.1.248"
 
 [tool.isort]
 profile = "black"
