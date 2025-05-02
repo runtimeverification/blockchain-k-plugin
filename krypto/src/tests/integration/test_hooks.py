@@ -1026,3 +1026,43 @@ def test_verify_bls12G1Msm(
 
     # Then
     assert expected == actual
+
+
+# https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g2msm.py
+VERIFYBLS12G2MSM_TEST_DATA: Final = (
+    ('g2_plus_inf', [BLS12_G2, BLS12_G2_INFTY], [1, 1], BLS12_G2),
+    ('all_zero_scalars', [BLS12_G2, BLS12_P2, BLS12_G2_INFTY], [0, 0, 0], BLS12_G2_INFTY),
+    ('sum_to_identity_opposite', [BLS12_G2, bls12_neg_g2(BLS12_G2)], [1, 1], BLS12_G2_INFTY),
+    ('scalars_sum_to_q', [BLS12_G2, BLS12_G2], [BLS12_Q - 1, 1], BLS12_G2_INFTY),
+    ('combined_basic_cases', [BLS12_G2, BLS12_G2, BLS12_G2_INFTY], [1, 0, 5], BLS12_G2),
+    ('identity_with_large_scalar', [BLS12_G2, BLS12_G2_INFTY], [1, 500], BLS12_G2),
+    ('multiple_points_zero_scalar', [BLS12_G2, BLS12_P2, bls12_neg_g2(BLS12_G2)], [0, 0, 0], BLS12_G2_INFTY),
+    ('max_discount', [BLS12_P2] * 3, [BLS12_Q] * 3, BLS12_G2_INFTY),
+)
+
+
+@pytest.mark.parametrize(
+    'id, first,second,result', VERIFYBLS12G2MSM_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G2MSM_TEST_DATA]
+)
+def test_verify_bls12G2Msm(
+    definition_dir: Path,
+    id: str,
+    first: list[tuple[tuple[int, int], tuple[int, int]]],
+    second: list[int],
+    result: tuple[tuple[int, int], tuple[int, int]],
+) -> None:
+    # Given
+    point_list = [f'ListItem(({x[0][0]} x {x[0][1]} , {x[1][0]} x {x[1][1]}))' for x in first]
+    scalar_list = [f'ListItem({x})' for x in second]
+    point_str = ' '.join(point_list)
+    scalar_str = ' '.join(scalar_list)
+    pgm = f'BLS12G2Msm( {scalar_str} , {point_str} )'
+
+    result_str = f'( {result[0][0]} x {result[0][1]} , {result[1][0]} x {result[1][1]} )'
+    expected = f'<k>\n  {result_str} ~> .K\n</k>'
+
+    # When
+    actual = run(definition_dir, pgm)
+
+    # Then
+    assert expected == actual
