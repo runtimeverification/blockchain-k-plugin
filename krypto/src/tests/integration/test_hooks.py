@@ -986,8 +986,6 @@ def test_verify_bls12g2oncurve(
     assert expected == actual
 
 
-
-
 # https://github.com/ethereum/execution-spec-tests/blob/b48d1dc81233af6e4d6c7c84e60e8eaa4067a288/tests/prague/eip2537_bls_12_381_precompiles/test_bls12_g1msm.py
 VERIFYBLS12G1MSM_TEST_DATA: Final = (
     ('g1_plus_inf', [BLS12_G1, BLS12_G1_INFTY], [1, 1], BLS12_G1),
@@ -1004,7 +1002,7 @@ VERIFYBLS12G1MSM_TEST_DATA: Final = (
 @pytest.mark.parametrize(
     'id, first,second,result', VERIFYBLS12G1MSM_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G1MSM_TEST_DATA]
 )
-def test_verify_bls12G1Msm(
+def test_verify_bls12g1msm(
     definition_dir: Path,
     id: str,
     first: list[tuple[int, int]],
@@ -1044,7 +1042,7 @@ VERIFYBLS12G2MSM_TEST_DATA: Final = (
 @pytest.mark.parametrize(
     'id, first,second,result', VERIFYBLS12G2MSM_TEST_DATA, ids=[id for id, *_ in VERIFYBLS12G2MSM_TEST_DATA]
 )
-def test_verify_bls12G2Msm(
+def test_verify_bls12g2msm(
     definition_dir: Path,
     id: str,
     first: list[tuple[tuple[int, int], tuple[int, int]]],
