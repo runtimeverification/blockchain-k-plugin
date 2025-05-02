@@ -142,19 +142,20 @@ fit in 256 bits, or the field values do not fit in 384 bits, all BLS12_381
 functions evaluate to `#False`.
 
 ```k
-    syntax G1Point ::= BLS12G1Add        ( G1Point, G1Point )  [function, hook(KRYPTO.bls12G1Add)]
-    syntax G2Point ::= BLS12G2Add        ( G2Point, G2Point )  [function, hook(KRYPTO.bls12G2Add)]
-    syntax G1Point ::= BLS12G1Mul        ( G1Point, Int )      [function, hook(KRYPTO.bls12G1Mul)]
-    syntax G1Point ::= BLS12G1Msm        ( List, List )        [function, hook(KRYPTO.bls12G1Msm)]
-    syntax G2Point ::= BLS12G2Mul        ( G2Point, Int )      [function, hook(KRYPTO.bls12G2Mul)]
-    syntax Bool    ::= BLS12PairingCheck ( List, List)         [function, hook(KRYPTO.bls12PairingCheck)]
-    syntax G1Point ::= BLS12MapFpToG1    ( Int )               [function, hook(KRYPTO.bls12MapFpToG1)]
-    syntax G2Point ::= BLS12MapFp2ToG2   ( Int, Int )          [function, hook(KRYPTO.bls12MapFp2ToG2)]
+    syntax G1Point ::= BLS12G1Add        ( G1Point, G1Point )           [function, hook(KRYPTO.bls12G1Add)]
+    syntax G2Point ::= BLS12G2Add        ( G2Point, G2Point )           [function, hook(KRYPTO.bls12G2Add)]
+    syntax G1Point ::= BLS12G1Mul        ( G1Point, Int )               [function, hook(KRYPTO.bls12G1Mul)]
+    syntax G1Point ::= BLS12G1Msm        ( scalars:List, points:List )  [function, hook(KRYPTO.bls12G1Msm)]
+    syntax G2Point ::= BLS12G2Mul        ( G2Point, Int )               [function, hook(KRYPTO.bls12G2Mul)]
+    syntax G2Point ::= BLS12G2Msm        ( scalars:List, points:List )  [function, hook(KRYPTO.bls12G2Msm)]
+    syntax Bool    ::= BLS12PairingCheck ( List, List)                  [function, hook(KRYPTO.bls12PairingCheck)]
+    syntax G1Point ::= BLS12MapFpToG1    ( Int )                        [function, hook(KRYPTO.bls12MapFpToG1)]
+    syntax G2Point ::= BLS12MapFp2ToG2   ( Int, Int )                   [function, hook(KRYPTO.bls12MapFp2ToG2)]
 
-    syntax Bool    ::= BLS12G1InSubgroup ( G1Point )           [function, hook(KRYPTO.bls12G1InSubgroup)]
-    syntax Bool    ::= BLS12G2InSubgroup ( G2Point )           [function, hook(KRYPTO.bls12G2InSubgroup)]
-    syntax Bool    ::= BLS12G1OnCurve    ( G1Point )           [function, hook(KRYPTO.bls12G1OnCurve)]
-    syntax Bool    ::= BLS12G2OnCurve    ( G2Point )           [function, hook(KRYPTO.bls12G2OnCurve)]
+    syntax Bool    ::= BLS12G1InSubgroup ( G1Point )                    [function, hook(KRYPTO.bls12G1InSubgroup)]
+    syntax Bool    ::= BLS12G2InSubgroup ( G2Point )                    [function, hook(KRYPTO.bls12G2InSubgroup)]
+    syntax Bool    ::= BLS12G1OnCurve    ( G1Point )                    [function, hook(KRYPTO.bls12G1OnCurve)]
+    syntax Bool    ::= BLS12G2OnCurve    ( G2Point )                    [function, hook(KRYPTO.bls12G2OnCurve)]
 
     syntax Int ::= "BLS12_FIELD_MODULUS"  [alias]
     rule BLS12_FIELD_MODULUS => 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
