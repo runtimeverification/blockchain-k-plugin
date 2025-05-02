@@ -4,6 +4,7 @@
 #include <cryptopp/sha3.h>
 #include <openssl/evp.h>
 #include <secp256k1_recovery.h>
+#include <vector>
 
 #include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libff/common/profiling.hpp>
@@ -408,6 +409,18 @@ void blst_p2_affine_set_infinity(blst_p2_affine *blstp) {
   memset(blstp, 0, sizeof(*blstp));
 }
 
+g1point* g1point_inf() {
+  struct g1point *result = (struct g1point *)kore_alloc(sizeof(struct g1point));
+
+  blockheader g1pointhdr =
+      get_block_header_for_symbol((uint64_t)get_tag_for_symbol_name("Lblg1Point{}"));
+  result->h = g1pointhdr;
+
+  result->x = zero_mpz_ptr();
+  result->y = zero_mpz_ptr();
+  return result;
+}
+
 g1point* blst_p1_to_g1point(const blst_p1 *p) {
   struct g1point *result = (struct g1point *)kore_alloc(sizeof(struct g1point));
 
@@ -553,6 +566,71 @@ struct g1point *hook_KRYPTO_bls12G1Mul(g1point *point, mpz_t scalar) {
 
   size_t nbits = mpz_cmp_ui(scalar, 0) == 0 ? 0 : mpz_sizeinbase(scalar, 2);
   blst_p1_mult(&result, &blstp, blstscalar.b, nbits);
+  return blst_p1_to_g1point(&result);
+}
+
+struct g1point *hook_KRYPTO_bls12G1Msm(list* scalars, list* g1) {
+  mpz_ptr scalars_size = hook_LIST_size(scalars);
+  mpz_ptr g1size = hook_LIST_size(g1);
+  unsigned long scalars_size_long = mpz_get_ui(scalars_size);
+  unsigned long g1size_long = mpz_get_ui(g1size);
+  mpz_clear(scalars_size);
+  mpz_clear(g1size);
+
+  if (scalars_size_long != g1size_long) {
+    throw std::invalid_argument("mismatched list sizes");
+  }
+
+  std::vector<blst_p1_affine> points(g1size_long);
+  std::vector<blst_scalar> blst_scalars(g1size_long);
+
+  int valid_point_count = 0;
+  int first_nbits = 0;
+  for (unsigned long i = 0; i < g1size_long; i++) {
+    inj *injg1 = (inj *)hook_LIST_get_long(g1, i);
+    g1point* g1pt = (g1point *)injg1->data;
+
+    if (!g1point_to_blst_p1_affine(&points[valid_point_count], g1pt)) {
+      throw std::invalid_argument("Invalid point");
+    }
+    if (blst_p1_affine_is_inf(&points[valid_point_count])) {
+      continue;
+    }
+
+    inj *injs1 = (inj *)hook_LIST_get_long(scalars, i);
+    mpz_ptr scalar = (mpz_ptr)injs1->data;
+    if (valid_point_count == 0) {
+      first_nbits = mpz_cmp_ui(scalar, 0) == 0 ? 0 : mpz_sizeinbase(scalar, 2);
+    }
+    if (!mpz_ptr_to_blst_scalar(&blst_scalars[valid_point_count], scalar)) {
+      throw std::invalid_argument("Invalid scalar");
+    }
+    valid_point_count++;
+  }
+
+  if (valid_point_count == 0) {
+    return g1point_inf();
+  }
+  if (valid_point_count == 1) {
+    blst_p1 blstp;
+    blst_p1_from_affine(&blstp, &points[0]);
+    blst_p1 result;
+    blst_p1_mult(&result, &blstp, blst_scalars[0].b, first_nbits);
+    return blst_p1_to_g1point(&result);
+  }
+
+  size_t scratch_size = blst_p1s_mult_pippenger_scratch_sizeof(valid_point_count);
+  std::vector<limb_t> scratch(scratch_size / sizeof(limb_t) + 1);
+
+  const byte *scalars_arg[2] = {(byte *)blst_scalars.data(), NULL};
+  const blst_p1_affine *points_arg[2] = {points.data(), NULL};
+  blst_p1 result;
+  blst_p1s_mult_pippenger
+      ( &result
+      , points_arg, valid_point_count
+      , scalars_arg, sizeof(blst_scalars[0]) * 8
+      , scratch.data()
+      );
   return blst_p1_to_g1point(&result);
 }
 

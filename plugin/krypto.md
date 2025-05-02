@@ -145,6 +145,7 @@ functions evaluate to `#False`.
     syntax G1Point ::= BLS12G1Add        ( G1Point, G1Point )  [function, hook(KRYPTO.bls12G1Add)]
     syntax G2Point ::= BLS12G2Add        ( G2Point, G2Point )  [function, hook(KRYPTO.bls12G2Add)]
     syntax G1Point ::= BLS12G1Mul        ( G1Point, Int )      [function, hook(KRYPTO.bls12G1Mul)]
+    syntax G1Point ::= BLS12G1Msm        ( List, List )        [function, hook(KRYPTO.bls12G1Msm)]
     syntax G2Point ::= BLS12G2Mul        ( G2Point, Int )      [function, hook(KRYPTO.bls12G2Mul)]
     syntax Bool    ::= BLS12PairingCheck ( List, List)         [function, hook(KRYPTO.bls12PairingCheck)]
     syntax G1Point ::= BLS12MapFpToG1    ( Int )               [function, hook(KRYPTO.bls12MapFpToG1)]
