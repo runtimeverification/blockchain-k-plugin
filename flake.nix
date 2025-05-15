@@ -129,12 +129,15 @@
 
             overrides = poetry2nix.overrides.withDefaults
               (finalPython: prevPython: {
-                kframework = prev.pyk-python310;
-                flake8-type-checking =
-                  prevPython.flake8-type-checking.overridePythonAttrs (old: {
-                    propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
-                      ++ [ finalPython.poetry ];
-                  });
+              kframework = prev.pyk-python310;
+              flake8-type-checking =
+                prevPython.flake8-type-checking.overridePythonAttrs (old: {
+                propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
+                  ++ [ finalPython.poetry ];
+                });
+              attrs = prevPython.attrs.overridePythonAttrs (old: {
+                buildInputs = old.buildInputs or [] ++ [prevPython.hatchling];
+              });
               });
 
             checkPhase = ''
