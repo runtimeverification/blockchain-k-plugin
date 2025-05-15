@@ -537,6 +537,18 @@ classify-imports = "*"
 flake8 = "*"
 
 [[package]]
+name = "flit-core"
+version = "3.12.0"
+description = "Distribution-building parts of Flit. See flit package for more information"
+optional = false
+python-versions = ">=3.6"
+groups = ["dev"]
+files = [
+    {file = "flit_core-3.12.0-py3-none-any.whl", hash = "sha256:e7a0304069ea895172e3c7bb703292e992c5d1555dd1233ab7b5621b5b69e62c"},
+    {file = "flit_core-3.12.0.tar.gz", hash = "sha256:18f63100d6f94385c6ed57a72073443e1a71a4acb4339491615d0f16d6ff01b2"},
+]
+
+[[package]]
 name = "graphviz"
 version = "0.20.3"
 description = "Simple Python interface for Graphviz"
@@ -1623,4 +1635,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "79e8cf7a8ce45c3ad4b37362ddf90da8d4f4bbe261d994fa183f9b1f3e87c96b"
+content-hash = "ace9bf7011654e2b81af68cab427ad3c4d3bfb61438dfb80a45c7c39f2877b7e"
