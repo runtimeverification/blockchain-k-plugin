@@ -58,7 +58,6 @@
           openssl.dev
           pkg-config
           secp256k1
-          hatchling
           k
         ];
 
@@ -136,8 +135,8 @@
                 propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
                   ++ [ finalPython.poetry ];
                 });
-              attrs = prevPython.attrs.overridePythonAttrs (old: {
-                buildInputs = old.buildInputs or [] ++ [prevPython.hatchling];
+               autoflake = prevPython.autoflake.overrideAttrs(_: super: {
+                nativeBuildInputs = super.nativeBuildInputs ++ [ prevPython.hatchling ];
               });
               });
 
