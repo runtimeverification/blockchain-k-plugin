@@ -146,13 +146,31 @@
                 mypy-extensions = prevPython.mypy-extensions.overridePythonAttrs (
                   old: {
                     buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.flit-core ];
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/mypy-extensions-pyproject.toml.patch
+                    ];
                   }
                 );
                 click = prevPython.click.overridePythonAttrs (
                   old: {
                     buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.flit-core ];
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/click-pyproject.toml.patch
+                    ];
                   }
                 );
+                typing-extensions = prevPython.typing-extensions.overridePythonAttrs (
+                  old: {
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/typing-extensions-pyproject.toml.patch
+                    ];
+                  }
+                );
+                attrs = prevPython.attrs.overridePythonAttrs (
+                  old: {
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/attrs-pyproject.toml.patch
+                    ];
                   }
                 );
               });
