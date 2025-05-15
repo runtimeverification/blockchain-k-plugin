@@ -77,7 +77,7 @@ $(PREFIX)/libff/lib/libff.a:
 
 C_KZG_4844 := $(CURDIR)/deps/c-kzg-4844
 C_KZG_4844_CFLAGS := -fPIC -O2 -I$(C_KZG_4844)/src -I$(C_KZG_4844)/inc
-C_KZG_4844_CXXFLAGS := $(C_KZG_4844_CFLAGS) -std=c++17
+C_KZG_4844_CXXFLAGS := $(C_KZG_4844_CFLAGS) -std=c++20
 
 BLST := $(C_KZG_4844)/blst
 
@@ -136,7 +136,7 @@ ifneq ($(APPLE_SILICON),)
     INCLUDES += -I $(GMP_PREFIX)/include -I $(MPFR_PREFIX)/include -I $(OPENSSL_PREFIX)/include -I $(CRYPTOPP_PREFIX)/include -I $(SECP256K1_PREFIX)/include -I $(BOOST_PREFIX)/include
 endif
 
-CPPFLAGS += --std=c++17 -fPIC -O3 $(INCLUDES)
+CPPFLAGS += --std=c++20 -fPIC -O3 $(INCLUDES)
 
 plugin-c/%.o: plugin-c/%.cpp $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/libff/lib/libff.a $(PREFIX)/c-kzg-4844/lib/libckzg.a $(PREFIX)/c-kzg-4844/lib/libblst.a
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
