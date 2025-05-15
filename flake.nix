@@ -58,6 +58,7 @@
           openssl.dev
           pkg-config
           secp256k1
+          hatchlingnix flake update
           k
         ];
 
