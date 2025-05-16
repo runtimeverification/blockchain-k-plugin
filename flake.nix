@@ -2,7 +2,7 @@
   description = "Blockchain K plugin";
 
   inputs = {
-    k-framework.url = "github:runtimeverification/k/v7.1.166";
+    k-framework.url = "github:runtimeverification/k/v7.1.255";
     nixpkgs.follows = "k-framework/nixpkgs";
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.follows = "k-framework/rv-utils";
@@ -130,11 +130,49 @@
             overrides = poetry2nix.overrides.withDefaults
               (finalPython: prevPython: {
                 kframework = prev.pyk-python310;
-                flake8-type-checking =
-                  prevPython.flake8-type-checking.overridePythonAttrs (old: {
-                    propagatedBuildInputs = (old.propagatedBuildInputs or [ ])
-                      ++ [ finalPython.poetry ];
-                  });
+                flake8-type-checking = prevPython.flake8-type-checking.overridePythonAttrs (old: {
+                  propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [
+                    finalPython.poetry
+                  ];
+                });
+                autoflake = prevPython.autoflake.overrideAttrs(_: super: {
+                  nativeBuildInputs = super.nativeBuildInputs ++ [ prevPython.hatchling ];
+                });
+                isort = prevPython.isort.overridePythonAttrs (
+                  old: {
+                    buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.hatchling ];
+                  }
+                );
+                mypy-extensions = prevPython.mypy-extensions.overridePythonAttrs (
+                  old: {
+                    buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.flit-core ];
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/mypy-extensions-pyproject.toml.patch
+                    ];
+                  }
+                );
+                click = prevPython.click.overridePythonAttrs (
+                  old: {
+                    buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.flit-core ];
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/click-pyproject.toml.patch
+                    ];
+                  }
+                );
+                typing-extensions = prevPython.typing-extensions.overridePythonAttrs (
+                  old: {
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/typing-extensions-pyproject.toml.patch
+                    ];
+                  }
+                );
+                attrs = prevPython.attrs.overridePythonAttrs (
+                  old: {
+                    patches = (old.patches or [ ]) ++ [
+                      ./nix/resources/attrs-pyproject.toml.patch
+                    ];
+                  }
+                );
               });
 
             checkPhase = ''
