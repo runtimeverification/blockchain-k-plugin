@@ -2,11 +2,14 @@
   description = "Blockchain K plugin";
 
   inputs = {
-    k-framework.url = "github:runtimeverification/k/v7.1.265";
-    nixpkgs.follows = "k-framework/nixpkgs";
+    rv-nix-tools.url = "github:runtimeverification/rv-nix-tools/854d4f05ea78547d46e807b414faad64cea10ae4";
+    nixpkgs.follows = "rv-nix-tools/nixpkgs";
+
+    k-framework.url = "github:runtimeverification/k/v7.1.257";
+    k-framework.inputs.nixpkgs.follows = "nixpkgs";
     flake-utils.follows = "k-framework/flake-utils";
-    rv-utils.follows = "k-framework/rv-utils";
     poetry2nix.follows = "k-framework/poetry2nix";
+    poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     cpp-httplib = {
       url =
@@ -39,7 +42,7 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, k-framework, poetry2nix, flake-utils, rv-utils
+  outputs = { self, nixpkgs, k-framework, poetry2nix, flake-utils, rv-nix-tools
     , cpp-httplib, cryptopp, libff, ate-pairing, xbyak
     , ckzg4844, blst, ... }@inputs:
     let
