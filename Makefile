@@ -141,7 +141,7 @@ CPPFLAGS += --std=c++20 -fPIC -O3 $(INCLUDES)
 plugin-c/%.o: plugin-c/%.cpp $(PREFIX)/libcryptopp/lib/libcryptopp.a $(PREFIX)/libff/lib/libff.a $(PREFIX)/c-kzg-4844/lib/libckzg.a $(PREFIX)/c-kzg-4844/lib/libblst.a
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
 
-$(PREFIX)/plugin/lib/plugin.a: plugin-c/crypto.o plugin-c/hash_ext.o plugin-c/kzg.o plugin-c/json.o plugin-c/k.o plugin-c/plugin_util.o
+$(PREFIX)/plugin/lib/plugin.a: plugin-c/crypto.o plugin-c/hash_ext.o plugin-c/kzg.o plugin-c/json.o plugin-c/k.o plugin-c/plugin_util.o plugin-c/p256verify.o
 	mkdir -p $(dir $@)
 	ar r $@ $^
 
