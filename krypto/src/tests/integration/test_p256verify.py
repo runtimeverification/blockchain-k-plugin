@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import pytest
 
 from .utils import hex2bytes, run
 
-if TYPE_CHECKING:
-    pass
-
-
 # EIP-7951 test vectors URL
 # wget 'https://raw.githubusercontent.com/ethereum/EIPs/d386b29b5a31bd5cfd8d21bbf4e8a0c87734085e/assets/eip-7951/test-vectors.json'
 TEST_VECTORS_FILE: Final = Path(__file__).parent / 'test-data' / 'test-vectors.json'
+P256VERIFY_SUCCESS: Final = (
+    'b"\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01"'
+)
+P256VERIFY_FAILURE: Final = 'b""'
 
 
 def load_test_vectors() -> list[tuple[str, str, str]]:
@@ -32,10 +32,7 @@ def load_test_vectors() -> list[tuple[str, str, str]]:
         input_hex = test['Input']
         expected_hex = test['Expected']
 
-        if expected_hex:
-            expected_output = f'b"\\x{"\\x".join(expected_hex[i:i+2] for i in range(0, len(expected_hex), 2))}"'
-        else:
-            expected_output = 'b""'
+        expected_output = P256VERIFY_SUCCESS if expected_hex else P256VERIFY_FAILURE
 
         test_vectors.append((test_name, input_hex, expected_output))
 
