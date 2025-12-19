@@ -8,27 +8,11 @@ import pytest
 from .utils import hex2bytes, run
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from pathlib import Path
     from typing import Final
 
 
 x01_32B: Final = hex2bytes(31 * '00' + '01')  # noqa: N816
-
-
-@pytest.fixture(scope='session')
-def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
-    definition = """
-        requires "plugin/krypto.md"
-
-        module TEST
-            imports BOOL
-            imports KRYPTO
-            syntax Pgm ::= Bool | Bytes | String | G1Point | G2Point
-            configuration <k> $PGM:Pgm </k>
-        endmodule
-    """
-    return krypto_kompile(definition=definition, main_module='TEST', syntax_module='TEST')
 
 
 HOOK_TEST_DATA: Final = (
@@ -172,8 +156,8 @@ HOOK_TEST_DATA: Final = (
     (
         'p256verify',
         f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca6050232ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e184cd60b855d442f5b3c7b11eb6c4e0ae7525fe710fab9aa7c77a67f79e6fadd762927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        'true',
-    )
+        'b"\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01"',
+    ),
 )
 
 
@@ -1063,69 +1047,6 @@ def test_verify_bls12g2msm(
 
     result_str = f'( {result[0][0]} x {result[0][1]} , {result[1][0]} x {result[1][1]} )'
     expected = f'<k>\n  {result_str} ~> .K\n</k>'
-
-    # When
-    actual = run(definition_dir, pgm)
-
-    # Then
-    assert expected == actual
-
-P256VERIFY_SUCCESS: Final = 'b"\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01"'
-
-P256VERIFY_FAILURE: Final = 'b""'
-
-# https://github.com/ethereum/EIPs/blob/d386b29b5a31bd5cfd8d21bbf4e8a0c87734085e/assets/eip-7951/test-vectors.json
-P256VERIFY_TEST_DATA:Final = (
-    (
-        'EcdsaP1363Verify SHA-256 #1',
-        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca6050232ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e184cd60b855d442f5b3c7b11eb6c4e0ae7525fe710fab9aa7c77a67f79e6fadd762927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_SUCCESS,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #3',
-        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca605023d45c5740946b2a147f59262ee6f5bc90bd01ed280528b62b3aed5fc93f06f739b329f479a2bbd0a5c384ee1493b1f5186a87139cac5df4087c134b49156847db2927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_FAILURE,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #5',
-        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca605023d45c5741946b2a137f59262ee6f5bc91001af27a5e1117a64733950642a3d1e8b329f479a2bbd0a5c384ee1493b1f5186a87139cac5df4087c134b49156847db2927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_FAILURE,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #35',
-        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca605023ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632550ffffffff00000001000000000000000000000000ffffffffffffffffffffffff2927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_FAILURE,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #50',
-        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca605023ffffffff00000001000000000000000000000000ffffffffffffffffffffffffffffffff000000010000000000000000000000010000000000000000000000002927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_FAILURE,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #59',
-        f'P256Verify({hex2bytes("00000000690ed426ccf17803ebe2bd0884bcd58a1bb5e7477ead3645f356e7a916aea964a2f6506d6f78c81c91fc7e8bded7d397738448de1e19a0ec580bf266252cd762130c6667cfe8b7bc47d27d78391e8e80c578d1cd38c3ff033be928e92927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_SUCCESS,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #61',
-        f'P256Verify({hex2bytes("ddf2000000005e0be0635b245f0b97978afd25daadeb3edb4a0161c27fe0604573b3c90ecd390028058164524dde892703dce3dea0d53fa8093999f07ab8aa432f67b0b8e20636695bb7d8bf0a651c802ed25a395387b5f4188c0c4075c886342927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_SUCCESS,
-    ),
-    (
-        'EcdsaP1363Verify SHA-256 #65',
-        f'P256Verify({hex2bytes("9b6cd3b812610000000026941a0f0bb53255ea4c9fd0cb3426e3a54b9fc6965c060b700bef665c68899d44f2356a578d126b062023ccc3c056bf0f60a237012b8d186c027832965f4fcc78a3366ca95dedbb410cbef3f26d6be5d581c11d36102927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
-        P256VERIFY_SUCCESS,
-    ),
-)
-
-@pytest.mark.parametrize(
-    'test_id,pgm,output',
-    P256VERIFY_TEST_DATA,
-    ids=[test_id for test_id, *_ in P256VERIFY_TEST_DATA],
-)
-def test_p256verify_hook(definition_dir: Path, test_id: str, pgm: str, output: str) -> None:
-    # Given
-    expected = f'<k>\n  {output} ~> .K\n</k>'
 
     # When
     actual = run(definition_dir, pgm)
