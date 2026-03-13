@@ -47,3 +47,18 @@ def krypto_kompile(kompile: Kompiler) -> Callable[..., Path]:
         return kompile(**args)
 
     return _krypto_kompile
+
+
+@pytest.fixture(scope='session')
+def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
+    definition = """
+        requires "plugin/krypto.md"
+
+        module TEST
+            imports BOOL
+            imports KRYPTO
+            syntax Pgm ::= Bool | Bytes | String | G1Point | G2Point
+            configuration <k> $PGM:Pgm </k>
+        endmodule
+    """
+    return krypto_kompile(definition=definition, main_module='TEST', syntax_module='TEST')
