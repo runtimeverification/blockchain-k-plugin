@@ -8,27 +8,11 @@ import pytest
 from .utils import hex2bytes, run
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from pathlib import Path
     from typing import Final
 
 
 x01_32B: Final = hex2bytes(31 * '00' + '01')  # noqa: N816
-
-
-@pytest.fixture(scope='session')
-def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
-    definition = """
-        requires "plugin/krypto.md"
-
-        module TEST
-            imports BOOL
-            imports KRYPTO
-            syntax Pgm ::= Bool | Bytes | String | G1Point | G2Point
-            configuration <k> $PGM:Pgm </k>
-        endmodule
-    """
-    return krypto_kompile(definition=definition, main_module='TEST', syntax_module='TEST')
 
 
 HOOK_TEST_DATA: Final = (
@@ -168,6 +152,11 @@ HOOK_TEST_DATA: Final = (
         'isValidPoint-G2',
         'isValidPoint((0x0, 0x0))',
         'true',
+    ),
+    (
+        'p256verify',
+        f'P256Verify({hex2bytes("bb5a52f42f9c9261ed4361f59422a1e30036e7c32b270c8807a419feca6050232ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e184cd60b855d442f5b3c7b11eb6c4e0ae7525fe710fab9aa7c77a67f79e6fadd762927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e")})',
+        'b"\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01"',
     ),
 )
 
