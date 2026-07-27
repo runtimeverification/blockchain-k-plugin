@@ -52,6 +52,11 @@ HOOK_TEST_DATA: Final = (
         '"08c9bcf367e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b"',
     ),
     (
+        'Blake2CompressNoAliasing',
+        f"blake2NoAlias({hex2bytes(213 * '00')})",
+        'true',
+    ),
+    (
         'Keccak256raw',
         'Keccak256raw(b"foo")',
         r'b"A\xb1\xa0d\x97R\xaf\x1b(\xb3\xdc)\xa1Un\xeex\x1eJL:\x1f\x7fS\xf9\x0f\xa84\xde\t\x8cM"',
