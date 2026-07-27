@@ -56,9 +56,20 @@ def definition_dir(krypto_kompile: Callable[..., Path]) -> Path:
 
         module TEST
             imports BOOL
+            imports BYTES
+            imports INT
+            imports K-EQUAL
+            imports STRING
             imports KRYPTO
             syntax Pgm ::= Bool | Bytes | String | G1Point | G2Point
             configuration <k> $PGM:Pgm </k>
+
+            // Passes the same Bytes term to Blake2Compress and to the check that
+            // follows it, so that a hook mutating its argument in place is observable.
+            syntax Bool ::= blake2NoAlias    ( Bytes )           [function]
+                          | blake2NoAliasAux ( String , Bytes )  [function]
+            rule blake2NoAlias(B) => blake2NoAliasAux(Blake2Compress(B), B)
+            rule blake2NoAliasAux(OUT, B) => lengthString(OUT) ==Int 128 andBool B ==K padRightBytes(b"", 213, 0)
         endmodule
     """
     return krypto_kompile(definition=definition, main_module='TEST', syntax_module='TEST')
